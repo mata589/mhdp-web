@@ -17,10 +17,7 @@ import { Sidebar } from './components/common/Sidebar/Sidebar';
 import { ProtectedRoute } from './components/common/ProtectedRoute/ProtectedRoute';
 
 // Pages
-//import { LoginPage } from './pages/auth/LoginPage/LoginPage';
 import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
-
-
 import { LoginPage } from './pages/auth/LoginPage';
 import { LiveCallInterface } from './pages/agent/LiveCallInterface/LiveCallInterface';
 import { CallSummaryScreen } from './pages/agent/CallSummaryScreen/CallSummaryScreen';
@@ -43,7 +40,6 @@ const queryClient = new QueryClient({
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
       <Header />
       <Sidebar />
       <Box
@@ -66,6 +62,7 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
+        <CssBaseline /> {/* Moved CssBaseline here to apply globally */}
         <AuthProvider>
           <NotificationProvider>
             <Router>

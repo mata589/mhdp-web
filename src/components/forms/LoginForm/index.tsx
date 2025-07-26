@@ -1,87 +1,116 @@
-// 2. src/components/forms/LoginForm/index.tsx
+// src/components/forms/LoginForm/index.tsx
 import React, { useState } from 'react';
-import { Box, TextField, Button, IconButton, InputAdornment, CircularProgress } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { Box, TextField, Button, CircularProgress } from '@mui/material';
+import { useAuth } from '../../../contexts/AuthContext';
+import type { User } from '../../../types/user.types';
 
 interface LoginFormProps {
-  onSuccess: () => void;
-  onError: (error: string) => void;
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError }) => {
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  // Role-based dashboard routing
+  const getDashboardRoute = (userRole: string): string => {
+    switch (userRole) {
+      case 'admin':
+        return '/admin';
+      case 'supervisor':
+        return '/supervisor';
+      case 'agent':
+        return '/dashboard';
+      default:
+        return '/dashboard'; // fallback to agent dashboard
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      onError?.('Please fill in all fields');
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Login:', formData);
-      onSuccess();
-    } catch (err) {
-      onError('Invalid email or password');
+      const user: User = await login(email, password);
+      
+      // Navigate to role-appropriate dashboard
+      const dashboardRoute = getDashboardRoute(user.role);
+      navigate(dashboardRoute, { replace: true });
+      
+      onSuccess?.();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      onError?.(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
       <TextField
         fullWidth
         label="Email"
         type="email"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        sx={{ mb: 3 }}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        margin="normal"
         required
+        disabled={isLoading}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          },
+        }}
       />
+      
       <TextField
         fullWidth
         label="Password"
-        type={showPassword ? 'text' : 'password'}
-        value={formData.password}
-        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShowPassword(!showPassword)}
-                edge="end"
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-        sx={{ mb: 3 }}
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        margin="normal"
         required
+        disabled={isLoading}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          },
+        }}
       />
+
       <Button
         type="submit"
         fullWidth
         variant="contained"
-        size="large"
         disabled={isLoading}
         sx={{
-          bgcolor: '#008080',
-          color: 'white',
+          mt: 3,
+          mb: 2,
           py: 1.5,
-          fontSize: '1rem',
-          fontWeight: 500,
-          textTransform: 'none',
           borderRadius: 2,
-          '&:hover': { bgcolor: '#006666' },
+          textTransform: 'none',
+          fontSize: '1rem',
+          fontWeight: 600,
         }}
       >
-        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+        {isLoading ? (
+          <CircularProgress size={24} color="inherit" />
+        ) : (
+          'Sign In'
+        )}
       </Button>
     </Box>
   );

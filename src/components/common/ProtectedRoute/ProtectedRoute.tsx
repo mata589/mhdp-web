@@ -1,79 +1,63 @@
-// src/components/common/ProtectedRoute/ProtectedRoute.tsx
+// src/components/common/ProtectedRoute/index.tsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { Box, CircularProgress, Alert, AlertTitle } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useAuth } from '../../../contexts/AuthContext';
+import type { User } from '../../../types/user.types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  roles?: string[]; // If provided, user must have one of these roles
-  requireAuth?: boolean; // Default: true
+  roles?: User['role'][];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  roles,
-  requireAuth = true,
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  roles 
 }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
       <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        bgcolor="background.default"
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
       >
         <CircularProgress size={40} />
       </Box>
     );
   }
 
-  // Redirect to login if authentication is required but user is not authenticated
-  if (requireAuth && !isAuthenticated) {
+  // Redirect to login if not authenticated
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check role-based access if roles are specified
-  if (roles && user && !roles.includes(user.role)) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        bgcolor="background.default"
-        p={3}
-      >
-        <Alert severity="error" sx={{ maxWidth: 400 }}>
-          <AlertTitle>Access Denied</AlertTitle>
-          You don't have permission to access this page. Your role ({user.role}) 
-          is not authorized for this resource.
-        </Alert>
-      </Box>
-    );
+  // Check role-based access
+  if (roles && !roles.includes(user.role)) {
+    // Redirect to appropriate dashboard based on user role
+    const redirectPath = getRoleBasedRedirect(user.role);
+    return <Navigate to={redirectPath} replace />;
   }
 
-  // If user is authenticated and authorized, render the protected component
   return <>{children}</>;
 };
 
-// Higher-order component for route protection
-export const withProtection = (
-  Component: React.ComponentType<any>,
-  options: { roles?: string[]; requireAuth?: boolean } = {}
-) => {
-  const ProtectedComponent: React.FC<any> = (props) => (
-    <ProtectedRoute {...options}>
-      <Component {...props} />
-    </ProtectedRoute>
-  );
-
-  ProtectedComponent.displayName = `withProtection(${Component.displayName || Component.name})`;
-  
-  return ProtectedComponent;
+// Helper function to get role-based redirect path
+const getRoleBasedRedirect = (role: User['role']): string => {
+  switch (role) {
+    case 'admin':
+      return '/admin';
+    case 'supervisor':
+      return '/supervisor';
+    case 'agent':
+      return '/dashboard';
+    default:
+      return '/dashboard';
+  }
 };

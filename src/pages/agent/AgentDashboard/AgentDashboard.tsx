@@ -95,7 +95,7 @@ export const AgentDashboard: React.FC = () => {
 
       {/* Metrics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid>
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             title="Total Calls Today"
             value={metrics?.totalCalls || 0}
@@ -103,7 +103,7 @@ export const AgentDashboard: React.FC = () => {
             isLoading={isLoading}
           />
         </Grid>
-        <Grid >
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             title="Calls Answered"
             value={metrics?.callsAnswered || 0}
@@ -111,7 +111,7 @@ export const AgentDashboard: React.FC = () => {
             isLoading={isLoading}
           />
         </Grid>
-        <Grid >
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             title="Escalated"
             value={metrics?.callsEscalated || 0}
@@ -120,7 +120,7 @@ export const AgentDashboard: React.FC = () => {
             color="warning"
           />
         </Grid>
-        <Grid >
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             title="Avg Duration"
             value={`${Math.floor((metrics?.averageDuration || 0) / 60)}:${(metrics?.averageDuration || 0) % 60}`}
@@ -132,7 +132,7 @@ export const AgentDashboard: React.FC = () => {
 
       {/* Escalated Calls Table */}
       <Grid container spacing={3}>
-        <Grid >
+        <Grid item xs={12}>
           <DataTable
             title="Calls Requiring Review"
             columns={escalatedCallColumns}
