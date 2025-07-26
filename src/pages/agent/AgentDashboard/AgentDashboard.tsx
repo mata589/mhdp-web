@@ -1,7 +1,6 @@
 // src/pages/agent/AgentDashboard/AgentDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { Grid } from '@mui/material'; 
-
+import { GridLegacy as Grid } from '@mui/material';
 
 import {
   Paper,
@@ -10,7 +9,6 @@ import {
   Button,
   Alert,
   Chip,
-  
 } from '@mui/material';
 import {
   Call,
@@ -44,11 +42,15 @@ export const AgentDashboard: React.FC = () => {
     {
       id: 'aiInsights.escalationFlags',
       label: 'Reason',
-      renderCell: (value: string[]) => (
+      renderCell: (value: string[] | undefined) => (
         <Box>
-          {value.map((flag, index) => (
-            <Chip key={index} label={flag} size="small" color="error" sx={{ mr: 0.5 }} />
-          ))}
+          {Array.isArray(value) && value.length > 0 ? (
+            value.map((flag, index) => (
+              <Chip key={index} label={flag} size="small" color="error" sx={{ mr: 0.5 }} />
+            ))
+          ) : (
+            <Chip label="No reason specified" size="small" color="default" sx={{ mr: 0.5 }} />
+          )}
         </Box>
       ),
     },

@@ -68,7 +68,7 @@ export const SupervisorDashboard: React.FC = () => {
 
       {/* Metrics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Phone sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
@@ -82,7 +82,7 @@ export const SupervisorDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Badge badgeContent={metrics.activeCalls} color="success">
@@ -98,7 +98,7 @@ export const SupervisorDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Badge badgeContent={metrics.escalatedCalls} color="error">
@@ -114,7 +114,7 @@ export const SupervisorDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <People sx={{ fontSize: 40, color: '#9c27b0', mb: 1 }} />
@@ -128,7 +128,7 @@ export const SupervisorDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Assignment sx={{ fontSize: 40, color: '#f44336', mb: 1 }} />
@@ -145,7 +145,7 @@ export const SupervisorDashboard: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Agent Status */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -191,7 +191,7 @@ export const SupervisorDashboard: React.FC = () => {
         </Grid>
 
         {/* Escalated Calls */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -235,14 +235,14 @@ export const SupervisorDashboard: React.FC = () => {
         </Grid>
 
         {/* Performance Overview */}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Today's Performance Overview
               </Typography>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Box>
                     <Typography variant="body2" gutterBottom>
                       Call Resolution Rate
@@ -255,7 +255,7 @@ export const SupervisorDashboard: React.FC = () => {
                     <Typography variant="caption">92%</Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Box>
                     <Typography variant="body2" gutterBottom>
                       Customer Satisfaction
@@ -269,7 +269,7 @@ export const SupervisorDashboard: React.FC = () => {
                     <Typography variant="caption">88%</Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Box>
                     <Typography variant="body2" gutterBottom>
                       First Call Resolution
@@ -283,7 +283,7 @@ export const SupervisorDashboard: React.FC = () => {
                     <Typography variant="caption">75%</Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Box>
                     <Typography variant="body2" gutterBottom>
                       Agent Utilization
