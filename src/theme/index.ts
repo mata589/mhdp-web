@@ -71,8 +71,9 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 4, // Ensure this is a number, not string
   },
+  spacing: 8, // Ensure consistent spacing unit
   components: {
     MuiButton: {
       styleOverrides: {
@@ -95,6 +96,15 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8, // Consistent with theme
+          },
         },
       },
     },

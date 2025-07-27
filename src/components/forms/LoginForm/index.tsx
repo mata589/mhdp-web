@@ -1,18 +1,21 @@
 // src/components/forms/LoginForm/index.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, TextField, Button, CircularProgress } from '@mui/material';
+import { Box, TextField, Button, CircularProgress, Link, IconButton, InputAdornment } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { User } from '../../../types/user.types';
 
 interface LoginFormProps {
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  onForgotPassword?: () => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForgotPassword }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +60,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError }) => {
     }
   };
 
+  const handleForgotPassword = () => {
+    if (onForgotPassword) {
+      onForgotPassword();
+    } else {
+      // Default behavior - navigate to forgot password page
+      navigate('/forgot-password');
+    }
+  };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
       <TextField
@@ -68,40 +84,76 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError }) => {
         margin="normal"
         required
         disabled={isLoading}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
-          },
-        }}
       />
       
       <TextField
         fullWidth
         label="Password"
-        type="password"
+        type={showPassword ? 'text' : 'password'}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         margin="normal"
         required
         disabled={isLoading}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
-          },
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                onClick={handleTogglePasswordVisibility}
+                disabled={isLoading}
+                edge="end"
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': {
+                    color: 'text.primary',
+                  },
+                }}
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
         }}
       />
+
+      {/* Forgot Password Link */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, mb: 2 }}>
+        <Link
+          component="button"
+          type="button"
+          onClick={handleForgotPassword}
+          disabled={isLoading}
+          sx={{
+            textDecoration: 'none',
+            color: 'primary.main',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            '&:hover': {
+              textDecoration: 'underline',
+              color: 'primary.dark',
+            },
+            '&:disabled': {
+              color: 'text.disabled',
+              cursor: 'not-allowed',
+            },
+          }}
+        >
+          Forgot password?
+        </Link>
+      </Box>
 
       <Button
         type="submit"
         fullWidth
         variant="contained"
+        color="primary"
         disabled={isLoading}
         sx={{
-          mt: 3,
+          mt: 1,
           mb: 2,
           py: 1.5,
-          borderRadius: 2,
-          textTransform: 'none',
           fontSize: '1rem',
           fontWeight: 600,
         }}
@@ -109,7 +161,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError }) => {
         {isLoading ? (
           <CircularProgress size={24} color="inherit" />
         ) : (
-          'Sign In'
+          'Login to your account'
         )}
       </Button>
     </Box>

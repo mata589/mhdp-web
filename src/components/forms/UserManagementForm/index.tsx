@@ -1,4 +1,4 @@
-// 3. src/components/forms/UserManagementForm/index.tsx
+// src/components/forms/UserManagementForm/index.tsx
 import React, { useState } from 'react';
 import { 
   Box, 
@@ -7,12 +7,10 @@ import {
   IconButton, 
   InputAdornment, 
   CircularProgress,
-  Typography,
-  RadioGroup,
-  FormControlLabel,
-  Radio
+  Typography
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
 interface UserManagementFormProps {
   mode: 'register' | 'edit';
@@ -27,19 +25,32 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
   onError,
   initialData 
 }) => {
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    role: 'agent',
-    firstName: 'James',
-    lastName: 'Gipir',
-    email: 'james.gipir@butabikahospital.go.ug',
-    password: 'james1@0.89q17',
+    role: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
     ...initialData
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      onError('Please fill in all required fields');
+      return;
+    }
+    
+    if (mode === 'register' && (!formData.role || !formData.password)) {
+      onError('Please select a role and enter a password');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -54,31 +65,107 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
     }
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit}>
       {mode === 'register' && (
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mb: 2, 
+              fontWeight: 500,
+              color: 'text.primary',
+              fontSize: '0.95rem'
+            }}
+          >
             Select your role
           </Typography>
-          <RadioGroup
-            row
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-          >
-            <FormControlLabel
-              value="agent"
-              control={<Radio sx={{ color: '#008080', '&.Mui-checked': { color: '#008080' } }} />}
-              label="Call Agent"
-              sx={{ mr: 3, '& .MuiFormControlLabel-label': { fontSize: '0.95rem' } }}
-            />
-            <FormControlLabel
-              value="supervisor"
-              control={<Radio sx={{ color: '#008080', '&.Mui-checked': { color: '#008080' } }} />}
-              label="Supervisor"
-              sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.95rem' } }}
-            />
-          </RadioGroup>
+          
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {/* Call Agent Option */}
+            <Box
+              onClick={() => setFormData({ ...formData, role: 'agent' })}
+              sx={{
+                flex: 1,
+                border: formData.role === 'agent' ? `2px solid ${theme.palette.primary.main}` : '1px solid #d1d5db',
+                borderRadius: typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius : 4, // Safe theme border radius
+                p: 2,
+                cursor: 'pointer',
+                backgroundColor: formData.role === 'agent' ? `${theme.palette.primary.main}08` : 'background.paper',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                  backgroundColor: `${theme.palette.primary.main}08`,
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    border: formData.role === 'agent' ? `6px solid ${theme.palette.primary.main}` : '2px solid #d1d5db',
+                    backgroundColor: formData.role === 'agent' ? theme.palette.primary.main : 'transparent',
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontSize: '0.95rem',
+                    fontWeight: 500,
+                    color: formData.role === 'agent' ? 'primary.main' : 'text.primary',
+                  }}
+                >
+                  Call Agent
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Supervisor Option */}
+            <Box
+              onClick={() => setFormData({ ...formData, role: 'supervisor' })}
+              sx={{
+                flex: 1,
+                border: formData.role === 'supervisor' ? `2px solid ${theme.palette.primary.main}` : '1px solid #d1d5db',
+                borderRadius: typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius : 4, // Safe theme border radius
+                p: 2,
+                cursor: 'pointer',
+                backgroundColor: formData.role === 'supervisor' ? `${theme.palette.primary.main}08` : 'background.paper',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                  backgroundColor: `${theme.palette.primary.main}08`,
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    border: formData.role === 'supervisor' ? `6px solid ${theme.palette.primary.main}` : '2px solid #d1d5db',
+                    backgroundColor: formData.role === 'supervisor' ? theme.palette.primary.main : 'transparent',
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontSize: '0.95rem',
+                    fontWeight: 500,
+                    color: formData.role === 'supervisor' ? 'primary.main' : 'text.primary',
+                  }}
+                >
+                  Supervisor
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       )}
 
@@ -87,8 +174,10 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
         label="First Name"
         value={formData.firstName}
         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-        sx={{ mb: 3 }}
+        margin="normal"
         required
+        disabled={isLoading}
+        sx={{ mb: 2 }}
       />
 
       <TextField
@@ -96,8 +185,10 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
         label="Last Name"
         value={formData.lastName}
         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-        sx={{ mb: 3 }}
+        margin="normal"
         required
+        disabled={isLoading}
+        sx={{ mb: 2 }}
       />
 
       <TextField
@@ -106,8 +197,10 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
         type="email"
         value={formData.email}
         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        sx={{ mb: 3 }}
+        margin="normal"
         required
+        disabled={isLoading}
+        sx={{ mb: 2 }}
       />
 
       {mode === 'register' && (
@@ -117,12 +210,23 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
           type={showPassword ? 'text' : 'password'}
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          margin="normal"
+          required
+          disabled={isLoading}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label="toggle password visibility"
+                  onClick={handleTogglePasswordVisibility}
+                  disabled={isLoading}
                   edge="end"
+                  sx={{
+                    color: 'text.secondary',
+                    '&:hover': {
+                      color: 'text.primary',
+                    },
+                  }}
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
@@ -130,7 +234,6 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
             ),
           }}
           sx={{ mb: 3 }}
-          required
         />
       )}
 
@@ -138,17 +241,13 @@ export const UserManagementForm: React.FC<UserManagementFormProps> = ({
         type="submit"
         fullWidth
         variant="contained"
+        color="primary"
         size="large"
         disabled={isLoading}
         sx={{
-          bgcolor: '#008080',
-          color: 'white',
           py: 1.5,
           fontSize: '1rem',
-          fontWeight: 500,
-          textTransform: 'none',
-          borderRadius: 2,
-          '&:hover': { bgcolor: '#006666' },
+          fontWeight: 600,
         }}
       >
         {isLoading ? (

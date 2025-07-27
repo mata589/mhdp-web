@@ -111,7 +111,7 @@ export const LoginPage: React.FC = () => {
       >
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
-            {tabValue === 0 ? 'Welcome Back' : 'Create your account'}
+            {tabValue === 0 ? 'Login to your account' : 'Create your account'}
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             {tabValue === 0 
@@ -121,32 +121,45 @@ export const LoginPage: React.FC = () => {
           </Typography>
 
           <Box sx={{ mb: 3 }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              sx={{
-                '& .MuiTabs-indicator': { display: 'none' },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  borderRadius: 2,
-                  color: '#666',
-                  bgcolor: '#f5f5f5',
-                  mr: 1,
-                  minWidth: 120,
-                  '&.Mui-selected': {
-                    color: '#333',
-                    bgcolor: 'white',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  },
-                },
-              }}
-            >
-              <Tab label="Login" value={0} />
-              <Tab label="Sign Up" value={1} />
-            </Tabs>
-          </Box>
+  <Box
+    sx={{
+      bgcolor: '#f5f5f5', // Grey background container
+      borderRadius: 2,
+      p: 0.5, // Small padding inside the grey container
+    }}
+  >
+    <Tabs
+      value={tabValue}
+      onChange={handleTabChange}
+      variant="fullWidth"
+      sx={{
+        '& .MuiTabs-indicator': { display: 'none' },
+        '& .MuiTab-root': {
+          textTransform: 'none',
+          fontSize: '1rem',
+          fontWeight: 500,
+          borderRadius: 1.5,
+          color: '#666',
+          bgcolor: 'transparent', // Transparent by default
+          mx: 0.25, // Small horizontal margin between tabs
+          flex: 1,
+          border: 'none', // Remove any default border
+          outline: 'none', // Remove outline
+          '&.Mui-selected': {
+            color: '#333',
+            bgcolor: 'white',
+            border: 'none', // Ensure no border on selected state
+            outline: 'none', // Ensure no outline on selected state
+            boxShadow: 'none', // Explicitly remove any shadow
+          },
+        },
+      }}
+    >
+      <Tab label="Login" value={0} />
+      <Tab label="Sign Up" value={1} />
+    </Tabs>
+  </Box>
+</Box>
 
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
