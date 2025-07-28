@@ -26,6 +26,8 @@ import { EscalatedCallReview } from './pages/supervisor/EscalatedCallReview/Esca
 import { AdminDashboard } from './pages/admin/AdminDashboard/AdminDashboard';
 import { UserManagement } from './pages/admin/UserManagement/UserManagement';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
+import { LandingPage } from './pages/public/LandingPage';
+
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -68,6 +70,8 @@ const App: React.FC = () => {
             <Router>
               <Routes>
                 {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/landing" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 
                 {/* Protected routes with layout */}
