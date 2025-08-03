@@ -1031,7 +1031,7 @@ const LandingPage = () => {
                     <Grid container spacing={6}>
                         <Grid item xs={12} md={4}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
-                                <Box sx={{ fontSize: '3rem' }}>🧠</Box>
+                                <Box sx={{ fontSize: '3rem' }}></Box>
                                 <Typography variant="h4" fontWeight="bold">
                                     Makerere AI Lab
                                 </Typography>

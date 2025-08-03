@@ -2,18 +2,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Box } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { theme } from './theme';
+import { useAuth } from './contexts/AuthContext';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 
+// Layout Components
+import { AgentLayout } from './components/layouts/AgentLayout/AgentLayout';
+import { SupervisorLayout } from './components/layouts/SupervisorLayout/SupervisorLayout';
+import { AdminLayout } from './components/layouts/AdminLayout/AdminLayout';
+
 // Components
-import { Header } from './components/common/Header/Header';
-import { Sidebar } from './components/common/Sidebar/Sidebar';
 import { ProtectedRoute } from './components/common/ProtectedRoute/ProtectedRoute';
 
 // Pages
@@ -28,7 +32,6 @@ import { UserManagement } from './pages/admin/UserManagement/UserManagement';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import { LandingPage } from './pages/public/LandingPage';
 
-
 // Create a query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,24 +42,56 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Role-based route components
+const AgentRoutes: React.FC = () => {
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Header />
-      <Sidebar />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: 'background.default',
-          ml: { sm: '240px' }, // sidebar width
-          mt: '64px', // header height
-          minHeight: 'calc(100vh - 64px)',
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
+    <Routes>
+      <Route path="/dashboard" element={<AgentDashboard />} />
+      <Route path="/active-calls" element={<LiveCallInterface />} />
+      <Route path="/live-call" element={<LiveCallInterface />} />
+      <Route path="/call-summary/:callId" element={<CallSummaryScreen />} />
+      <Route path="/call-history" element={<div>Call History Page</div>} />
+      <Route path="/analytics" element={<div>Analytics Page</div>} />
+      <Route path="/training" element={<div>Training Materials Page</div>} />
+      <Route path="/emergency" element={<div>Emergency Guide Page</div>} />
+      <Route path="/help" element={<div>Help and Support Page</div>} />
+      <Route path="/settings" element={<div>Settings Page</div>} />
+      <Route path="/call-review/:callId" element={<CallReviewScreen />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+};
+
+const SupervisorRoutes: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/supervisor" element={<SupervisorDashboard />} />
+      <Route path="/live-monitoring" element={<div>Live Monitoring Page</div>} />
+      <Route path="/escalations" element={<EscalatedCallReview />} />
+      <Route path="/escalated-reviews" element={<EscalatedCallReview />} />
+      <Route path="/call-history" element={<div>Call History Page</div>} />
+      <Route path="/staff-performance" element={<div>Staff Performance Page</div>} />
+      <Route path="/analytics" element={<div>Analytics Page</div>} />
+      <Route path="/training" element={<div>Training Materials Page</div>} />
+      <Route path="/help" element={<div>Help and Support Page</div>} />
+      <Route path="/settings" element={<div>Settings Page</div>} />
+      <Route path="/call-review/:callId" element={<CallReviewScreen />} />
+      <Route path="*" element={<Navigate to="/supervisor" replace />} />
+    </Routes>
+  );
+};
+
+const AdminRoutes: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<UserManagement />} />
+      <Route path="/admin/system" element={<div>System Health Page</div>} />
+      <Route path="/admin/analytics" element={<div>Analytics Page</div>} />
+      <Route path="/admin/security" element={<div>Security Page</div>} />
+      <Route path="/admin/settings" element={<div>Settings Page</div>} />
+      <Route path="*" element={<Navigate to="/admin" replace />} />
+    </Routes>
   );
 };
 
@@ -64,7 +99,7 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <CssBaseline /> {/* Moved CssBaseline here to apply globally */}
+        <CssBaseline />
         <AuthProvider>
           <NotificationProvider>
             <Router>
@@ -74,26 +109,24 @@ const App: React.FC = () => {
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 
-                {/* Protected routes with layout */}
+                {/* Agent routes with Agent Layout */}
                 <Route
-                  path="/"
+                  path="/agent/*"
                   element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Navigate to="/dashboard" replace />
-                      </AppLayout>
+                    <ProtectedRoute roles={['agent']}>
+                      <AgentLayout>
+                        <AgentRoutes />
+                      </AgentLayout>
                     </ProtectedRoute>
                   }
                 />
                 
-                {/* Agent routes */}
+                {/* Legacy agent routes - redirect to new structure */}
                 <Route
                   path="/dashboard"
                   element={
                     <ProtectedRoute roles={['agent']}>
-                      <AppLayout>
-                        <AgentDashboard />
-                      </AppLayout>
+                      <Navigate to="/agent/dashboard" replace />
                     </ProtectedRoute>
                   }
                 />
@@ -101,9 +134,7 @@ const App: React.FC = () => {
                   path="/live-call"
                   element={
                     <ProtectedRoute roles={['agent']}>
-                      <AppLayout>
-                        <LiveCallInterface />
-                      </AppLayout>
+                      <Navigate to="/agent/live-call" replace />
                     </ProtectedRoute>
                   }
                 />
@@ -111,71 +142,67 @@ const App: React.FC = () => {
                   path="/call-summary/:callId"
                   element={
                     <ProtectedRoute roles={['agent']}>
-                      <AppLayout>
-                        <CallSummaryScreen />
-                      </AppLayout>
+                      <Navigate to="/agent/call-summary/:callId" replace />
                     </ProtectedRoute>
                   }
                 />
 
-                {/* Supervisor routes */}
+                {/* Supervisor routes with Supervisor Layout */}
                 <Route
-                  path="/supervisor"
+                  path="/supervisor/*"
                   element={
                     <ProtectedRoute roles={['supervisor']}>
-                      <AppLayout>
-                        <SupervisorDashboard />
-                      </AppLayout>
+                      <SupervisorLayout>
+                        <SupervisorRoutes />
+                      </SupervisorLayout>
                     </ProtectedRoute>
                   }
                 />
+                
+                {/* Legacy supervisor routes - redirect to new structure */}
                 <Route
                   path="/escalated-reviews"
                   element={
                     <ProtectedRoute roles={['supervisor']}>
-                      <AppLayout>
-                        <EscalatedCallReview />
-                      </AppLayout>
+                      <Navigate to="/supervisor/escalated-reviews" replace />
                     </ProtectedRoute>
                   }
                 />
 
-                {/* Admin routes */}
+                {/* Admin routes with Admin Layout */}
                 <Route
-                  path="/admin"
+                  path="/admin/*"
                   element={
                     <ProtectedRoute roles={['admin']}>
-                      <AppLayout>
-                        <AdminDashboard />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/users"
-                  element={
-                    <ProtectedRoute roles={['admin']}>
-                      <AppLayout>
-                        <UserManagement />
-                      </AppLayout>
+                      <AdminLayout>
+                        <AdminRoutes />
+                      </AdminLayout>
                     </ProtectedRoute>
                   }
                 />
 
-                {/* Shared routes */}
+                {/* Shared routes - determine layout based on user role */}
                 <Route
                   path="/call-review/:callId"
                   element={
                     <ProtectedRoute roles={['agent', 'supervisor']}>
-                      <AppLayout>
-                        <CallReviewScreen />
-                      </AppLayout>
+                      <RoleBasedCallReview />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Default redirects based on role */}
+                <Route
+                  path="/dashboard-redirect"
+                  element={
+                    <ProtectedRoute>
+                      <RoleBasedDashboardRedirect />
                     </ProtectedRoute>
                   }
                 />
 
                 {/* Catch all route */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard-redirect" replace />} />
               </Routes>
             </Router>
           </NotificationProvider>
@@ -183,6 +210,53 @@ const App: React.FC = () => {
       </ThemeProvider>
     </QueryClientProvider>
   );
+};
+
+// Helper component to redirect based on user role
+const RoleBasedDashboardRedirect: React.FC = () => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  switch (user.role) {
+    case 'agent':
+      return <Navigate to="/agent/dashboard" replace />;
+    case 'supervisor':
+      return <Navigate to="/supervisor" replace />;
+    case 'admin':
+      return <Navigate to="/admin" replace />;
+    default:
+      return <Navigate to="/login" replace />;
+  }
+};
+
+// Helper component for shared call review with role-based layout
+const RoleBasedCallReview: React.FC = () => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (user.role === 'agent') {
+    return (
+      <AgentLayout>
+        <CallReviewScreen />
+      </AgentLayout>
+    );
+  }
+  
+  if (user.role === 'supervisor') {
+    return (
+      <SupervisorLayout>
+        <CallReviewScreen />
+      </SupervisorLayout>
+    );
+  }
+  
+  return <Navigate to="/login" replace />;
 };
 
 export default App;

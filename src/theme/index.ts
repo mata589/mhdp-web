@@ -1,5 +1,15 @@
-// src/theme/index.ts
 import { createTheme } from '@mui/material/styles';
+
+// Extend the theme interface to include custom color variants
+declare module '@mui/material/styles' {
+  interface PaletteColor {
+    lighter: string;
+  }
+
+  interface SimplePaletteColorOptions {
+    lighter?: string;
+  }
+}
 
 export const theme = createTheme({
   palette: {
@@ -23,6 +33,7 @@ export const theme = createTheme({
     },
     error: {
       main: '#f44336', // Red for critical alerts
+      lighter: '#ffebee', // Light red background for hover states
     },
     warning: {
       main: '#ff9800', // Yellow for warnings
@@ -33,6 +44,18 @@ export const theme = createTheme({
     background: {
       default: '#fafafa',
       paper: '#ffffff',
+    },
+    grey: {
+      50: '#fafafa',
+      100: '#f5f5f5',
+      200: '#eeeeee',
+      300: '#e0e0e0',
+      400: '#bdbdbd',
+      500: '#9e9e9e',
+      600: '#757575',
+      700: '#616161',
+      800: '#424242',
+      900: '#212121',
     },
   },
   typography: {
@@ -71,9 +94,9 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 4, // Ensure this is a number, not string
+    borderRadius: 4,
   },
-  spacing: 8, // Ensure consistent spacing unit
+  spacing: 8,
   components: {
     MuiButton: {
       styleOverrides: {
@@ -103,7 +126,33 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8, // Consistent with theme
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderRight: '1px solid #e0e0e0',
+          boxShadow: 'none',
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          margin: '0 8px',
+          '&.Mui-selected': {
+            backgroundColor: '#008080',
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: '#005959',
+            },
+            '& .MuiListItemIcon-root': {
+              color: '#ffffff',
+            },
           },
         },
       },
