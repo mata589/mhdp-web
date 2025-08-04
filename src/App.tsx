@@ -31,6 +31,9 @@ import { AdminDashboard } from './pages/admin/AdminDashboard/AdminDashboard';
 import { UserManagement } from './pages/admin/UserManagement/UserManagement';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import { LandingPage } from './pages/public/LandingPage';
+import { CallHistory } from './pages/agent/CallHistory/CallHistory';
+import { Analytics } from './pages/agent/Analytics/Analytics';
+import { LiveMonitoring } from './pages/supervisor/LiveMonitoring/LiveMonitoring';
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -50,8 +53,8 @@ const AgentRoutes: React.FC = () => {
       <Route path="/active-calls" element={<LiveCallInterface />} />
       <Route path="/live-call" element={<LiveCallInterface />} />
       <Route path="/call-summary/:callId" element={<CallSummaryScreen />} />
-      <Route path="/call-history" element={<div>Call History Page</div>} />
-      <Route path="/analytics" element={<div>Analytics Page</div>} />
+      <Route path="/call-history" element={<CallHistory />} />
+      <Route path="/analytics" element={<Analytics />} />
       <Route path="/training" element={<div>Training Materials Page</div>} />
       <Route path="/emergency" element={<div>Emergency Guide Page</div>} />
       <Route path="/help" element={<div>Help and Support Page</div>} />
@@ -66,7 +69,7 @@ const SupervisorRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/supervisor" element={<SupervisorDashboard />} />
-      <Route path="/live-monitoring" element={<div>Live Monitoring Page</div>} />
+      <Route path="/live-monitoring" element={<LiveMonitoring />} />
       <Route path="/escalations" element={<EscalatedCallReview />} />
       <Route path="/escalated-reviews" element={<EscalatedCallReview />} />
       <Route path="/call-history" element={<div>Call History Page</div>} />

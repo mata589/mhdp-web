@@ -1,4 +1,3 @@
-// src/components/layouts/BaseLayout/BaseLayout.tsx
 import React from 'react';
 import { Box } from '@mui/material';
 
@@ -14,21 +13,30 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({
   children 
 }) => {
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Header />
-      <Sidebar />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: 'background.default',
-          ml: { sm: '240px' }, // sidebar width
-          mt: '64px', // header height
-          minHeight: 'calc(100vh - 64px)',
-          p: 3,
-        }}
-      >
-        {children}
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* Fixed Sidebar */}
+      <Box sx={{ width: 240, flexShrink: 0 }}>
+        <Sidebar />
+      </Box>
+
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Fixed Header */}
+        <Box sx={{ height: 64, flexShrink: 0 }}>
+          <Header />
+        </Box>
+
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            bgcolor: 'background.default',
+            p: 3,
+            overflow: 'auto',
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Box>
   );

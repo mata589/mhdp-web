@@ -1,5 +1,6 @@
 // File: src/pages/admin/UserManagement/UserManagement.tsx
 import React, { useState } from 'react';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Box,
   Card,
@@ -25,7 +26,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
   Tabs,
   Tab
 } from '@mui/material';

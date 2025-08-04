@@ -1,11 +1,11 @@
 // File: src/pages/agent/CallSummaryScreen/CallSummaryScreen.tsx
 import React, { useState } from 'react';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   Chip,
   TextField,
   Button,

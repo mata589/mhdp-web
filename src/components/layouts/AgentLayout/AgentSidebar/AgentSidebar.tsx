@@ -26,17 +26,18 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
 
+
 const agentNavItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/active-calls', label: 'Active calls', icon: PhoneIcon },
-  { path: '/call-history', label: 'Call history', icon: HistoryIcon },
-  { path: '/analytics', label: 'Analytics', icon: AnalyticsIcon },
+  { path: '/agent/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { path: '/agent/active-calls', label: 'Active calls', icon: PhoneIcon },
+  { path: '/agent/call-history', label: 'Call history', icon: HistoryIcon },
+  { path: '/agent/analytics', label: 'Analytics', icon: AnalyticsIcon },
 ];
 
 const secondaryNavItems = [
-  { path: '/training', label: 'Training materials', icon: TrainingIcon },
-  { path: '/emergency', label: 'Emergency guide', icon: EmergencyIcon },
-  { path: '/help', label: 'Help and support', icon: HelpIcon },
+  { path: '/agent/training', label: 'Training materials', icon: TrainingIcon },
+  { path: '/agent/emergency', label: 'Emergency guide', icon: EmergencyIcon },
+  { path: '/agent/help', label: 'Help and support', icon: HelpIcon },
 ];
 
 const DRAWER_WIDTH = 320;
@@ -47,7 +48,7 @@ export const AgentSidebar: React.FC = () => {
   const { user, logout } = useAuth();
 
   // Set dashboard as default if at root or no specific path
-  const currentPath = location.pathname === '/' ? '/dashboard' : location.pathname;
+  const currentPath = location.pathname === '/agent' ? '/agent/dashboard' : location.pathname;
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -246,7 +247,7 @@ export const AgentSidebar: React.FC = () => {
         <Divider sx={{ mb: 2, borderColor: '#e5e7eb' }} />
         
         <ListItemButton
-          onClick={() => handleNavigation('/settings')}
+          onClick={() => handleNavigation('/agent/settings')}
           sx={{
             borderRadius: '8px',
             py: '10px',

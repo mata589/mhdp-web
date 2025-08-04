@@ -1,8 +1,8 @@
 // File: src/pages/admin/AdminDashboard/AdminDashboard.tsx
 import React, { useState } from 'react';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,

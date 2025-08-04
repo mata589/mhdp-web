@@ -27,18 +27,19 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
 
+
 const supervisorNavItems = [
   { path: '/supervisor', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/live-monitoring', label: 'Live monitoring', icon: MonitorIcon },
-  { path: '/escalations', label: 'Escalations', icon: EscalationIcon },
-  { path: '/call-history', label: 'Call history', icon: HistoryIcon },
-  { path: '/staff-performance', label: 'Staff performance', icon: StaffIcon },
-  { path: '/analytics', label: 'Analytics', icon: AnalyticsIcon },
+  { path: '/supervisor/live-monitoring', label: 'Live monitoring', icon: MonitorIcon },
+  { path: '/supervisor/escalations', label: 'Escalations', icon: EscalationIcon },
+  { path: '/supervisor/call-history', label: 'Call history', icon: HistoryIcon },
+  { path: '/supervisor/staff-performance', label: 'Staff performance', icon: StaffIcon },
+  { path: '/supervisor/analytics', label: 'Analytics', icon: AnalyticsIcon },
 ];
 
 const secondaryNavItems = [
-  { path: '/training', label: 'Training materials', icon: TrainingIcon },
-  { path: '/help', label: 'Help and support', icon: HelpIcon },
+  { path: '/supervisor/training', label: 'Training materials', icon: TrainingIcon },
+  { path: '/supervisor/help', label: 'Help and support', icon: HelpIcon },
 ];
 
 const DRAWER_WIDTH = 240;
@@ -195,7 +196,7 @@ export const SupervisorSidebar: React.FC = () => {
         <Divider sx={{ mb: 2, borderColor: '#e5e7eb' }} />
         
         <ListItemButton
-          onClick={() => handleNavigation('/settings')}
+          onClick={() => handleNavigation('/supervisor/settings')}
           sx={{
             borderRadius: 2,
             py: 1.5,

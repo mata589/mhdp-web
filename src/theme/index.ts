@@ -15,13 +15,13 @@ export const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#008080', // Teal
+      main: '#008080', 
       light: '#4db6b6',
       dark: '#005959',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#ffa500', // Orange
+      main: '#ffa500', 
       light: '#ffcc66',
       dark: '#cc7700',
       contrastText: '#000000',

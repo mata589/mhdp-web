@@ -1,12 +1,12 @@
 // File: src/pages/agent/LiveCallInterface/LiveCallInterface.tsx
 import React, { useState, useEffect } from 'react';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Box,
   Card,
   CardContent,
   Typography,
   Button,
-  Grid,
   Avatar,
   Chip,
   IconButton,
