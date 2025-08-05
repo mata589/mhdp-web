@@ -15,7 +15,7 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Fixed Sidebar */}
-      <Box sx={{ width: 240, flexShrink: 0 }}>
+      <Box sx={{ width: 320, flexShrink: 0 }}>
         <Sidebar />
       </Box>
 
