@@ -9,6 +9,24 @@ declare module '@mui/material/styles' {
   interface SimplePaletteColorOptions {
     lighter?: string;
   }
+
+  interface Palette {
+    status: {
+      available: string;
+      busy: string;
+      away: string;
+      offline: string;
+    };
+  }
+
+  interface PaletteOptions {
+    status?: {
+      available?: string;
+      busy?: string;
+      away?: string;
+      offline?: string;
+    };
+  }
 }
 
 export const theme = createTheme({
@@ -40,6 +58,12 @@ export const theme = createTheme({
     },
     success: {
       main: '#4caf50', // Green for stable states
+    },
+    status: {
+      available: '#4ade80', // Green for available
+      busy: '#f59e0b',      // Amber for busy
+      away: '#ef4444',      // Red for away
+      offline: '#6b7280'    // Gray for offline
     },
     background: {
       default: '#fafafa',

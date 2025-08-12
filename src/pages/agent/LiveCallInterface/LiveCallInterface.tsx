@@ -176,144 +176,208 @@ export const LiveCallInterface: React.FC = () => {
         {/* Left Panel - Call Info & Transcription */}
         <Grid item xs={12} md={8}>
           {/* Call Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-            <Box sx={{ 
-              width: 8, 
-              height: 8, 
-              borderRadius: '50%', 
-              backgroundColor: '#f44336' 
-            }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Live Call - {formatTime(callDuration)}
-            </Typography>
-          </Box>
+    
 
-          {/* Call Details Card */}
-          <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+       {/* Main Container Card */}
+       <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: '#FFFFFF', border: '1px solid #DADADA' }}>
             <CardContent sx={{ p: 3 }}>
-              <Grid container spacing={3}>
-                <Grid item xs={6} sm={2}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Caller ID
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {callData.callerId}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={2}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Caller Type
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {callData.callerType}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={2}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Language
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {callData.language}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6} sm={2}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Risk Level
-                  </Typography>
-                  <Chip
-                    label={callData.riskLevel}
-                    size="small"
-                    sx={{
-                      backgroundColor: callData.riskLevel === 'High' ? '#f44336' : 
-                                     callData.riskLevel === 'Medium' ? '#ff9800' : '#4caf50',
-                      color: 'white',
-                      fontWeight: 500,
-                      height: 20,
-                      fontSize: '0.75rem'
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={2}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Caller Sex
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {callData.callerSex}
-                  </Typography>
-                </Grid>
-              </Grid>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  Speaking:
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {callData.speakerName}
+              {/* Live Call Header */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <Box sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  backgroundColor: '#f44336' 
+                }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Live Call - {formatTime(callDuration)}
                 </Typography>
               </Box>
+
+              {/* Call Details Inner Card */}
+              <Card sx={{ borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: '#f8fffe', border: '1px solid #CCE5E5' }}>
+                <CardContent sx={{ p: 3 }}>
+                  {/* First Row */}
+                  <Grid container spacing={4} sx={{ mb: 3 }}>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Caller ID
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '1rem', color: '#333' }}>
+                        {callData.callerId}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Caller Type
+                      </Typography>
+                      <Chip
+                        label="Patient"
+                        size="small"
+                        sx={{
+                          backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                          border: '1px solid #0ea5e9',
+                          color: '#0284c7',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          height: 28,
+                          borderRadius: '14px'
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Language
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '1rem', color: '#333' }}>
+                        {callData.language}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Caller Sex
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '1rem', color: '#333' }}>
+                        {callData.callerSex}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Trajectory of care
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '1rem', color: '#333' }}>
+                        Already in care
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                  
+                  {/* Second Row */}
+                  <Grid container spacing={4}>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Risk Level
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ 
+                          width: 8, 
+                          height: 8, 
+                          borderRadius: '50%', 
+                          backgroundColor: '#f44336' 
+                        }} />
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#f44336', fontSize: '1rem' }}>
+                          Critical
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={2.4}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Agent
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '1rem', color: '#333' }}>
+                        James Gipir
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={7.2}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.75rem', display: 'block', mb: 1 }}>
+                        Speakers
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Chip
+                          label="Caller (54%)"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#f5f5f5',
+                            color: '#666',
+                            fontWeight: 500,
+                            fontSize: '0.75rem',
+                            height: 28,
+                            borderRadius: '14px',
+                            border: '1px solid #e0e0e0'
+                          }}
+                        />
+                        <Chip
+                          label="Agent (45%)"
+                          size="small"
+                          sx={{
+                            backgroundColor: '#f5f5f5',
+                            color: '#666',
+                            fontWeight: 500,
+                            fontSize: '0.75rem',
+                            height: 28,
+                            borderRadius: '14px',
+                            border: '1px solid #e0e0e0'
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
 
-          {/* Call Controls */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 3 }}>
-            <IconButton
-              sx={{ 
-                width: 56, 
-                height: 56, 
-                backgroundColor: '#f5f5f5',
-                '&:hover': { backgroundColor: '#e0e0e0' }
-              }}
-            >
-              <Mic />
-            </IconButton>
-            <IconButton
-              sx={{ 
-                width: 56, 
-                height: 56, 
-                backgroundColor: '#f5f5f5',
-                '&:hover': { backgroundColor: '#e0e0e0' }
-              }}
-            >
-              <VolumeUp />
-            </IconButton>
-            <IconButton
-              sx={{ 
-                width: 56, 
-                height: 56, 
-                backgroundColor: '#212121',
-                color: 'white',
-                '&:hover': { backgroundColor: '#424242' }
-              }}
-            >
-              <Pause />
-            </IconButton>
-            <IconButton
-              sx={{ 
-                width: 56, 
-                height: 56, 
-                backgroundColor: '#f44336',
-                color: 'white',
-                '&:hover': { backgroundColor: '#d32f2f' }
-              }}
-              onClick={handleEndCall}
-            >
-              <PhoneDisabled />
-            </IconButton>
-            <IconButton
-              sx={{ 
-                width: 56, 
-                height: 56, 
-                backgroundColor: '#ff9800',
-                color: 'white',
-                '&:hover': { backgroundColor: '#f57c00' }
-              }}
-            >
-              <Warning />
-            </IconButton>
-          </Box>
-
+          {/* Call Controls Container */}
+          <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: '#FFFFFF', border: '1px solid #DADADA' }}>
+            <CardContent sx={{ p: 3 }}>
+              {/* Call Controls */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                <IconButton
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { backgroundColor: '#e0e0e0' }
+                  }}
+                >
+                  <Mic />
+                </IconButton>
+                <IconButton
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { backgroundColor: '#e0e0e0' }
+                  }}
+                >
+                  <VolumeUp />
+                </IconButton>
+                <IconButton
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    backgroundColor: '#212121',
+                    color: 'white',
+                    '&:hover': { backgroundColor: '#424242' }
+                  }}
+                >
+                  <Pause />
+                </IconButton>
+                <IconButton
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    backgroundColor: '#f44336',
+                    color: 'white',
+                    '&:hover': { backgroundColor: '#d32f2f' }
+                  }}
+                  onClick={handleEndCall}
+                >
+                  <PhoneDisabled />
+                </IconButton>
+                <IconButton
+                  sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    backgroundColor: '#ff9800',
+                    color: 'white',
+                    '&:hover': { backgroundColor: '#f57c00' }
+                  }}
+                >
+                  <Warning />
+                </IconButton>
+              </Box>
+            </CardContent>
+          </Card>
           {/* Transcription */}
           <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             <CardContent sx={{ p: 3 }}>
@@ -392,78 +456,192 @@ export const LiveCallInterface: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Right Panel - Analysis & Actions */}
-        <Grid item xs={12} md={4}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-            Analysis
+       {/* Right Panel - Analysis & Actions */}
+<Grid item xs={12} md={4}>
+  {/* Analysis Section */}
+  <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: '#FFFFFF', border: '1px solid #DADADA' }}>
+    <CardContent sx={{ p: 3 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+        Analysis
+      </Typography>
+
+      {/* Agent Sentiment */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#333' }}>
+            Agent Sentiment
           </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
+              80%
+            </Typography>
+            <Chip 
+              label="Positive" 
+              size="small" 
+              sx={{ 
+                backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                border: '1px solid #22c55e',
+                color: '#15803d',
+                fontWeight: 600,
+                fontSize: '0.7rem'
+              }} 
+            />
+          </Box>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={80}
+          sx={{ 
+            height: 8, 
+            borderRadius: 4, 
+            backgroundColor: '#f0f0f0',
+            '& .MuiLinearProgress-bar': { 
+              backgroundColor: '#008080',
+              borderRadius: 4
+            }
+          }}
+        />
+      </Box>
 
-          {/* Sentiment Analysis */}
-          <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Agent Sentiment
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      60%
-                    </Typography>
-                    <Chip label="Neutral" size="small" sx={{ backgroundColor: '#607d8b', color: 'white' }} />
-                  </Box>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={60}
-                  sx={{ height: 6, borderRadius: 3, backgroundColor: '#f5f5f5' }}
-                />
-              </Box>
+      {/* Caller Sentiment */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#333' }}>
+            Caller Sentiment
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
+              69%
+            </Typography>
+            <Chip 
+              label="Neutral" 
+              size="small" 
+              sx={{ 
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid #f59e0b',
+                color: '#d97706',
+                fontWeight: 600,
+                fontSize: '0.7rem'
+              }} 
+            />
+          </Box>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={69}
+          sx={{ 
+            height: 8, 
+            borderRadius: 4, 
+            backgroundColor: '#f0f0f0',
+            '& .MuiLinearProgress-bar': { 
+              backgroundColor: '#008080',
+              borderRadius: 4
+            }
+          }}
+        />
+      </Box>
 
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Caller Sentiment
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      60%
-                    </Typography>
-                    <Chip label="Neutral" size="small" sx={{ backgroundColor: '#607d8b', color: 'white' }} />
-                  </Box>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={60}
-                  sx={{ height: 6, borderRadius: 3, backgroundColor: '#f5f5f5' }}
-                />
-              </Box>
+      {/* Conversation Quality */}
+      <Box sx={{ mb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#333' }}>
+            Conversation Quality
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
+              84%
+            </Typography>
+            <Chip 
+              label="Very Good" 
+              size="small" 
+              sx={{ 
+                backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                border: '1px solid #22c55e',
+                color: '#15803d',
+                fontWeight: 600,
+                fontSize: '0.7rem'
+              }} 
+            />
+          </Box>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={84}
+          sx={{ 
+            height: 8, 
+            borderRadius: 4, 
+            backgroundColor: '#f0f0f0',
+            '& .MuiLinearProgress-bar': { 
+              backgroundColor: '#008080',
+              borderRadius: 4
+            }
+          }}
+        />
+      </Box>
+    </CardContent>
+  </Card>
 
-              <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Conversation Quality
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      84%
-                    </Typography>
-                    <Chip label="Very Good" size="small" sx={{ backgroundColor: '#4caf50', color: 'white' }} />
-                  </Box>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={84}
-                  sx={{ 
-                    height: 6, 
-                    borderRadius: 3, 
-                    backgroundColor: '#f5f5f5',
-                    '& .MuiLinearProgress-bar': { backgroundColor: '#4caf50' }
-                  }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
+  {/* Technical Quality Section */}
+  <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', backgroundColor: '#FFFFFF', border: '1px solid #DADADA' }}>
+    <CardContent sx={{ p: 3 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: '#333' }}>
+        Technical Quality
+      </Typography>
+
+      {/* Network Quality */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#333' }}>
+            Network Quality
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
+            3.8/5
+          </Typography>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={76} // 3.8/5 = 76%
+          sx={{ 
+            height: 6, 
+            borderRadius: 3, 
+            backgroundColor: '#f0f0f0',
+            '& .MuiLinearProgress-bar': { 
+              backgroundColor: '#ff9800',
+              borderRadius: 3
+            }
+          }}
+        />
+      </Box>
+
+      {/* Audio Quality */}
+      <Box sx={{ mb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#333' }}>
+            Audio Quality
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: '#333' }}>
+            4.5/5
+          </Typography>
+        </Box>
+        <LinearProgress 
+          variant="determinate" 
+          value={90} // 4.5/5 = 90%
+          sx={{ 
+            height: 6, 
+            borderRadius: 3, 
+            backgroundColor: '#f0f0f0',
+            '& .MuiLinearProgress-bar': { 
+              backgroundColor: '#ff9800',
+              borderRadius: 3
+            }
+          }}
+        />
+        <Typography variant="caption" sx={{ color: '#999', fontSize: '0.75rem', mt: 1, display: 'block' }}>
+          Clear audio with minimal background noise
+        </Typography>
+      </Box>
+    </CardContent>
+  </Card>
 
           {/* Detected Keywords */}
           <Card sx={{ mb: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>

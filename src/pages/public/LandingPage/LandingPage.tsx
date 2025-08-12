@@ -10,6 +10,7 @@ import clinicalImage from '../../../assets/images/clinicalImage.png';
 import collaborators from '../../../assets/images/collaborators.png';
 import mentalHealthImage from '../../../assets/images/mental-health-challenges.png';
 import patientsSketchImage from '../../../assets/images/patientsSketchImage.png';
+import lablogos from '../../../assets/images/lablogos.png';
 import providersSketchImage from '../../../assets/images/providersSketchImage.png';
 import supervisorsSketchImage from '../../../assets/images/supervisorsSketchImage.png';
 import {
@@ -1032,9 +1033,18 @@ const LandingPage = () => {
                         <Grid item xs={12} md={4}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
                                 <Box sx={{ fontSize: '3rem' }}></Box>
-                                <Typography variant="h4" fontWeight="bold">
-                                    Makerere AI Lab
-                                </Typography>
+                                <Box
+                            component="img"
+                            src={lablogos}
+                            alt="Healthcare Providers"
+                            sx={{
+                                width: '100%',
+                                maxWidth: 300,
+                                height: 'auto',
+                                objectFit: 'contain'
+                            }}
+                        />
+                                
                             </Box>
                             <Box sx={{ display: 'flex', gap: 3 }}>
                                 <IconButton size="large" sx={{ bgcolor: 'white', boxShadow: 2, width: 50, height: 50 }}>

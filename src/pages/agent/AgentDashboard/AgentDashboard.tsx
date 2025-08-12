@@ -30,12 +30,14 @@ import {
   TrendingUp,
   Person,
   FilterList,
+  Star,
 } from '@mui/icons-material';
 import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
 import { DataTable } from '../../../components/common/DataTable/DataTable';
 
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCallData } from '../../../hooks/useCallData';
+import StatusChip from '../../../components/common/StatusChip/StatusChip';
 
 const statusColors = {
   'Available': '#4caf50',
@@ -43,16 +45,104 @@ const statusColors = {
   'Break': '#607d8b'
 };
 
-const riskColors = {
-  'Low': '#4caf50',
-  'Medium': '#ff9800',
-  'High': '#f44336'
+// Custom chip component for Risk Level (with dot)
+const RiskChip: React.FC<{ riskLevel: 'Low' | 'Medium' | 'High' }> = ({ riskLevel }) => {
+  const riskStyles = {
+    'Low': {
+      backgroundColor: 'rgba(74, 222, 128, 0.1)',
+      borderColor: '#22c55e',
+      color: '#15803d',
+      dotColor: '#22c55e'
+    },
+    'Medium': {
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      borderColor: '#f59e0b',
+      color: '#d97706',
+      dotColor: '#f59e0b'
+    },
+    'High': {
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderColor: '#ef4444',
+      color: '#dc2626',
+      dotColor: '#ef4444'
+    }
+  };
+
+  const currentStyle = riskStyles[riskLevel];
+
+  return (
+    <Chip 
+      label={riskLevel}
+      sx={{ 
+        backgroundColor: currentStyle.backgroundColor,
+        color: currentStyle.color,
+        border: `2px solid ${currentStyle.borderColor}`,
+        fontWeight: 700,
+        fontSize: '0.75rem',
+        width: 'fit-content',
+        '& .MuiChip-label': {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontWeight: 700,
+          '&::before': {
+            content: '""',
+            width: '8px',
+            height: '8px',
+            backgroundColor: currentStyle.dotColor,
+            borderRadius: '50%'
+          }
+        }
+      }}
+    />
+  );
 };
 
-const outcomeColors = {
-  'Advice Given': '#4caf50',
-  'Escalated': '#f44336',
-  'Referred': '#607d8b'
+// Custom chip component for Outcome (without dot)
+const OutcomeChip: React.FC<{ outcome: 'Advice Given' | 'Escalated' | 'Referred' }> = ({ outcome }) => {
+  const outcomeStyles = {
+    'Advice Given': {
+      backgroundColor: 'rgba(74, 222, 128, 0.1)',
+      borderColor: '#22c55e',
+      color: '#15803d',
+    },
+    'Escalated': {
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderColor: '#ef4444',
+      color: '#dc2626',
+    },
+    'Referred': {
+      backgroundColor: 'rgba(96, 125, 139, 0.1)',
+      borderColor: '#607d8b',
+      color: '#455a64',
+    }
+  };
+
+  const currentStyle = outcomeStyles[outcome];
+
+  return (
+    <Chip 
+      label={outcome}
+      sx={{ 
+        backgroundColor: currentStyle.backgroundColor,
+        color: currentStyle.color,
+        border: `2px solid ${currentStyle.borderColor}`,
+        fontWeight: 700,
+        fontSize: '0.75rem',
+        width: 'fit-content'
+      }}
+    />
+  );
+};
+
+// Helper function to format date and time
+const formatDateTime = (dateTimeString: string) => {
+  // Extract date and time parts from the string
+  const parts = dateTimeString.split(' ');
+  const date = `${parts[1]} ${parts[2]} ${parts[3]}`;
+  const time = `${parts[4]} ${parts[5]} - ${parts[7]} ${parts[8]}`;
+  
+  return { date, time };
 };
 
 export const AgentDashboard: React.FC = () => {
@@ -69,8 +159,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'English',
       primaryTopic: 'Anxiety Management',
-      riskLevel: 'Medium',
-      outcome: 'Advice Given',
+      riskLevel: 'Medium' as const,
+      outcome: 'Advice Given' as const,
       qualityScore: '78%'
     },
     {
@@ -78,8 +168,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'French',
       primaryTopic: 'Depression',
-      riskLevel: 'High',
-      outcome: 'Escalated',
+      riskLevel: 'High' as const,
+      outcome: 'Escalated' as const,
       qualityScore: '78%'
     },
     {
@@ -87,8 +177,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Tue, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'English',
       primaryTopic: 'Psychosis',
-      riskLevel: 'Medium',
-      outcome: 'Advice Given',
+      riskLevel: 'Medium' as const,
+      outcome: 'Advice Given' as const,
       qualityScore: '80%'
     },
     {
@@ -96,8 +186,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'English',
       primaryTopic: 'Psychosis',
-      riskLevel: 'Low',
-      outcome: 'Referred',
+      riskLevel: 'Low' as const,
+      outcome: 'Referred' as const,
       qualityScore: '78%'
     },
     {
@@ -105,8 +195,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'Spanish',
       primaryTopic: 'Depression',
-      riskLevel: 'Medium',
-      outcome: 'Advice Given',
+      riskLevel: 'Medium' as const,
+      outcome: 'Advice Given' as const,
       qualityScore: '78%'
     }
   ];
@@ -119,22 +209,55 @@ export const AgentDashboard: React.FC = () => {
     <Box sx={{ p: 3, backgroundColor: '#fafafa', minHeight: '100vh' }}>
       {/* Header Section */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <Typography variant="h4" sx={{ fontWeight: 600, color: '#212121' }}>
-            Hey, James
-          </Typography>
-          <Chip 
-            label={status}
-            sx={{ 
-              backgroundColor: statusColors[status],
-              color: 'white',
-              fontWeight: 500,
-              fontSize: '0.75rem'
-            }}
-          />
-        </Box>
-      </Box>
-
+  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Typography variant="h4" sx={{ fontWeight: 600, color: '#212121' }}>
+        Hey, James
+      </Typography>
+      <StatusChip status={status} />
+    </Box>
+    
+    <Box 
+      sx={{ 
+        display: 'flex',
+        border: '2px solid #e0e0e0',
+        borderRadius: '25px',
+        overflow: 'hidden',
+        backgroundColor: 'white'
+      }}
+    >
+      {(['Available', 'Busy', 'Break'] as const).map((statusOption, index) => (
+        <Button
+          key={statusOption}
+          onClick={() => handleStatusChange(statusOption)}
+          sx={{
+            px: 3,
+            py: 1,
+            backgroundColor: status === statusOption ? 'white' : 'transparent',
+            color: status === statusOption ? '#000' : '#666',
+            fontWeight: status === statusOption ? 600 : 400,
+            borderRadius: 0,
+            border: 'none',
+            borderRight: index < 2 ? '1px solid #e0e0e0' : 'none',
+            textTransform: 'none',
+            minWidth: 80,
+            '&:hover': {
+              backgroundColor: status === statusOption ? 'white' : '#f5f5f5',
+            },
+            '&::before': status === statusOption ? {
+              content: '"✓"',
+              marginRight: '8px',
+              fontSize: '14px',
+              fontWeight: 600
+            } : {}
+          }}
+        >
+          {statusOption}
+        </Button>
+      ))}
+    </Box>
+  </Box>
+</Box>
       {/* Action Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
@@ -154,7 +277,7 @@ export const AgentDashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                   Answer call
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary"sx={{ fontSize: '0.75rem' }}>
                   Take incoming helpline calls
                 </Typography>
               </Box>
@@ -179,7 +302,7 @@ export const AgentDashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                   View call history
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary"sx={{ fontSize: '0.75rem' }}>
                   Review past calls and insights
                 </Typography>
               </Box>
@@ -204,7 +327,7 @@ export const AgentDashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                   Escalate a case
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary"sx={{ fontSize: '0.75rem' }}>
                   Flag urgent cases to supervisor
                 </Typography>
               </Box>
@@ -383,69 +506,62 @@ export const AgentDashboard: React.FC = () => {
 
         {/* Table Rows */}
         <Stack spacing={1}>
-          {recentCalls.map((call, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1fr',
-                gap: 2,
-                p: 2,
-                alignItems: 'center',
-                '&:hover': { backgroundColor: '#f9f9f9' },
-                borderRadius: '8px'
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {call.dateTime}
-              </Typography>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {call.id}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {call.caller}
-                </Typography>
-              </Box>
-              <Typography variant="body2">
-                {call.primaryTopic}
-              </Typography>
-              <Chip
-                label={call.riskLevel}
-                size="small"
+          {recentCalls.map((call, index) => {
+            const { date, time } = formatDateTime(call.dateTime);
+            return (
+              <Box
+                key={index}
                 sx={{
-                  backgroundColor: riskColors[call.riskLevel as keyof typeof riskColors],
-                  color: 'white',
-                  fontWeight: 500,
-                  width: 'fit-content'
-                }}
-              />
-              <Chip
-                label={call.outcome}
-                size="small"
-                sx={{
-                  backgroundColor: outcomeColors[call.outcome as keyof typeof outcomeColors],
-                  color: 'white',
-                  fontWeight: 500,
-                  width: 'fit-content'
-                }}
-              />
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {call.qualityScore}
-              </Typography>
-              <Button
-                variant="text"
-                size="small"
-                sx={{ 
-                  color: '#008080',
-                  fontWeight: 500,
-                  width: 'fit-content'
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1fr',
+                  gap: 2,
+                  p: 2,
+                  alignItems: 'center',
+                  '&:hover': { backgroundColor: '#f9f9f9' },
+                  borderRadius: '8px'
                 }}
               >
-                View
-              </Button>
-            </Box>
-          ))}
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {date}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {time}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {call.id}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {call.caller}
+                  </Typography>
+                </Box>
+                <Typography variant="body2">
+                  {call.primaryTopic}
+                </Typography>
+                <RiskChip riskLevel={call.riskLevel} />
+                <OutcomeChip outcome={call.outcome} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Star sx={{ color: '#ffd700', fontSize: 16 }} />
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {call.qualityScore}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="text"
+                  size="small"
+                  sx={{ 
+                    color: '#008080',
+                    fontWeight: 500,
+                    width: 'fit-content'
+                  }}
+                >
+                  View
+                </Button>
+              </Box>
+            );
+          })}
         </Stack>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
