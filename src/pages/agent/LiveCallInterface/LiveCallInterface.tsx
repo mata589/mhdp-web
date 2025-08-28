@@ -1,6 +1,7 @@
 // File: src/pages/agent/LiveCallInterface/LiveCallInterface.tsx
 import React, { useState, useEffect } from 'react';
 import { GridLegacy as Grid } from '@mui/material';
+import noactivecall from '../../../assets/images/noactivecall.png';
 import {
   Box,
   Card,
@@ -142,8 +143,19 @@ export const LiveCallInterface: React.FC = () => {
               Ready for Next Call
             </Typography>
           </Box>
+          <Box
+                            component="img"
+                            src={noactivecall}
+                            alt="Healthcare Providers"
+                            sx={{
+                                width: '100%',
+                                maxWidth: 300,
+                                height: 'auto',
+                                objectFit: 'contain'
+                            }}
+                        />
           
-          <Box sx={{ mb: 4 }}>
+          {/* <Box sx={{ mb: 4 }}>
             <svg width="200" height="150" viewBox="0 0 200 150" style={{ marginBottom: '20px' }}>
               <rect x="50" y="60" width="100" height="60" rx="8" fill="#008080" />
               <rect x="55" y="65" width="90" height="35" rx="4" fill="#ffffff" />
@@ -154,7 +166,7 @@ export const LiveCallInterface: React.FC = () => {
               <rect x="75" y="100" width="15" height="8" rx="2" fill="#008080" />
               <rect x="110" y="100" width="15" height="8" rx="2" fill="#008080" />
             </svg>
-          </Box>
+          </Box> */}
           
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: '#212121' }}>
             No active call

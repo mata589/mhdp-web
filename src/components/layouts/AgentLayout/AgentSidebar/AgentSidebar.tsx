@@ -22,6 +22,8 @@ import {
   Help as HelpIcon,
   Settings as SettingsIcon,
   ExitToApp as SignOutIcon,
+  Voicemail as VoicemailIcon,
+  PhoneMissed as MissedCallsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -31,6 +33,8 @@ const agentNavItems = [
   { path: '/agent/dashboard', label: 'Dashboard', icon: DashboardIcon },
   { path: '/agent/active-calls', label: 'Active calls', icon: PhoneIcon },
   { path: '/agent/call-history', label: 'Call history', icon: HistoryIcon },
+  { path: '/agent/voicemail', label: 'Voicemail', icon: VoicemailIcon },
+  { path: '/agent/missed-calls', label: 'Missed calls', icon: MissedCallsIcon },
   { path: '/agent/analytics', label: 'Analytics', icon: AnalyticsIcon },
 ];
 

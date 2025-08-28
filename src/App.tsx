@@ -34,6 +34,9 @@ import { LandingPage } from './pages/public/LandingPage';
 import { CallHistory } from './pages/agent/CallHistory/CallHistory';
 import { Analytics } from './pages/agent/Analytics/Analytics';
 import { LiveMonitoring } from './pages/supervisor/LiveMonitoring/LiveMonitoring';
+import { VoicemailListPage } from './pages/agent/VoicemailListPage/VoicemailListPage';
+import { VoicemailPage } from './pages/agent/VoicemailPage/VoicemailPage';
+import { MissedCallsPage } from './pages/agent/MissedCallsPage/MissedCallsPage';
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -54,6 +57,9 @@ const AgentRoutes: React.FC = () => {
       <Route path="/live-call" element={<LiveCallInterface />} />
       <Route path="/call-summary/:callId" element={<CallSummaryScreen />} />
       <Route path="/call-history" element={<CallHistory />} />
+      <Route path="/voicemail" element={<VoicemailListPage />} />
+      <Route path="/voicemail/:voicemailId" element={<VoicemailPage />} />
+      <Route path="/missed-calls" element={<MissedCallsPage />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/training" element={<div>Training Materials Page</div>} />
       <Route path="/emergency" element={<div>Emergency Guide Page</div>} />
