@@ -19,17 +19,17 @@ import {
   TableRow,
   Menu,
   IconButton,
-  Avatar,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   FilterList as FilterIcon,
-  Visibility as ViewIcon,
   Phone as CallBackIcon,
+  PlayArrow as PlayIcon,
+  Visibility as ViewIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  Voicemail as VoicemailIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
 
 interface VoicemailItem {
   id: string;
@@ -38,66 +38,104 @@ interface VoicemailItem {
   time: string;
   timeRange: string;
   duration: string;
+  primaryTopic: string;
+  language: string;
   riskLevel: 'Low' | 'Medium' | 'High' | 'Critical';
-  status: 'Unresolved' | 'Resolved';
+  status: 'Unresolved' | 'Resolved' | 'In progress';
   priority: 'urgent' | 'normal';
 }
 
-// Mock data - replace with actual API call
+// Updated mock data to match the design
 const mockVoicemails: VoicemailItem[] = [
+  {
+    id: '2090',
+    callerId: '#2090',
+    date: 'Mon, July 13, 2025',
+    time: '10:43 AM',
+    timeRange: '10:43 AM - 10:51 AM',
+    duration: '2:18',
+    primaryTopic: 'Anxiety',
+    language: 'English',
+    riskLevel: 'Medium',
+    status: 'Resolved',
+    priority: 'normal',
+  },
   {
     id: '2031',
     callerId: '#2031',
     date: 'Mon, July 13, 2025',
     time: '10:43 AM',
-    timeRange: '10:43 AM - 11:06 AM',
-    duration: '2:18',
+    timeRange: '10:43 AM - 10:51 AM',
+    duration: '3:15',
+    primaryTopic: 'Depression',
+    language: 'English',
     riskLevel: 'Critical',
     status: 'Unresolved',
     priority: 'urgent',
   },
   {
-    id: '2090',
-    callerId: '#2090',
+    id: '2034',
+    callerId: '#2034',
     date: 'Mon, July 13, 2025',
-    time: '10:41 AM',
-    timeRange: '10:41 AM - 10:44 AM',
-    duration: '3:15',
-    riskLevel: 'Medium',
-    status: 'Resolved',
-    priority: 'normal',
-  },
-  {
-    id: '2246',
-    callerId: '#2246',
-    date: 'Mon, July 13, 2025',
-    time: '10:39 AM',
-    timeRange: '10:39 AM - 10:41 AM',
+    time: '10:43 AM',
+    timeRange: '10:43 AM - 10:51 AM',
     duration: '1:47',
-    riskLevel: 'High',
-    status: 'Unresolved',
-    priority: 'urgent',
-  },
-  {
-    id: '6043',
-    callerId: '#6043',
-    date: 'Mon, July 13, 2025',
-    time: '10:37 AM',
-    timeRange: '10:37 AM - 10:38 AM',
-    duration: '0:58',
+    primaryTopic: 'Psychosis',
+    language: 'Luganda',
     riskLevel: 'Low',
     status: 'Resolved',
     priority: 'normal',
   },
   {
-    id: '2056',
-    callerId: '#2056',
+    id: '2031b',
+    callerId: '#2031',
     date: 'Mon, July 13, 2025',
-    time: '10:35 AM',
-    timeRange: '10:35 AM - 10:37 AM',
+    time: '10:43 AM',
+    timeRange: '10:43 AM - 10:51 AM',
+    duration: '0:58',
+    primaryTopic: 'Anxiety',
+    language: 'English',
+    riskLevel: 'High',
+    status: 'In progress',
+    priority: 'urgent',
+  },
+  {
+    id: '2063',
+    callerId: '#2063',
+    date: 'Mon, July 13, 2025',
+    time: '10:43 AM',
+    timeRange: '10:43 AM - 10:51 AM',
     duration: '2:43',
+    primaryTopic: 'Anxiety',
+    language: 'Swahili',
+    riskLevel: 'Low',
+    status: 'Resolved',
+    priority: 'normal',
+  },
+  {
+    id: '2031c',
+    callerId: '#2031',
+    date: 'Mon, July 13, 2025',
+    time: '10:43 AM',
+    timeRange: '10:43 AM - 10:51 AM',
+    duration: '1:12',
+    primaryTopic: 'Depression',
+    language: 'English',
+    riskLevel: 'Low',
+    status: 'In progress',
+    priority: 'normal',
+  },
+  {
+    id: '2012',
+    callerId: '#2012',
+    date: 'Mon, July 13, 2025',
+    time: '10:43 AM',
+    timeRange: '10:43 AM - 10:51 AM',
+    duration: '3:45',
+    primaryTopic: 'Psychosis',
+    language: 'English',
     riskLevel: 'Medium',
-    status: 'Unresolved',
+    status: 'Resolved',
     priority: 'normal',
   },
 ];
@@ -112,15 +150,18 @@ export const VoicemailListPage: React.FC = () => {
   const [filtersMenuAnchor, setFiltersMenuAnchor] = useState<null | HTMLElement>(null);
 
   const itemsPerPage = 10;
-  const totalItems = 45; // Mock total
+  const totalItems = 60; // Updated to match design
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handleViewVoicemail = (voicemailId: string) => {
     navigate(`/agent/voicemail/${voicemailId}`);
   };
 
+  const handlePlayVoicemail = (voicemailId: string) => {
+    console.log('Playing voicemail:', voicemailId);
+  };
+
   const handleCallBack = (callId: string) => {
-    // Implement callback functionality
     console.log('Calling back:', callId);
   };
 
@@ -135,9 +176,16 @@ export const VoicemailListPage: React.FC = () => {
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'Resolved' 
-      ? { bgcolor: '#dcfce7', color: '#059669' }
-      : { bgcolor: '#fee2e2', color: '#dc2626' };
+    switch (status) {
+      case 'Resolved':
+        return { bgcolor: '#dcfce7', color: '#059669' };
+      case 'In progress':
+        return { bgcolor: '#dbeafe', color: '#2563eb' };
+      case 'Unresolved':
+        return { bgcolor: '#fee2e2', color: '#dc2626' };
+      default:
+        return { bgcolor: '#f3f4f6', color: '#6b7280' };
+    }
   };
 
   const handleFiltersMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -150,69 +198,14 @@ export const VoicemailListPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <VoicemailIcon sx={{ mr: 2, color: '#0d9488' }} />
-        <Typography variant="h5" fontWeight={600}>
-          Voicemails
-        </Typography>
-        <Chip
-          label={`${mockVoicemails.filter(v => v.status === 'Unresolved').length} Unresolved`}
-          sx={{ 
-            ml: 2, 
-            bgcolor: '#fee2e2', 
-            color: '#dc2626',
-            fontWeight: 500,
-          }}
-        />
-      </Box>
-
-      {/* Summary Cards */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <Card sx={{ flex: 1, p: 2 }}>
-          <Typography variant="h4" fontWeight={700} color="#dc2626">
-            {mockVoicemails.filter(v => v.priority === 'urgent').length}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Urgent Voicemails
-          </Typography>
-        </Card>
-        <Card sx={{ flex: 1, p: 2 }}>
-          <Typography variant="h4" fontWeight={700} color="#0d9488">
-            {mockVoicemails.length}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Total Today
-          </Typography>
-        </Card>
-        <Card sx={{ flex: 1, p: 2 }}>
-          <Typography variant="h4" fontWeight={700} color="#059669">
-            {mockVoicemails.filter(v => v.status === 'Resolved').length}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Resolved
-          </Typography>
-        </Card>
-        <Card sx={{ flex: 1, p: 2 }}>
-          <Typography variant="h4" fontWeight={700} color="#6b7280">
-            {Math.floor(mockVoicemails.reduce((acc, v) => {
-              const [min, sec] = v.duration.split(':').map(Number);
-              return acc + (min * 60 + sec);
-            }, 0) / 60)}m
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Avg. Duration
-          </Typography>
-        </Card>
-      </Box>
-
       {/* Filters Bar */}
       <Box sx={{ 
         display: 'flex', 
         gap: 2, 
         mb: 3, 
-        flexWrap: 'wrap',
         alignItems: 'center',
+        justifyContent: 'flex-start',
+        flexWrap: 'nowrap',
       }}>
         {/* Search */}
         <TextField
@@ -226,7 +219,14 @@ export const VoicemailListPage: React.FC = () => {
               </InputAdornment>
             ),
           }}
-          sx={{ minWidth: 300 }}
+          sx={{ 
+            flex: 1,
+            maxWidth: '350px',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '8px',
+              fontSize: '14px',
+            }
+          }}
           size="small"
         />
 
@@ -236,35 +236,56 @@ export const VoicemailListPage: React.FC = () => {
           onChange={(e) => setDateRange(e.target.value)}
           placeholder="Select date range"
           size="small"
-          sx={{ minWidth: 200 }}
+          sx={{ 
+            minWidth: '180px',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '8px',
+              fontSize: '14px',
+            }
+          }}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <ArrowDownIcon />
+                <ArrowDownIcon sx={{ color: '#9ca3af' }} />
               </InputAdornment>
             ),
           }}
         />
 
         {/* Status Filter */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl size="small" sx={{ 
+          minWidth: '110px',
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            fontSize: '14px',
+          }
+        }}>
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             displayEmpty
+            sx={{ fontSize: '14px' }}
           >
             <MenuItem value="All status">All status</MenuItem>
             <MenuItem value="Unresolved">Unresolved</MenuItem>
             <MenuItem value="Resolved">Resolved</MenuItem>
+            <MenuItem value="In progress">In progress</MenuItem>
           </Select>
         </FormControl>
 
         {/* Risk Level Filter */}
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ 
+          minWidth: '140px',
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            fontSize: '14px',
+          }
+        }}>
           <Select
             value={riskLevelFilter}
             onChange={(e) => setRiskLevelFilter(e.target.value)}
             displayEmpty
+            sx={{ fontSize: '14px' }}
           >
             <MenuItem value="All risk levels">All risk levels</MenuItem>
             <MenuItem value="Low">Low</MenuItem>
@@ -279,35 +300,48 @@ export const VoicemailListPage: React.FC = () => {
           variant="outlined"
           startIcon={<FilterIcon />}
           onClick={handleFiltersMenuOpen}
-          sx={{ borderColor: '#e5e7eb', color: '#374151' }}
+          sx={{ 
+            borderColor: '#d1d5db', 
+            color: '#6b7280',
+            borderRadius: '8px',
+            fontSize: '14px',
+            minWidth: '90px',
+            '&:hover': {
+              borderColor: '#9ca3af',
+              bgcolor: '#f9fafb'
+            }
+          }}
         >
           Filters
         </Button>
       </Box>
 
       {/* Table */}
-      <Card>
+      <Card sx={{ boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
-                  Voicemail
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Date & Time
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
-                  Duration
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
+                  Caller ID
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
-                  Risk Level
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
+                  Primary Topic
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
+                  Risk level
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Status
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Action
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
+                  
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -317,44 +351,12 @@ export const VoicemailListPage: React.FC = () => {
                   key={voicemail.id} 
                   sx={{ 
                     '&:hover': { bgcolor: '#f9fafb' },
-                    borderLeft: voicemail.priority === 'urgent' ? '3px solid #dc2626' : 'none',
+                    '&:not(:last-child)': { borderBottom: '1px solid #f3f4f6' },
                   }}
                 >
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar
-                        sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          bgcolor: voicemail.priority === 'urgent' ? '#dc2626' : '#0d9488',
-                          fontSize: '14px'
-                        }}
-                      >
-                        <VoicemailIcon fontSize="small" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" fontWeight={500}>
-                          Voicemail {voicemail.callerId}
-                        </Typography>
-                        {voicemail.priority === 'urgent' && (
-                          <Chip
-                            label="URGENT"
-                            size="small"
-                            sx={{ 
-                              bgcolor: '#fee2e2', 
-                              color: '#dc2626', 
-                              fontSize: '10px',
-                              height: 16,
-                              mt: 0.5,
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Box>
-                      <Typography variant="body2" fontWeight={500}>
+                      <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
                         {voicemail.date}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -362,59 +364,66 @@ export const VoicemailListPage: React.FC = () => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
+                    <Box>
+                      <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                        {voicemail.callerId}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {voicemail.language}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Typography variant="body2" fontWeight={500}>
-                      {voicemail.duration}
+                      {voicemail.primaryTopic}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Chip
                       label={voicemail.riskLevel}
                       size="small"
                       sx={{
                         ...getRiskLevelColor(voicemail.riskLevel),
                         fontWeight: 500,
+                        fontSize: '12px',
+                        height: 24,
                       }}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Chip
                       label={voicemail.status}
                       size="small"
                       sx={{
                         ...getStatusColor(voicemail.status),
                         fontWeight: 500,
+                        fontSize: '12px',
+                        height: 24,
                       }}
                     />
                   </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<ViewIcon />}
-                        onClick={() => handleViewVoicemail(voicemail.id)}
-                        sx={{ 
-                          borderColor: '#0d9488', 
-                          color: '#0d9488',
-                          '&:hover': { borderColor: '#0f766e', bgcolor: '#f0fdfa' }
-                        }}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<CallBackIcon />}
-                        onClick={() => handleCallBack(voicemail.id)}
-                        sx={{ 
-                          bgcolor: '#0d9488', 
-                          '&:hover': { bgcolor: '#0f766e' }
-                        }}
-                      >
-                        Call back
-                      </Button>
-                    </Box>
+                  <TableCell sx={{ py: 2 }}>
+                    <ActionButtonsGroup
+                      onPlay={() => handlePlayVoicemail(voicemail.id)}
+                      onView={() => handleViewVoicemail(voicemail.id)}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ py: 2 }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<CallBackIcon />}
+                      onClick={() => handleCallBack(voicemail.id)}
+                      sx={{ 
+                        bgcolor: '#0d9488', 
+                        '&:hover': { bgcolor: '#0f766e' },
+                        minWidth: '100px',
+                        fontSize: '12px',
+                      }}
+                    >
+                      Call back
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -427,11 +436,11 @@ export const VoicemailListPage: React.FC = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
-          p: 2,
-          borderTop: '1px solid #e5e7eb',
+          p: 3,
+          borderTop: '1px solid #f3f4f6',
         }}>
           <Typography variant="body2" color="text.secondary">
-            Page {currentPage}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} results
+            Page 1-10 of {totalItems} results
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button
@@ -439,7 +448,14 @@ export const VoicemailListPage: React.FC = () => {
               size="small"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(currentPage - 1)}
-              sx={{ borderColor: '#e5e7eb', color: '#374151' }}
+              sx={{ 
+                borderColor: '#e5e7eb', 
+                color: '#6b7280',
+                '&:disabled': { 
+                  borderColor: '#f3f4f6',
+                  color: '#d1d5db'
+                }
+              }}
             >
               Previous
             </Button>
@@ -448,7 +464,14 @@ export const VoicemailListPage: React.FC = () => {
               size="small"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(currentPage + 1)}
-              sx={{ borderColor: '#e5e7eb', color: '#374151' }}
+              sx={{ 
+                borderColor: '#e5e7eb', 
+                color: '#374151',
+                '&:hover': { 
+                  borderColor: '#0d9488',
+                  color: '#0d9488'
+                }
+              }}
             >
               Next
             </Button>

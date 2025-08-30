@@ -166,18 +166,14 @@ export const MissedCallsPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
-      {/* Header */}
-      <Typography variant="h5" fontWeight={600} sx={{ mb: 3 }}>
-        Missed Calls
-      </Typography>
-
       {/* Filters Bar */}
       <Box sx={{ 
         display: 'flex', 
         gap: 2, 
         mb: 3, 
-        flexWrap: 'wrap',
         alignItems: 'center',
+        justifyContent: 'flex-start',
+        flexWrap: 'nowrap',
       }}>
         {/* Search */}
         <TextField
@@ -191,7 +187,14 @@ export const MissedCallsPage: React.FC = () => {
               </InputAdornment>
             ),
           }}
-          sx={{ minWidth: 300 }}
+          sx={{ 
+            flex: 1,
+            maxWidth: '350px',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '8px',
+              fontSize: '14px',
+            }
+          }}
           size="small"
         />
 
@@ -201,22 +204,35 @@ export const MissedCallsPage: React.FC = () => {
           onChange={(e) => setDateRange(e.target.value)}
           placeholder="Select date range"
           size="small"
-          sx={{ minWidth: 200 }}
+          sx={{ 
+            minWidth: '180px',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '8px',
+              fontSize: '14px',
+            }
+          }}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <ArrowDownIcon />
+                <ArrowDownIcon sx={{ color: '#9ca3af' }} />
               </InputAdornment>
             ),
           }}
         />
 
         {/* Status Filter */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl size="small" sx={{ 
+          minWidth: '110px',
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            fontSize: '14px',
+          }
+        }}>
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             displayEmpty
+            sx={{ fontSize: '14px' }}
           >
             <MenuItem value="All status">All status</MenuItem>
             <MenuItem value="Missed">Missed</MenuItem>
@@ -225,11 +241,18 @@ export const MissedCallsPage: React.FC = () => {
         </FormControl>
 
         {/* Risk Level Filter */}
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ 
+          minWidth: '140px',
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            fontSize: '14px',
+          }
+        }}>
           <Select
             value={riskLevelFilter}
             onChange={(e) => setRiskLevelFilter(e.target.value)}
             displayEmpty
+            sx={{ fontSize: '14px' }}
           >
             <MenuItem value="All risk levels">All risk levels</MenuItem>
             <MenuItem value="Low">Low</MenuItem>
@@ -244,44 +267,60 @@ export const MissedCallsPage: React.FC = () => {
           variant="outlined"
           startIcon={<FilterIcon />}
           onClick={handleFiltersMenuOpen}
-          sx={{ borderColor: '#e5e7eb', color: '#374151' }}
+          sx={{ 
+            borderColor: '#d1d5db', 
+            color: '#6b7280',
+            borderRadius: '8px',
+            fontSize: '14px',
+            minWidth: '90px',
+            '&:hover': {
+              borderColor: '#9ca3af',
+              bgcolor: '#f9fafb'
+            }
+          }}
         >
           Filters
         </Button>
       </Box>
 
       {/* Table */}
-      <Card>
+      <Card sx={{ boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Date & Time
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Caller ID
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Call count
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Risk level
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Status
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2 }}>
                   Action
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {mockMissedCalls.map((call) => (
-                <TableRow key={call.id} sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
-                  <TableCell>
+                <TableRow 
+                  key={call.id} 
+                  sx={{ 
+                    '&:hover': { bgcolor: '#f9fafb' },
+                    '&:not(:last-child)': { borderBottom: '1px solid #f3f4f6' },
+                  }}
+                >
+                  <TableCell sx={{ py: 2 }}>
                     <Box>
-                      <Typography variant="body2" fontWeight={500}>
+                      <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
                         {call.date}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -289,47 +328,56 @@ export const MissedCallsPage: React.FC = () => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Typography variant="body2" fontWeight={500}>
                       {call.callerId}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Typography variant="body2" fontWeight={500}>
                       {call.callCount}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Chip
                       label={call.riskLevel}
                       size="small"
                       sx={{
                         ...getRiskLevelColor(call.riskLevel),
                         fontWeight: 500,
+                        fontSize: '12px',
+                        height: 24,
                       }}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Chip
                       label={call.status}
                       size="small"
                       sx={{
                         ...getStatusColor(call.status),
                         fontWeight: 500,
+                        fontSize: '12px',
+                        height: 24,
                       }}
                     />
                   </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TableCell sx={{ py: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                       <Button
                         variant="outlined"
                         size="small"
                         startIcon={<ViewIcon />}
                         onClick={() => handleView(call.id)}
                         sx={{ 
-                          borderColor: '#0d9488', 
+                          borderColor: '#0d9488',
                           color: '#0d9488',
-                          '&:hover': { borderColor: '#0f766e', bgcolor: '#f0fdfa' }
+                          '&:hover': { 
+                            bgcolor: '#f0fdfa',
+                            borderColor: '#0d9488'
+                          },
+                          minWidth: '70px',
+                          fontSize: '12px',
                         }}
                       >
                         View
@@ -341,7 +389,9 @@ export const MissedCallsPage: React.FC = () => {
                         onClick={() => handleCallBack(call.id)}
                         sx={{ 
                           bgcolor: '#0d9488', 
-                          '&:hover': { bgcolor: '#0f766e' }
+                          '&:hover': { bgcolor: '#0f766e' },
+                          minWidth: '100px',
+                          fontSize: '12px',
                         }}
                       >
                         Call back
@@ -359,11 +409,11 @@ export const MissedCallsPage: React.FC = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
-          p: 2,
-          borderTop: '1px solid #e5e7eb',
+          p: 3,
+          borderTop: '1px solid #f3f4f6',
         }}>
           <Typography variant="body2" color="text.secondary">
-            Page {currentPage}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} results
+            Page 1-10 of {totalItems} results
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button
@@ -371,7 +421,14 @@ export const MissedCallsPage: React.FC = () => {
               size="small"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(currentPage - 1)}
-              sx={{ borderColor: '#e5e7eb', color: '#374151' }}
+              sx={{ 
+                borderColor: '#e5e7eb', 
+                color: '#6b7280',
+                '&:disabled': { 
+                  borderColor: '#f3f4f6',
+                  color: '#d1d5db'
+                }
+              }}
             >
               Previous
             </Button>
@@ -380,7 +437,14 @@ export const MissedCallsPage: React.FC = () => {
               size="small"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(currentPage + 1)}
-              sx={{ borderColor: '#e5e7eb', color: '#374151' }}
+              sx={{ 
+                borderColor: '#e5e7eb', 
+                color: '#374151',
+                '&:hover': { 
+                  borderColor: '#0d9488',
+                  color: '#0d9488'
+                }
+              }}
             >
               Next
             </Button>

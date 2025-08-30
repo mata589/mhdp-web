@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
 import { DataTable } from '../../../components/common/DataTable/DataTable';
+import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
 
 import { useAuth } from '../../../contexts/AuthContext';
 import { useCallData } from '../../../hooks/useCallData';
@@ -474,7 +475,7 @@ export const AgentDashboard: React.FC = () => {
         {/* Table Headers */}
         <Box sx={{ 
           display: 'grid', 
-          gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1fr',
+          gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1.5fr',
           gap: 2,
           p: 2,
           backgroundColor: '#f5f5f5',
@@ -513,7 +514,7 @@ export const AgentDashboard: React.FC = () => {
                 key={index}
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1fr',
+                  gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1.5fr',
                   gap: 2,
                   p: 2,
                   alignItems: 'center',
@@ -548,17 +549,10 @@ export const AgentDashboard: React.FC = () => {
                     {call.qualityScore}
                   </Typography>
                 </Box>
-                <Button
-                  variant="text"
-                  size="small"
-                  sx={{ 
-                    color: '#008080',
-                    fontWeight: 500,
-                    width: 'fit-content'
-                  }}
-                >
-                  View
-                </Button>
+                <ActionButtonsGroup
+                  onPlay={() => console.log('Play call:', call.id)}
+                  onView={() => console.log('View call:', call.id)}
+                />
               </Box>
             );
           })}

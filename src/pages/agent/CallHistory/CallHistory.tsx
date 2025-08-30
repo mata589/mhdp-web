@@ -23,6 +23,7 @@ import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
 } from '@mui/icons-material';
+import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
 
 const mockCallHistory = [
   {
@@ -379,7 +380,11 @@ export const CallHistory: React.FC = () => {
                     </TableCell>
                     
                     <TableCell sx={{ py: 2 }}>
-                      <Button
+                    <ActionButtonsGroup
+                  onPlay={() => console.log('Play call:', call.id)}
+                  onView={() => console.log('View call:', call.id)}
+                />
+                      {/* <Button
                         variant="text"
                         sx={{
                           color: '#0891b2',
@@ -394,7 +399,7 @@ export const CallHistory: React.FC = () => {
                         }}
                       >
                         View
-                      </Button>
+                      </Button> */}
                     </TableCell>
                   </TableRow>
                 );
