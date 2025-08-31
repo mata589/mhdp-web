@@ -133,15 +133,7 @@ export const LiveCallInterface: React.FC = () => {
       }}>
         <Box sx={{ textAlign: 'center', maxWidth: 400 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4, justifyContent: 'center' }}>
-            <Box sx={{ 
-              width: 8, 
-              height: 8, 
-              borderRadius: '50%', 
-              backgroundColor: '#4caf50' 
-            }} />
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#4caf50' }}>
-              Ready for Next Call
-            </Typography>
+          
           </Box>
           <Box
                             component="img"

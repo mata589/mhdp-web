@@ -1,5 +1,6 @@
 // src/pages/agent/AgentDashboard/AgentDashboard.tsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import { GridLegacy as Grid } from '@mui/material';
 
 import {
@@ -148,10 +149,12 @@ const formatDateTime = (dateTimeString: string) => {
 
 export const AgentDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); // Add this hook
   
   const [status, setStatus] = useState<'Available' | 'Busy' | 'Break'>('Available');
   const [statusFilter, setStatusFilter] = useState('All status');
   const [languageFilter, setLanguageFilter] = useState('All languages');
+  const [showIncomingCall, setShowIncomingCall] = useState(false);
 
   // Mock data for recent call activity
   const recentCalls = [
@@ -206,59 +209,269 @@ export const AgentDashboard: React.FC = () => {
     setStatus(newStatus);
   };
 
+  // Simulate incoming call for demo purposes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowIncomingCall(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAnswer = () => {
+    setShowIncomingCall(false);
+    // Navigate to live call interface
+    navigate('/live-call');
+  };
+
+  const handleDecline = () => {
+    setShowIncomingCall(false);
+    // Handle decline logic here
+  };
+
+  const handleVoicemail = () => {
+    setShowIncomingCall(false);
+    // Handle voicemail logic here
+  };
+
   return (
-    <Box sx={{ p: 3, backgroundColor: '#fafafa', minHeight: '100vh' }}>
-      {/* Header Section */}
-      <Box sx={{ mb: 4 }}>
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      <Typography variant="h4" sx={{ fontWeight: 600, color: '#212121' }}>
-        Hey, James
-      </Typography>
-      <StatusChip status={status} />
-    </Box>
-    
-    <Box 
-      sx={{ 
-        display: 'flex',
-        border: '2px solid #e0e0e0',
-        borderRadius: '25px',
-        overflow: 'hidden',
-        backgroundColor: 'white'
-      }}
-    >
-      {(['Available', 'Busy', 'Break'] as const).map((statusOption, index) => (
-        <Button
-          key={statusOption}
-          onClick={() => handleStatusChange(statusOption)}
+    <Box sx={{ p: 3, backgroundColor: '#fafafa', minHeight: '100vh', position: 'relative' }}>
+      {/* Incoming Call Popup */}
+     {/* Incoming Call Popup */}
+   {/* Incoming Call Popup */}
+   {showIncomingCall && (
+        <Box
           sx={{
-            px: 3,
-            py: 1,
-            backgroundColor: status === statusOption ? 'white' : 'transparent',
-            color: status === statusOption ? '#000' : '#666',
-            fontWeight: status === statusOption ? 600 : 400,
-            borderRadius: 0,
-            border: 'none',
-            borderRight: index < 2 ? '1px solid #e0e0e0' : 'none',
-            textTransform: 'none',
-            minWidth: 80,
-            '&:hover': {
-              backgroundColor: status === statusOption ? 'white' : '#f5f5f5',
-            },
-            '&::before': status === statusOption ? {
-              content: '"✓"',
-              marginRight: '8px',
-              fontSize: '14px',
-              fontWeight: 600
-            } : {}
+            position: 'fixed',
+            top: 120,
+            right: 20,
+            width: 320,
+            height: 320,
+            backgroundColor: 'linear-gradient(to bottom, #CCE5E5, #F2FAFA)',
+            background: 'linear-gradient(to bottom, #CCE5E5, #F2FAFA)',
+            borderRadius: '18px',
+            p: 3,
+            pt: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            zIndex: 1000,
           }}
         >
-          {statusOption}
-        </Button>
-      ))}
-    </Box>
-  </Box>
-</Box>
+          <Box sx={{ textAlign: 'center', width: '100%' }}>
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                fontWeight: 700, 
+                color: '#2c3e50',
+                mb: 1,
+                fontSize: '1.5rem'
+              }}
+            >
+              Call #2031
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', mb: 3 }}>
+              <Box 
+                sx={{ 
+                  width: 10, 
+                  height: 10, 
+                  backgroundColor: '#22c55e', 
+                  borderRadius: '50%' 
+                }} 
+              />
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: '#5a6c7d',
+                  fontWeight: 500,
+                  fontSize: '1rem'
+                }}
+              >
+                Incoming...
+              </Typography>
+            </Box>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2, 
+              justifyContent: 'center',
+              mb: 3,
+            }}>
+              <Avatar 
+                sx={{ 
+                  backgroundColor: '#7fa8a3', 
+                  color: 'white',
+                  width: 50, 
+                  height: 50,
+                }}
+              >
+                <Person sx={{ fontSize: '1.5rem' }} />
+              </Avatar>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 600, 
+                  color: '#2c3e50',
+                  fontSize: '1.4rem'
+                }}
+              >
+                039 701 234 567
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 2, 
+            width: '100%',
+            justifyContent: 'space-between',
+            px: 1,
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              width: '100%',
+              justifyContent: 'space-between',
+              px: 1
+            }}>
+              <Button
+                onClick={handleVoicemail}
+                sx={{
+                  width: 70,
+                  height: 50,
+                  backgroundColor: '#e8eaed',
+                  color: '#5f6368',
+                  borderRadius: '25px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: 'unset',
+                  '&:hover': {
+                    backgroundColor: '#dadce0'
+                  }
+                }}
+              >
+                <Phone sx={{ fontSize: 24, transform: 'rotate(15deg)' }} />
+              </Button>
+
+              <Button
+                onClick={handleDecline}
+                sx={{
+                  width: 70,
+                  height: 50,
+                  backgroundColor: '#ea4335',
+                  color: 'white',
+                  borderRadius: '25px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: 'unset',
+                  '&:hover': {
+                    backgroundColor: '#d33b2c'
+                  }
+                }}
+              >
+                <CallEnd sx={{ fontSize: 24 }} />
+              </Button>
+
+              <Button
+                onClick={handleAnswer}
+                sx={{
+                  width: 70,
+                  height: 50,
+                  backgroundColor: '#34a853',
+                  color: 'white',
+                  borderRadius: '25px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: 'unset',
+                  '&:hover': {
+                    backgroundColor: '#2d8f47'
+                  }
+                }}
+              >
+                <Call sx={{ fontSize: 24 }} />
+              </Button>
+            </Box>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              width: '100%',
+              justifyContent: 'space-between',
+              px: 1,
+              mt: 1
+            }}>
+              <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#2c3e50', width: 70, textAlign: 'center' }}>
+                Voicemail
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#2c3e50', width: 70, textAlign: 'center' }}>
+                Decline
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#2c3e50', width: 70, textAlign: 'center' }}>
+                Answer
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
+      {/* Header Section */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600, color: '#212121' }}>
+              Hey, James
+            </Typography>
+            <StatusChip status={status} />
+          </Box>
+          
+          <Box 
+            sx={{ 
+              display: 'flex',
+              border: '2px solid #e0e0e0',
+              borderRadius: '25px',
+              overflow: 'hidden',
+              backgroundColor: 'white'
+            }}
+          >
+            {(['Available', 'Busy', 'Break'] as const).map((statusOption, index) => (
+              <Button
+                key={statusOption}
+                onClick={() => handleStatusChange(statusOption)}
+                sx={{
+                  px: 3,
+                  py: 1,
+                  backgroundColor: status === statusOption ? 'white' : 'transparent',
+                  color: status === statusOption ? '#000' : '#666',
+                  fontWeight: status === statusOption ? 600 : 400,
+                  borderRadius: 0,
+                  border: 'none',
+                  borderRight: index < 2 ? '1px solid #e0e0e0' : 'none',
+                  textTransform: 'none',
+                  minWidth: 80,
+                  '&:hover': {
+                    backgroundColor: status === statusOption ? 'white' : '#f5f5f5',
+                  },
+                  '&::before': status === statusOption ? {
+                    content: '"✓"',
+                    marginRight: '8px',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  } : {}
+                }}
+              >
+                {statusOption}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
       {/* Action Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
@@ -276,10 +489,10 @@ export const AgentDashboard: React.FC = () => {
               </Avatar>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Answer call
+                  Make call
                 </Typography>
-                <Typography variant="body2" color="text.secondary"sx={{ fontSize: '0.75rem' }}>
-                  Take incoming helpline calls
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  Take outgoing helpline calls
                 </Typography>
               </Box>
             </Box>
@@ -303,7 +516,7 @@ export const AgentDashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                   View call history
                 </Typography>
-                <Typography variant="body2" color="text.secondary"sx={{ fontSize: '0.75rem' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                   Review past calls and insights
                 </Typography>
               </Box>
@@ -328,7 +541,7 @@ export const AgentDashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                   Escalate a case
                 </Typography>
-                <Typography variant="body2" color="text.secondary"sx={{ fontSize: '0.75rem' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                   Flag urgent cases to supervisor
                 </Typography>
               </Box>
