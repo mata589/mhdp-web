@@ -1,23 +1,19 @@
-# Use Node.js 20 as the base image
-FROM node:20.11.1-alpine
+FROM node:20 as build
 
-# Set the working directory inside the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy only the package.json and yarn.lock files to install dependencies
-COPY package.json yarn.lock ./
+# Clean install
+COPY package*.json ./
 
-# Install dependencies using Yarn
-RUN yarn install --frozen-lockfile
+RUN npm config set strict-ssl false
+RUN npm install --legacy-peer-deps --platform=linux --arch=x64
 
-# Copy the entire application code to the container
 COPY . .
+RUN npm run build
 
-# Build the application for production
-RUN yarn build
-
-# Expose the default Next.js port
-EXPOSE 50000
-
-# Start the application
-CMD ["yarn", "start"]
+# Production stage
+FROM nginx:latest
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
