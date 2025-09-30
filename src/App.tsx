@@ -74,17 +74,18 @@ const AgentRoutes: React.FC = () => {
 const SupervisorRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/supervisor" element={<SupervisorDashboard />} />
-      <Route path="/live-monitoring" element={<LiveMonitoring />} />
-      <Route path="/escalations" element={<EscalatedCallReview />} />
-      <Route path="/escalated-reviews" element={<EscalatedCallReview />} />
-      <Route path="/call-history" element={<div>Call History Page</div>} />
-      <Route path="/staff-performance" element={<div>Staff Performance Page</div>} />
-      <Route path="/analytics" element={<div>Analytics Page</div>} />
-      <Route path="/training" element={<div>Training Materials Page</div>} />
-      <Route path="/help" element={<div>Help and Support Page</div>} />
-      <Route path="/settings" element={<div>Settings Page</div>} />
-      <Route path="/call-review/:callId" element={<CallReviewScreen />} />
+      {/* Use index route for /supervisor instead of path="/supervisor" */}
+      <Route index element={<SupervisorDashboard />} />
+      <Route path="live-monitoring" element={<LiveMonitoring />} />
+      <Route path="escalations" element={<EscalatedCallReview />} />
+      <Route path="escalated-reviews" element={<EscalatedCallReview />} />
+      <Route path="call-history" element={<div>Call History Page</div>} />
+      <Route path="staff-performance" element={<div>Staff Performance Page</div>} />
+      <Route path="analytics" element={<div>Analytics Page</div>} />
+      <Route path="training" element={<div>Training Materials Page</div>} />
+      <Route path="help" element={<div>Help and Support Page</div>} />
+      <Route path="settings" element={<div>Settings Page</div>} />
+      <Route path="call-review/:callId" element={<CallReviewScreen />} />
       <Route path="*" element={<Navigate to="/supervisor" replace />} />
     </Routes>
   );

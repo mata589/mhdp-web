@@ -1,281 +1,263 @@
 // src/pages/supervisor/LiveMonitoring/LiveMonitoring.tsx
-import React from 'react';
-import { GridLegacy as Grid } from '@mui/material'
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  Card,
-  CardContent,
-  Avatar,
   Chip,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
 } from '@mui/material';
 import {
-  Visibility as ViewIcon,
+  Search as SearchIcon,
   Phone as PhoneIcon,
-  AccessTime as TimeIcon,
-  Person as PersonIcon,
 } from '@mui/icons-material';
 
-const mockActiveAgents = [
+const mockActiveCalls = [
   {
-    id: '1',
-    name: 'Alice Johnson',
-    avatar: 'AJ',
-    status: 'on-call',
-    currentCall: {
-      caller: 'John Doe',
-      duration: '05:23',
-      urgency: 'medium',
-    },
+    id: '1031',
+    agent: 'Sarah Mukasa',
+    urgency: 'critical',
+    startTime: '10:15 AM',
+    duration: '08:42',
   },
   {
-    id: '2',
-    name: 'Bob Smith',
-    avatar: 'BS',
-    status: 'available',
-    currentCall: null,
+    id: '1045',
+    agent: 'Sarah Mukasa',
+    urgency: 'high',
+    startTime: '10:15 AM',
+    duration: '08:42',
   },
   {
-    id: '3',
-    name: 'Carol Wilson',
-    avatar: 'CW',
-    status: 'on-call',
-    currentCall: {
-      caller: 'Jane Smith',
-      duration: '12:45',
-      urgency: 'high',
-    },
+    id: '1050',
+    agent: 'Sarah Mukasa',
+    urgency: 'low',
+    startTime: '10:15 AM',
+    duration: '08:42',
   },
   {
-    id: '4',
-    name: 'David Brown',
-    avatar: 'DB',
-    status: 'break',
-    currentCall: null,
+    id: '1053',
+    agent: 'Sarah Mukasa',
+    urgency: 'medium',
+    startTime: '10:15 AM',
+    duration: '08:42',
   },
 ];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'on-call':
-      return '#dc2626';
-    case 'available':
-      return '#059669';
-    case 'break':
-      return '#d97706';
-    default:
-      return '#6b7280';
-  }
-};
-
 const getUrgencyColor = (urgency: string) => {
   switch (urgency) {
+    case 'critical':
+      return { bgcolor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' };
     case 'high':
-      return 'error';
+      return { bgcolor: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa' };
     case 'medium':
-      return 'warning';
+      return { bgcolor: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a' };
     case 'low':
-      return 'success';
+      return { bgcolor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' };
     default:
-      return 'default';
+      return { bgcolor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' };
   }
 };
 
 export const LiveMonitoring: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600, color: '#111827' }}>
-          Live Monitoring
-        </Typography>
-        <Typography variant="body2" color="#6b7280">
-          Monitor active agents and ongoing calls in real-time
-        </Typography>
+    <Box sx={{ p: 3, bgcolor: '#f9fafb', minHeight: '100vh' }}>
+      {/* Search and Filter Bar */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <TextField
+          placeholder="Search by agent..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            flex: 1,
+            bgcolor: 'white',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: '#9ca3af' }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <FormControl sx={{ minWidth: 150, bgcolor: 'white', borderRadius: 2 }}>
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            displayEmpty
+            sx={{
+              borderRadius: 2,
+            }}
+          >
+            <MenuItem value="all">All status</MenuItem>
+            <MenuItem value="critical">Critical</MenuItem>
+            <MenuItem value="high">High</MenuItem>
+            <MenuItem value="medium">Medium</MenuItem>
+            <MenuItem value="low">Low</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
-      {/* Quick Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#059669', color: 'white' }}>
-                  <PersonIcon />
-                </Box>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>
-                    4
-                  </Typography>
-                  <Typography variant="body2" color="#6b7280">
-                    Active Agents
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#dc2626', color: 'white' }}>
-                  <PhoneIcon />
-                </Box>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>
-                    2
-                  </Typography>
-                  <Typography variant="body2" color="#6b7280">
-                    Ongoing Calls
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#7c3aed', color: 'white' }}>
-                  <TimeIcon />
-                </Box>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>
-                    9:04
-                  </Typography>
-                  <Typography variant="body2" color="#6b7280">
-                    Avg Call Time
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#059669', color: 'white' }}>
-                  <PersonIcon />
-                </Box>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>
-                    2
-                  </Typography>
-                  <Typography variant="body2" color="#6b7280">
-                    Available Agents
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Active Calls Section */}
+      <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827' }}>
+              Active calls
+            </Typography>
+            <Box
+              sx={{
+                bgcolor: '#f3f4f6',
+                color: '#6b7280',
+                px: 2,
+                py: 0.5,
+                borderRadius: 10,
+                fontSize: '0.875rem',
+                fontWeight: 500,
+              }}
+            >
+              3
+            </Box>
+          </Box>
 
-      {/* Agent Status Table */}
-      <Paper sx={{ overflow: 'hidden' }}>
-        <Box sx={{ p: 3, borderBottom: '1px solid #e5e7eb' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827' }}>
-            Agent Status Overview
-          </Typography>
+          {/* Call List */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {mockActiveCalls.map((call) => (
+              <Box
+                key={call.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  p: 2.5,
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 2,
+                  bgcolor: 'white',
+                  '&:hover': {
+                    bgcolor: '#f9fafb',
+                    cursor: 'pointer',
+                  },
+                }}
+              >
+                {/* Phone Icon */}
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    bgcolor: '#dbeafe',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 2,
+                  }}
+                >
+                  <PhoneIcon sx={{ color: '#3b82f6' }} />
+                </Box>
+
+                {/* Call Info */}
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                    Call #{call.id}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                    Agent: <span style={{ fontWeight: 500, color: '#111827' }}>{call.agent}</span>
+                  </Typography>
+                </Box>
+
+                {/* Urgency Badge */}
+                <Box sx={{ mx: 3 }}>
+                  <Chip
+                    label={call.urgency.charAt(0).toUpperCase() + call.urgency.slice(1)}
+                    sx={{
+                      ...getUrgencyColor(call.urgency),
+                      fontWeight: 500,
+                      fontSize: '0.813rem',
+                      height: 28,
+                      '& .MuiChip-label': {
+                        px: 2,
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* Time Info */}
+                <Box sx={{ display: 'flex', gap: 4, mr: 2 }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#6b7280', display: 'block' }}>
+                      Started:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827' }}>
+                      {call.startTime}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#6b7280', display: 'block' }}>
+                      Duration:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827' }}>
+                      {call.duration}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Box>
         </Box>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Agent</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Current Call</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Duration</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Urgency</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {mockActiveAgents.map((agent) => (
-                <TableRow key={agent.id} sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#10b981', fontSize: '0.875rem' }}>
-                        {agent.avatar}
-                      </Avatar>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827' }}>
-                        {agent.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          bgcolor: getStatusColor(agent.status),
-                        }}
-                      />
-                      <Typography variant="body2" color="#111827">
-                        {agent.status.charAt(0).toUpperCase() + agent.status.slice(1).replace('-', ' ')}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    {agent.currentCall ? (
-                      <Typography variant="body2" color="#111827">
-                        {agent.currentCall.caller}
-                      </Typography>
-                    ) : (
-                      <Typography variant="body2" color="#9ca3af">
-                        No active call
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {agent.currentCall ? (
-                      <Typography variant="body2" color="#111827">
-                        {agent.currentCall.duration}
-                      </Typography>
-                    ) : (
-                      <Typography variant="body2" color="#9ca3af">
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {agent.currentCall ? (
-                      <Chip
-                        label={agent.currentCall.urgency.charAt(0).toUpperCase() + agent.currentCall.urgency.slice(1)}
-                        color={getUrgencyColor(agent.currentCall.urgency) as any}
-                        size="small"
-                      />
-                    ) : (
-                      <Typography variant="body2" color="#9ca3af">
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {agent.currentCall && (
-                      <IconButton size="small" sx={{ color: '#10b981' }}>
-                        <ViewIcon fontSize="small" />
-                      </IconButton>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+
+        {/* Pagination */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            p: 3,
+            borderTop: '1px solid #e5e7eb',
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#6b7280' }}>
+            Page 1-1 of 3 results
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box
+              sx={{
+                px: 2,
+                py: 1,
+                border: '1px solid #e5e7eb',
+                borderRadius: 1,
+                color: '#9ca3af',
+                fontSize: '0.875rem',
+                cursor: 'not-allowed',
+              }}
+            >
+              ‹ Previous
+            </Box>
+            <Box
+              sx={{
+                px: 2,
+                py: 1,
+                border: '1px solid #e5e7eb',
+                borderRadius: 1,
+                color: '#111827',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: '#f9fafb',
+                },
+              }}
+            >
+              Next ›
+            </Box>
+          </Box>
+        </Box>
       </Paper>
     </Box>
   );

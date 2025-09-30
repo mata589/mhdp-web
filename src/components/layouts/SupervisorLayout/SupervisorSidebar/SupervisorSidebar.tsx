@@ -42,12 +42,15 @@ const secondaryNavItems = [
   { path: '/supervisor/help', label: 'Help and support', icon: HelpIcon },
 ];
 
-const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH = 320;
 
 export const SupervisorSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  // Set dashboard as default if at root or no specific path
+  const currentPath = location.pathname === '/supervisor' ? '/supervisor' : location.pathname;
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -77,25 +80,69 @@ export const SupervisorSidebar: React.FC = () => {
       }}
     >
       {/* Hospital Logo and Title */}
-      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Avatar
+      <Box sx={{ 
+        p: 3, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        borderBottom: '1px solid #e5e7eb',
+        mb: 1
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{ 
+              width: 40, 
+              height: 40, 
+              bgcolor: '#14b8a6',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'white',
+            }}
+          >
+            BH
+          </Avatar>
+          <Box>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: '1rem', color: '#111827' }}>
+              Butabika Hospital
+            </Typography>
+            <Typography variant="caption" color="#9ca3af" sx={{ fontSize: '0.75rem' }}>
+              Supervisor portal
+            </Typography>
+          </Box>
+        </Box>
+        
+        {/* Collapse/Expand Icon */}
+        <Box 
           sx={{ 
-            width: 40, 
-            height: 40, 
-            bgcolor: '#10b981',
-            fontSize: '1rem',
-            fontWeight: 700,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb',
+            bgcolor: 'white',
+            cursor: 'pointer',
+            '&:hover': {
+              bgcolor: '#f9fafb',
+            }
           }}
         >
-          BH
-        </Avatar>
-        <Box>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: '1rem' }}>
-            Butabika Hospital
-          </Typography>
-          <Typography variant="caption" color="#6b7280" sx={{ fontSize: '0.75rem' }}>
-            Supervisor portal
-          </Typography>
+          <Box 
+            sx={{
+              width: 16,
+              height: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Box sx={{ width: '12px', height: '2px', bgcolor: '#6b7280', borderRadius: '1px' }} />
+            <Box sx={{ width: '12px', height: '2px', bgcolor: '#6b7280', borderRadius: '1px' }} />
+            <Box sx={{ width: '8px', height: '2px', bgcolor: '#6b7280', borderRadius: '1px' }} />
+          </Box>
         </Box>
       </Box>
 
@@ -103,29 +150,31 @@ export const SupervisorSidebar: React.FC = () => {
       <List sx={{ px: 2, py: 0, mt: 1 }}>
         {supervisorNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = currentPath === item.path;
           
           return (
-            <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
+            <ListItem key={item.path} disablePadding sx={{ mb: '2px' }}>
               <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 sx={{
-                  borderRadius: 2,
-                  py: 1.5,
-                  px: 2,
-                  bgcolor: isActive ? '#10b981' : 'transparent',
-                  color: isActive ? 'white' : '#374151',
+                  borderRadius: '8px',
+                  py: '10px',
+                  px: '12px',
+                  bgcolor: isActive ? '#14b8a6' : 'transparent',
+                  color: isActive ? 'white' : '#6b7280',
                   '&:hover': {
-                    bgcolor: isActive ? '#059669' : '#f9fafb',
+                    bgcolor: isActive ? '#0d9488' : '#f9fafb',
                   },
                   transition: 'all 0.2s ease-in-out',
+                  minHeight: '44px',
                 }}
               >
                 <ListItemIcon sx={{ 
                   color: 'inherit', 
-                  minWidth: 36,
+                  minWidth: '32px',
+                  mr: '12px',
                   '& .MuiSvgIcon-root': {
-                    fontSize: '1.25rem',
+                    fontSize: '20px',
                   },
                 }}>
                   <Icon />
@@ -133,9 +182,10 @@ export const SupervisorSidebar: React.FC = () => {
                 <ListItemText 
                   primary={item.label}
                   primaryTypographyProps={{
-                    fontSize: '0.875rem',
+                    fontSize: '14px',
                     fontWeight: isActive ? 600 : 500,
                     color: 'inherit',
+                    lineHeight: '20px',
                   }}
                 />
               </ListItemButton>
@@ -144,34 +194,36 @@ export const SupervisorSidebar: React.FC = () => {
         })}
       </List>
 
-      <Divider sx={{ mx: 2, my: 2, borderColor: '#e5e7eb' }} />
+      <Divider sx={{ mx: 2, my: 3, borderColor: '#e5e7eb' }} />
 
       {/* Secondary Navigation */}
       <List sx={{ px: 2, py: 0 }}>
         {secondaryNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = currentPath === item.path;
           
           return (
-            <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
+            <ListItem key={item.path} disablePadding sx={{ mb: '2px' }}>
               <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 sx={{
-                  borderRadius: 2,
-                  py: 1.5,
-                  px: 2,
-                  bgcolor: isActive ? '#10b981' : 'transparent',
+                  borderRadius: '8px',
+                  py: '10px',
+                  px: '12px',
+                  bgcolor: isActive ? '#14b8a6' : 'transparent',
                   color: isActive ? 'white' : '#6b7280',
                   '&:hover': {
-                    bgcolor: isActive ? '#059669' : '#f9fafb',
+                    bgcolor: isActive ? '#0d9488' : '#f9fafb',
                   },
                   transition: 'all 0.2s ease-in-out',
+                  minHeight: '44px',
                 }}
               >
                 <ListItemIcon sx={{ 
-                  minWidth: 36,
+                  minWidth: '32px',
+                  mr: '12px',
                   '& .MuiSvgIcon-root': {
-                    fontSize: '1.25rem',
+                    fontSize: '20px',
                     color: 'inherit',
                   },
                 }}>
@@ -180,9 +232,10 @@ export const SupervisorSidebar: React.FC = () => {
                 <ListItemText 
                   primary={item.label}
                   primaryTypographyProps={{
-                    fontSize: '0.875rem',
+                    fontSize: '14px',
                     fontWeight: isActive ? 600 : 500,
                     color: 'inherit',
+                    lineHeight: '20px',
                   }}
                 />
               </ListItemButton>
@@ -198,21 +251,23 @@ export const SupervisorSidebar: React.FC = () => {
         <ListItemButton
           onClick={() => handleNavigation('/supervisor/settings')}
           sx={{
-            borderRadius: 2,
-            py: 1.5,
-            px: 2,
-            mb: 1,
+            borderRadius: '8px',
+            py: '10px',
+            px: '12px',
+            mb: '2px',
             color: '#6b7280',
             '&:hover': {
               bgcolor: '#f9fafb',
             },
             transition: 'all 0.2s ease-in-out',
+            minHeight: '44px',
           }}
         >
           <ListItemIcon sx={{ 
-            minWidth: 36,
+            minWidth: '32px',
+            mr: '12px',
             '& .MuiSvgIcon-root': {
-              fontSize: '1.25rem',
+              fontSize: '20px',
               color: '#6b7280',
             },
           }}>
@@ -221,9 +276,10 @@ export const SupervisorSidebar: React.FC = () => {
           <ListItemText 
             primary="Settings"
             primaryTypographyProps={{
-              fontSize: '0.875rem',
+              fontSize: '14px',
               color: '#6b7280',
               fontWeight: 500,
+              lineHeight: '20px',
             }}
           />
         </ListItemButton>
@@ -231,20 +287,22 @@ export const SupervisorSidebar: React.FC = () => {
         <ListItemButton
           onClick={handleSignOut}
           sx={{
-            borderRadius: 2,
-            py: 1.5,
-            px: 2,
+            borderRadius: '8px',
+            py: '10px',
+            px: '12px',
             color: '#dc2626',
             '&:hover': {
               bgcolor: '#fef2f2',
             },
             transition: 'all 0.2s ease-in-out',
+            minHeight: '44px',
           }}
         >
           <ListItemIcon sx={{ 
-            minWidth: 36,
+            minWidth: '32px',
+            mr: '12px',
             '& .MuiSvgIcon-root': {
-              fontSize: '1.25rem',
+              fontSize: '20px',
               color: '#dc2626',
             },
           }}>
@@ -253,9 +311,10 @@ export const SupervisorSidebar: React.FC = () => {
           <ListItemText 
             primary="Sign out"
             primaryTypographyProps={{
-              fontSize: '0.875rem',
+              fontSize: '14px',
               color: '#dc2626',
               fontWeight: 500,
+              lineHeight: '20px',
             }}
           />
         </ListItemButton>

@@ -1,307 +1,927 @@
 // File: src/pages/supervisor/SupervisorDashboard/SupervisorDashboard.tsx
 import React, { useState } from 'react';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
+  Button,
+  Avatar,
+  IconButton,
+  Tabs,
+  Tab,
+  Chip,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  Button,
-  Avatar,
-  LinearProgress,
-  IconButton,
-  Badge
+  Select,
+  MenuItem,
+  FormControl,
 } from '@mui/material';
 import {
-  TrendingUp,
-  People,
   Phone,
   Warning,
+  Star,
   Visibility,
-  Assignment
+  Refresh,
+  TrendingUp,
+  TrendingDown,
+  PlayArrow,
+  PhoneInTalk,
+  FilterList,
 } from '@mui/icons-material';
+import { useAuth } from '../../../contexts/AuthContext';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 export const SupervisorDashboard: React.FC = () => {
-  const metrics = {
-    totalCalls: 1247,
-    activeCalls: 23,
-    escalatedCalls: 8,
-    avgWaitTime: '2:45',
-    agentPerformance: 87
-  };
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const metrics = [
+    {
+      icon: Phone,
+      iconBg: '#14b8a6',
+      label: 'Total Calls',
+      value: '489',
+      change: '+5%',
+      changeLabel: 'vs last month',
+      isPositive: true,
+    },
+    {
+      icon: Phone,
+      iconBg: '#f59e0b',
+      label: 'Calls Today',
+      value: '156',
+      change: '-1%',
+      changeLabel: 'vs yesterday',
+      isPositive: false,
+    },
+    {
+      icon: Warning,
+      iconBg: '#ef4444',
+      label: 'Escalated Calls',
+      value: '7',
+      change: '-1%',
+      changeLabel: 'vs yesterday',
+      isPositive: true,
+    },
+    {
+      icon: Star,
+      iconBg: '#3b82f6',
+      label: 'Avg. Quality Score',
+      value: '82%',
+      change: '+5%',
+      changeLabel: 'vs last month',
+      isPositive: true,
+    },
+  ];
+
+  const callVolumeData = [
+    { time: '07:00', calls: 98 },
+    { time: '08:00', calls: 89 },
+    { time: '09:00', calls: 92 },
+    { time: '10:00', calls: 32 },
+    { time: '11:00', calls: 68 },
+    { time: '12:00', calls: 78 },
+    { time: '13:00', calls: 132 },
+    { time: '14:00', calls: 142 },
+    { time: '15:00', calls: 118 },
+    { time: '16:00', calls: 98 },
+    { time: '17:00', calls: 78 },
+  ];
 
   const agents = [
-    { id: 1, name: 'James Gipir', status: 'available', calls: 12, avgRating: 4.5 },
-    { id: 2, name: 'Sarah Mukasa', status: 'busy', calls: 8, avgRating: 4.8 },
-    { id: 3, name: 'David Okello', status: 'break', calls: 15, avgRating: 4.2 },
-    { id: 4, name: 'Grace Nalongo', status: 'available', calls: 10, avgRating: 4.6 }
+    { 
+      id: 1, 
+      name: 'James Gipir', 
+      status: 'In call', 
+      statusColor: '#ef4444',
+      duration: '2:31',
+      performance: 78,
+      avatar: 'J',
+      avatarBg: '#14b8a6'
+    },
+    { 
+      id: 2, 
+      name: 'Sarah Mukasa', 
+      status: 'In call', 
+      statusColor: '#ef4444',
+      duration: '2:31',
+      performance: 80,
+      avatar: 'S',
+      avatarBg: '#f59e0b'
+    },
+    { 
+      id: 3, 
+      name: 'Mary Namu', 
+      status: 'Available', 
+      statusColor: '#10b981',
+      duration: null,
+      performance: 78,
+      avatar: 'M',
+      avatarBg: '#3b82f6'
+    },
+    { 
+      id: 4, 
+      name: 'Flavia Nabukenya', 
+      status: 'In call', 
+      statusColor: '#ef4444',
+      duration: '18:31',
+      performance: 92,
+      avatar: 'F',
+      avatarBg: '#f59e0b'
+    },
+    { 
+      id: 5, 
+      name: 'Amooti Sam', 
+      status: 'Break', 
+      statusColor: '#f59e0b',
+      duration: null,
+      performance: 78,
+      avatar: 'A',
+      avatarBg: '#14b8a6'
+    },
   ];
 
-  const escalatedCalls = [
-    { id: 'ESC-001', caller: 'John Doe', agent: 'James Gipir', reason: 'Complex medical query', time: '5 min ago' },
-    { id: 'ESC-002', caller: 'Mary Smith', agent: 'Sarah Mukasa', reason: 'Billing dispute', time: '15 min ago' },
-    { id: 'ESC-003', caller: 'Peter Kato', agent: 'David Okello', reason: 'Emergency consultation', time: '30 min ago' }
+  const escalations = [
+    {
+      id: '2031',
+      type: 'Suicidal intent',
+      severity: 'Critical',
+      severityColor: '#ef4444',
+      agent: 'James Gipir',
+      date: 'Jul 13, 2025',
+      time: '10:43AM',
+    },
+    {
+      id: '1921',
+      type: 'Severe depression',
+      severity: 'High',
+      severityColor: '#f59e0b',
+      agent: 'Emma Sseki',
+      date: 'Jul 13, 2025',
+      time: '10:43AM',
+    },
+    {
+      id: '2031',
+      type: 'Suicidal intent',
+      severity: 'Critical',
+      severityColor: '#ef4444',
+      agent: 'James Gipir',
+      date: 'Jul 13, 2025',
+      time: '10:43AM',
+    },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return 'success';
-      case 'busy': return 'error';
-      case 'break': return 'warning';
-      default: return 'default';
-    }
+  const staffPerformance = [
+    {
+      name: 'James Gipir',
+      avatar: 'J',
+      avatarBg: '#14b8a6',
+      status: 'On call',
+      statusColor: '#ef4444',
+      lastActive: 'Mon, July 13, 2025',
+      lastActiveTime: '10:43 AM',
+      callsHandled: 150,
+      escalations: 12,
+      qualityScore: 72,
+    },
+    {
+      name: 'Sarah Mukasa',
+      avatar: 'S',
+      avatarBg: '#f59e0b',
+      status: 'Available',
+      statusColor: '#10b981',
+      lastActive: 'Mon, July 13, 2025',
+      lastActiveTime: '10:43 AM',
+      callsHandled: 150,
+      escalations: 12,
+      qualityScore: 72,
+    },
+    {
+      name: 'Mary Namu',
+      avatar: 'M',
+      avatarBg: '#3b82f6',
+      status: 'On call',
+      statusColor: '#ef4444',
+      lastActive: 'Mon, July 13, 2025',
+      lastActiveTime: '10:43 AM',
+      callsHandled: 150,
+      escalations: 12,
+      qualityScore: 72,
+    },
+    {
+      name: 'Flavia Nabukenya',
+      avatar: 'F',
+      avatarBg: '#f59e0b',
+      status: 'Break',
+      statusColor: '#f59e0b',
+      lastActive: 'Mon, July 13, 2025',
+      lastActiveTime: '10:43 AM',
+      callsHandled: 150,
+      escalations: 12,
+      qualityScore: 72,
+    },
+    {
+      name: 'James Gipir',
+      avatar: 'J',
+      avatarBg: '#14b8a6',
+      status: 'Break',
+      statusColor: '#f59e0b',
+      lastActive: 'Mon, July 13, 2025',
+      lastActiveTime: '10:43 AM',
+      callsHandled: 150,
+      escalations: 12,
+      qualityScore: 72,
+    },
+  ];
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-        Supervisor Dashboard
-      </Typography>
+    <Box sx={{ p: 3, bgcolor: '#f9fafb', minHeight: '100vh' }}>
+      {/* Header */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 3 
+      }}>
+        <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
+          Hello, {user?.name || 'Bosco Kimuli'}
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Visibility />}
+          sx={{
+            bgcolor: '#14b8a6',
+            color: 'white',
+            textTransform: 'none',
+            px: 3,
+            py: 1,
+            borderRadius: 2,
+            '&:hover': {
+              bgcolor: '#0d9488',
+            },
+          }}
+        >
+          Monitor live calls
+        </Button>
+      </Box>
 
       {/* Metrics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Phone sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {metrics.totalCalls}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Calls Today
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Badge badgeContent={metrics.activeCalls} color="success">
-                <TrendingUp sx={{ fontSize: 40, color: '#4caf50', mb: 1 }} />
-              </Badge>
-              <Typography variant="h5" sx={{ fontWeight: 600, mt: 1 }}>
-                {metrics.activeCalls}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active Calls
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Badge badgeContent={metrics.escalatedCalls} color="error">
-                <Warning sx={{ fontSize: 40, color: '#ff9800', mb: 1 }} />
-              </Badge>
-              <Typography variant="h5" sx={{ fontWeight: 600, mt: 1 }}>
-                {metrics.escalatedCalls}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Escalated Calls
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <People sx={{ fontSize: 40, color: '#9c27b0', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {metrics.avgWaitTime}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Avg Wait Time
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Assignment sx={{ fontSize: 40, color: '#f44336', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {metrics.agentPerformance}%
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Avg Performance
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {metrics.map((metric, index) => {
+          const Icon = metric.icon;
+          return (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Card 
+                sx={{ 
+                  bgcolor: 'white',
+                  borderRadius: 2,
+                  boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                  '&:hover': {
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  },
+                  transition: 'all 0.2s',
+                }}
+              >
+                <CardContent sx={{ p: 2.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 2,
+                        bgcolor: metric.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Icon sx={{ fontSize: 20, color: 'white' }} />
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                        {metric.label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#111827', mb: 0.5 }}>
+                    {metric.value}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {metric.isPositive ? (
+                      <TrendingUp sx={{ fontSize: 14, color: '#10b981' }} />
+                    ) : (
+                      <TrendingDown sx={{ fontSize: 14, color: '#ef4444' }} />
+                    )}
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: metric.isPositive ? '#10b981' : '#ef4444',
+                        fontWeight: 600,
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      {metric.change}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.75rem' }}>
+                      {metric.changeLabel}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
-      <Grid container spacing={3}>
-        {/* Agent Status */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Agent Status
-              </Typography>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Agent</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Calls</TableCell>
-                      <TableCell>Rating</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {agents.map((agent) => (
-                      <TableRow key={agent.id}>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ width: 32, height: 32 }}>
-                              {agent.name.split(' ').map(n => n[0]).join('')}
-                            </Avatar>
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: '#e5e7eb', mb: 3 }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: '#6b7280',
+              minHeight: 48,
+              '&.Mui-selected': {
+                color: '#14b8a6',
+                fontWeight: 600,
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#14b8a6',
+              height: 2,
+            },
+          }}
+        >
+          <Tab label="Overview" />
+          <Tab label="Alerts & Escalations" />
+          <Tab label="Staff Performance" />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Grid container spacing={3}>
+          {/* Call Volume Trends */}
+          <Grid item xs={12} lg={7}>
+            <Card sx={{ 
+              bgcolor: 'white',
+              borderRadius: 2,
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                      Call Volume Trends
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                      Hourly call distribution
+                    </Typography>
+                  </Box>
+                </Box>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={callVolumeData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                    <XAxis 
+                      dataKey="time" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#111827',
+                        border: 'none',
+                        borderRadius: 8,
+                        color: 'white',
+                      }}
+                      cursor={{ fill: '#f3f4f6' }}
+                    />
+                    <Bar 
+                      dataKey="calls" 
+                      fill="#14b8a6" 
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={40}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Agent Status Monitor */}
+          <Grid item xs={12} lg={5}>
+            <Card sx={{ 
+              bgcolor: 'white',
+              borderRadius: 2,
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                      Agent Status Monitor
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                      Current availability
+                    </Typography>
+                  </Box>
+                  <IconButton 
+                    size="small" 
+                    sx={{ 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 1.5,
+                      '&:hover': { bgcolor: '#f9fafb' }
+                    }}
+                  >
+                    <Refresh sx={{ fontSize: 18, color: '#14b8a6' }} />
+                  </IconButton>
+                </Box>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {agents.map((agent) => (
+                    <Box
+                      key={agent.id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        p: 2,
+                        bgcolor: '#f9fafb',
+                        borderRadius: 2,
+                        '&:hover': {
+                          bgcolor: '#f3f4f6',
+                        },
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                        <Avatar
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: agent.avatarBg,
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                          }}
+                        >
+                          {agent.avatar}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontWeight: 600, 
+                              color: '#111827',
+                              mb: 0.5,
+                              fontSize: '0.875rem'
+                            }}
+                          >
                             {agent.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                bgcolor: agent.statusColor,
+                              }}
+                            />
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                color: '#6b7280',
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              {agent.status}
+                              {agent.duration && ` • ${agent.duration}`}
+                            </Typography>
                           </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={agent.status}
-                            color={getStatusColor(agent.status)}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>{agent.calls}</TableCell>
-                        <TableCell>{agent.avgRating}/5</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Star sx={{ fontSize: 14, color: '#fbbf24' }} />
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 600, 
+                            color: '#111827',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          {agent.performance}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
+      )}
 
-        {/* Escalated Calls */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Escalated Calls
+      {/* Escalations Tab */}
+      {activeTab === 1 && (
+        <Card sx={{ 
+          bgcolor: 'white',
+          borderRadius: 2,
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                  Escalations Overview
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Manage and review flagged calls
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      bgcolor: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#e5e7eb',
+                      },
+                    }}
+                  >
+                    <MenuItem value="all">All status</MenuItem>
+                    <MenuItem value="critical">Critical</MenuItem>
+                    <MenuItem value="high">High</MenuItem>
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="outlined"
+                  startIcon={<FilterList />}
+                  sx={{
+                    textTransform: 'none',
+                    borderColor: '#e5e7eb',
+                    color: '#6b7280',
+                    '&:hover': {
+                      borderColor: '#d1d5db',
+                      bgcolor: '#f9fafb',
+                    },
+                  }}
+                >
+                  Filters
+                </Button>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {escalations.map((escalation, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 2.5,
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 2,
+                    '&:hover': {
+                      bgcolor: '#f9fafb',
+                    },
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flex: 1 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 2,
+                        bgcolor: '#f3f4f6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <PhoneInTalk sx={{ fontSize: 20, color: '#6b7280' }} />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#111827' }}>
+                          {escalation.type}
+                        </Typography>
+                        <Chip
+                          label={escalation.severity}
+                          size="small"
+                          sx={{
+                            bgcolor: `${escalation.severityColor}15`,
+                            color: escalation.severityColor,
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            height: 22,
+                          }}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 3 }}>
+                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                          <span style={{ fontWeight: 500, color: '#374151' }}>Caller ID:</span> {escalation.id}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                          <span style={{ fontWeight: 500, color: '#374151' }}>Agent:</span> {escalation.agent}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                          <span style={{ fontWeight: 500, color: '#374151' }}>Sent:</span> {escalation.date} | {escalation.time}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="text"
+                      startIcon={<PlayArrow />}
+                      sx={{
+                        textTransform: 'none',
+                        color: '#14b8a6',
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: '#14b8a615',
+                        },
+                      }}
+                    >
+                      Play
+                    </Button>
+                    <Button
+                      variant="text"
+                      startIcon={<Visibility />}
+                      sx={{
+                        textTransform: 'none',
+                        color: '#14b8a6',
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: '#14b8a615',
+                        },
+                      }}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<PhoneInTalk />}
+                      sx={{
+                        textTransform: 'none',
+                        bgcolor: '#14b8a6',
+                        color: 'white',
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: '#0d9488',
+                        },
+                      }}
+                    >
+                      Call
+                    </Button>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                Page <span style={{ color: '#14b8a6', fontWeight: 600 }}>1-10</span> of 60 results
               </Typography>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Call ID</TableCell>
-                      <TableCell>Caller</TableCell>
-                      <TableCell>Reason</TableCell>
-                      <TableCell>Action</TableCell>
+              <Button
+                variant="outlined"
+                sx={{
+                  textTransform: 'none',
+                  borderColor: '#e5e7eb',
+                  color: '#14b8a6',
+                  fontWeight: 500,
+                  '&:hover': {
+                    borderColor: '#14b8a6',
+                    bgcolor: '#14b8a615',
+                  },
+                }}
+              >
+                View All
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Staff Performance Tab */}
+      {activeTab === 2 && (
+        <Card sx={{ 
+          bgcolor: 'white',
+          borderRadius: 2,
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                  Staff Performance Overview
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Quality scores and call metrics by agents
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      bgcolor: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#e5e7eb',
+                      },
+                    }}
+                  >
+                    <MenuItem value="all">All status</MenuItem>
+                    <MenuItem value="available">Available</MenuItem>
+                    <MenuItem value="oncall">On call</MenuItem>
+                    <MenuItem value="break">Break</MenuItem>
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="outlined"
+                  startIcon={<FilterList />}
+                  sx={{
+                    textTransform: 'none',
+                    borderColor: '#e5e7eb',
+                    color: '#6b7280',
+                    '&:hover': {
+                      borderColor: '#d1d5db',
+                      bgcolor: '#f9fafb',
+                    },
+                  }}
+                >
+                  Filters
+                </Button>
+              </Box>
+            </Box>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Name</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Last Active</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Calls Handled</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Escalations</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Quality Score</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {staffPerformance.map((staff, index) => (
+                    <TableRow 
+                      key={index}
+                      sx={{
+                        '&:hover': {
+                          bgcolor: '#f9fafb',
+                        },
+                      }}
+                    >
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: staff.avatarBg,
+                              color: 'white',
+                              fontWeight: 600,
+                              fontSize: '0.875rem',
+                            }}
+                          >
+                            {staff.avatar}
+                          </Avatar>
+                          <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827' }}>
+                            {staff.name}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={staff.status}
+                          size="small"
+                          icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: staff.statusColor, ml: 1 }} />}
+                          sx={{
+                            bgcolor: `${staff.statusColor}15`,
+                            color: staff.statusColor,
+                            fontWeight: 500,
+                            fontSize: '0.75rem',
+                            '& .MuiChip-icon': {
+                              ml: 1,
+                            },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500 }}>
+                          {staff.lastActive}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                          {staff.lastActiveTime}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                          {staff.callsHandled}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                          {staff.escalations}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Star sx={{ fontSize: 14, color: '#fbbf24' }} />
+                          <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                            {staff.qualityScore}%
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="text"
+                          sx={{
+                            textTransform: 'none',
+                            color: '#14b8a6',
+                            fontWeight: 500,
+                            fontSize: '0.875rem',
+                            '&:hover': {
+                              bgcolor: '#14b8a615',
+                            },
+                          }}
+                        >
+                          View
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {escalatedCalls.map((call) => (
-                      <TableRow key={call.id}>
-                        <TableCell>{call.id}</TableCell>
-                        <TableCell>{call.caller}</TableCell>
-                        <TableCell>
-                          <Typography variant="body2" noWrap>
-                            {call.reason}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {call.time}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton size="small" color="primary">
-                            <Visibility />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-        {/* Performance Overview */}
-        <Grid size={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Today's Performance Overview
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                Page <span style={{ color: '#14b8a6', fontWeight: 600 }}>1-10</span> of 60 results
               </Typography>
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <Box>
-                    <Typography variant="body2" gutterBottom>
-                      Call Resolution Rate
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={92}
-                      sx={{ height: 8, borderRadius: 4, mb: 1 }}
-                    />
-                    <Typography variant="caption">92%</Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <Box>
-                    <Typography variant="body2" gutterBottom>
-                      Customer Satisfaction
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={88}
-                      color="success"
-                      sx={{ height: 8, borderRadius: 4, mb: 1 }}
-                    />
-                    <Typography variant="caption">88%</Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <Box>
-                    <Typography variant="body2" gutterBottom>
-                      First Call Resolution
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={75}
-                      color="warning"
-                      sx={{ height: 8, borderRadius: 4, mb: 1 }}
-                    />
-                    <Typography variant="caption">75%</Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
-                  <Box>
-                    <Typography variant="body2" gutterBottom>
-                      Agent Utilization
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={85}
-                      color="info"
-                      sx={{ height: 8, borderRadius: 4, mb: 1 }}
-                    />
-                    <Typography variant="caption">85%</Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+              <Button
+                variant="outlined"
+                sx={{
+                  textTransform: 'none',
+                  borderColor: '#e5e7eb',
+                  color: '#14b8a6',
+                  fontWeight: 500,
+                  '&:hover': {
+                    borderColor: '#14b8a6',
+                    bgcolor: '#14b8a615',
+                  },
+                }}
+              >
+                View All
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 };
