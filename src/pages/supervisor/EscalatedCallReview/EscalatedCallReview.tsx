@@ -1,106 +1,110 @@
-// File: src/pages/supervisor/EscalatedCallReview/EscalatedCallReview.tsx
 import React, { useState } from 'react';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
+  TextField,
+  InputAdornment,
   Button,
+  MenuItem,
+  Select,
+  FormControl,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   IconButton,
+  Divider,
   Avatar,
-  Divider
 } from '@mui/material';
 import {
-  Visibility,
-  PlayArrow,
-  Assignment,
-  Close,
+  Search,
+  Phone,
+  Eye,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  
   CheckCircle,
-  Cancel
-} from '@mui/icons-material';
+} from 'lucide-react';
 
-export const EscalatedCallReview: React.FC = () => {
-  const [selectedCall, setSelectedCall] = useState<any>(null);
+export default function EscalatedCallsPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('All risk levels');
   const [reviewDialog, setReviewDialog] = useState(false);
+  const [selectedCall, setSelectedCall] = useState<any>(null);
   const [resolution, setResolution] = useState('');
   const [status, setStatus] = useState('pending');
+
+  const metrics = [
+    {
+      title: 'Total Escalations',
+      value: '12',
+      icon: '/cross1.png',
+    },
+    {
+      title: 'Escalations Today',
+      value: '6',
+      icon: '/cross2.png',
+    },
+    {
+      title: 'Critical Alerts',
+      value: '4',
+      icon: '/cross3.png',
+    },
+    {
+      title: 'Resolved Today',
+      value: '2',
+      icon: '/cross4.png',
+    },
+  ];
 
   const escalatedCalls = [
     {
       id: 'ESC-001',
+      type: 'Suicidal intent',
+      severity: 'Critical',
+      callerId: 'Caller ID: 2001',
       caller: 'John Doe',
       phone: '+256 700 123 456',
-      agent: 'James Gipir',
-      escalationTime: '2024-07-23 14:30',
-      reason: 'Complex medical query regarding drug interactions',
-      priority: 'high',
-      status: 'pending',
+      agent: 'James Ojat',
+      sentTime: 'Jul 13, 2025 | 10:43AM',
       duration: '15:30',
-      category: 'Medical Consultation'
+      reason: 'Complex medical query regarding drug interactions',
+      category: 'Medical Consultation',
+      severityColor: '#DC2626',
     },
     {
       id: 'ESC-002',
+      type: 'Severe depression',
+      severity: 'High',
+      callerId: 'Caller ID: 1821',
       caller: 'Mary Smith',
       phone: '+256 701 987 654',
-      agent: 'Sarah Mukasa',
-      escalationTime: '2024-07-23 13:45',
-      reason: 'Billing dispute - overcharged for services',
-      priority: 'medium',
-      status: 'in-review',
+      agent: 'Emma Seeti',
+      sentTime: 'Jul 13, 2025 | 10:43AM',
       duration: '12:15',
-      category: 'Billing'
+      reason: 'Patient expressing symptoms of severe depression',
+      category: 'Mental Health',
+      severityColor: '#F59E0B',
     },
     {
       id: 'ESC-003',
+      type: 'Suicidal intent',
+      severity: 'Critical',
+      callerId: 'Caller ID: 2001',
       caller: 'Peter Kato',
       phone: '+256 702 456 789',
-      agent: 'David Okello',
-      escalationTime: '2024-07-23 12:20',
-      reason: 'Emergency consultation request',
-      priority: 'urgent',
-      status: 'resolved',
+      agent: 'James Ojat',
+      sentTime: 'Jul 13, 2025 | 10:43AM',
       duration: '8:45',
-      category: 'Emergency'
-    }
+      reason: 'Emergency consultation request',
+      category: 'Emergency',
+      severityColor: '#DC2626',
+    },
   ];
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'error';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'success';
-      default: return 'default';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'warning';
-      case 'in-review': return 'info';
-      case 'resolved': return 'success';
-      case 'closed': return 'default';
-      default: return 'default';
-    }
-  };
 
   const handleViewCall = (call: any) => {
     setSelectedCall(call);
@@ -120,148 +124,342 @@ export const EscalatedCallReview: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-        Escalated Call Review
-      </Typography>
+    <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: 3 }}>
+      {/* Metrics Cards */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(4, 1fr)',
+          },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        {metrics.map((metric, index) => (
+          <Card
+            key={index}
+            sx={{
+              boxShadow: 'none',
+              border: '1px solid #E5E7EB',
+              borderRadius: '8px',
+            }}
+          >
+            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '8px',
+                    
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={metric.icon}
+                    alt={metric.title}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      objectFit: 'contain',
+                    }}
+                  />
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#6B7280',
+                  }}
+                >
+                  {metric.title}
+                </Typography>
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: '32px',
+                  fontWeight: 700,
+                  color: '#111827',
+                  lineHeight: 1,
+                }}
+              >
+                {metric.value}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
 
-      {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: '#f44336' }}>
-                8
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Escalated
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: '#ff9800' }}>
-                3
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pending Review
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: '#2196f3' }}>
-                2
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                In Review
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: '#4caf50' }}>
-                3
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Resolved Today
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Main Content Card */}
+      <Card sx={{ boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
+        <CardContent sx={{ p: 3 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
+              flexWrap: 'wrap',
+              gap: 2,
+            }}
+          >
+            <Typography sx={{ fontSize: '18px', fontWeight: 600, color: '#111827' }}>
+              Escalated calls
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+              <TextField
+                placeholder="Search by agent or call id..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                size="small"
+                sx={{
+                  width: { xs: '100%', sm: '280px' },
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '14px',
+                    bgcolor: 'white',
+                    '& fieldset': {
+                      borderColor: '#E5E7EB',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#D1D5DB',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#4682B4',
+                      borderWidth: '1px',
+                    },
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={18} color="#9CA3AF" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <Select
+                  value={selectedLevel}
+                  onChange={(e) => setSelectedLevel(e.target.value)}
+                  sx={{
+                    fontSize: '14px',
+                    bgcolor: 'white',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#E5E7EB',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#D1D5DB',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#4682B4',
+                      borderWidth: '1px',
+                    },
+                  }}
+                >
+                  <MenuItem value="All risk levels">All risk levels</MenuItem>
+                  <MenuItem value="Critical">Critical</MenuItem>
+                  <MenuItem value="High">High</MenuItem>
+                  <MenuItem value="Medium">Medium</MenuItem>
+                </Select>
+              </FormControl>
+              <Button
+                variant="outlined"
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#374151',
+                  borderColor: '#E5E7EB',
+                  '&:hover': {
+                    borderColor: '#D1D5DB',
+                    bgcolor: '#F9FAFB',
+                  },
+                }}
+              >
+                Filters
+              </Button>
+            </Box>
+          </Box>
 
-      {/* Escalated Calls Table */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Escalated Calls
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Call ID</TableCell>
-                  <TableCell>Caller Info</TableCell>
-                  <TableCell>Agent</TableCell>
-                  <TableCell>Reason</TableCell>
-                  <TableCell>Priority</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {escalatedCalls.map((call) => (
-                  <TableRow key={call.id}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {call.id}
+          {/* Call List */}
+          <Box>
+            {escalatedCalls.map((call, index) => (
+              <Box
+                key={call.id}
+                sx={{
+                  py: 2.5,
+                  borderTop: index === 0 ? 'none' : '1px solid #F3F4F6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '20px',
+                      bgcolor: '#CCE5E5',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Phone size={20} color="#6B7280" />
+                  </Box>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                      <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
+                        {call.type}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {call.caller}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {call.phone}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                          {call.agent.split(' ').map(n => n[0]).join('')}
-                        </Avatar>
-                        <Typography variant="body2">{call.agent}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ maxWidth: 200 }} noWrap>
-                        {call.reason}
-                      </Typography>
-                      <Chip label={call.category} size="small" sx={{ mt: 0.5 }} />
-                    </TableCell>
-                    <TableCell>
                       <Chip
-                        label={call.priority}
-                        color={getPriorityColor(call.priority)}
+                        label={call.severity}
                         size="small"
+                        sx={{
+                          height: '22px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          bgcolor: call.severityColor,
+                          color: 'white',
+                          '& .MuiChip-label': {
+                            px: 1,
+                          },
+                        }}
                       />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={call.status}
-                        color={getStatusColor(call.status)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                        {new Date(call.escalationTime).toLocaleTimeString()}
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                        {call.callerId}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleViewCall(call)}
-                      >
-                        <Visibility />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                        Agent: <span style={{ fontWeight: 500, color: '#374151' }}>{call.agent}</span>
+                      </Typography>
+                      <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                        Sent: {call.sentTime}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 1.5 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Play size={16} />}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#008080',
+                      borderColor: '#E5E7EB',
+                      px: 2,
+                      '&:hover': {
+                        borderColor: '#4682B4',
+                        bgcolor: '#F0F9FF',
+                      },
+                    }}
+                  >
+                    Play
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Eye size={16} />}
+                    onClick={() => handleViewCall(call)}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#008080',
+                      borderColor: '#E5E7EB',
+                      px: 2,
+                      '&:hover': {
+                        borderColor: '#4682B4',
+                        bgcolor: '#F0F9FF',
+                      },
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Phone size={16} />}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      bgcolor: '#00897b',
+                      color: 'white',
+                      px: 2,
+                      '&:hover': {
+                        bgcolor: '#00796b',
+                      },
+                    }}
+                  >
+                    Call
+                  </Button>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Pagination */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 3,
+              pt: 3,
+              borderTop: '1px solid #F3F4F6',
+            }}
+          >
+            <Typography sx={{ fontSize: '14px', color: '#6B7280' }}>
+              Page 1-3 of 5 results
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.5,
+                  py: 0.75,
+                  borderColor: '#E5E7EB',
+                  color: '#6B7280',
+                  '&:hover': {
+                    borderColor: '#D1D5DB',
+                    bgcolor: '#F9FAFB',
+                  },
+                }}
+              >
+                <ChevronLeft size={18} />
+              </Button>
+              <Button
+                variant="outlined"
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.5,
+                  py: 0.75,
+                  borderColor: '#E5E7EB',
+                  color: '#6B7280',
+                  '&:hover': {
+                    borderColor: '#D1D5DB',
+                    bgcolor: '#F9FAFB',
+                  },
+                }}
+              >
+                <ChevronRight size={18} />
+              </Button>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
 
@@ -269,58 +467,113 @@ export const EscalatedCallReview: React.FC = () => {
       <Dialog open={reviewDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            Call Review - {selectedCall?.id}
-            <IconButton onClick={handleCloseDialog}>
-              <Close />
+            <Typography sx={{ fontSize: '18px', fontWeight: 600 }}>
+              Call Review - {selectedCall?.id}
+            </Typography>
+            <IconButton onClick={handleCloseDialog} size="small">
+              
             </IconButton>
           </Box>
         </DialogTitle>
         <DialogContent>
           {selectedCall && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>Call Details</Typography>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Caller</Typography>
-                  <Typography variant="body1">{selectedCall.caller}</Typography>
+            <Box>
+              <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
+                {/* Left Side - Call Details */}
+                <Box sx={{ flex: 1, minWidth: 250 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
+                    Call Details
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Caller
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      {selectedCall.caller}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Phone
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      {selectedCall.phone}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Agent
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: '#4682B4' }}>
+                        {selectedCall.agent.split(' ').map((n: string) => n[0]).join('')}
+                      </Avatar>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {selectedCall.agent}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Duration
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      {selectedCall.duration}
+                    </Typography>
+                  </Box>
                 </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Phone</Typography>
-                  <Typography variant="body1">{selectedCall.phone}</Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Agent</Typography>
-                  <Typography variant="body1">{selectedCall.agent}</Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Duration</Typography>
-                  <Typography variant="body1">{selectedCall.duration}</Typography>
-                </Box>
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>Escalation Info</Typography>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Reason</Typography>
-                  <Typography variant="body1">{selectedCall.reason}</Typography>
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Category</Typography>
-                  <Chip label={selectedCall.category} size="small" />
-                </Box>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Priority</Typography>
-                  <Chip
-                    label={selectedCall.priority}
-                    color={getPriorityColor(selectedCall.priority)}
-                    size="small"
-                  />
-                </Box>
-              </Grid>
 
-              <Grid item xs={12}>
+                {/* Right Side - Escalation Info */}
+                <Box sx={{ flex: 1, minWidth: 250 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
+                    Escalation Info
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Reason
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      {selectedCall.reason}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Category
+                    </Typography>
+                    <Chip label={selectedCall.category} size="small" sx={{ fontSize: '12px' }} />
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Severity
+                    </Typography>
+                    <Chip
+                      label={selectedCall.severity}
+                      size="small"
+                      sx={{
+                        bgcolor: selectedCall.severityColor,
+                        color: 'white',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Escalation Time
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      {selectedCall.sentTime}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Resolution Section */}
+              <Box>
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom>Resolution</Typography>
+                <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
+                  Resolution
+                </Typography>
                 <TextField
                   multiline
                   rows={4}
@@ -328,13 +581,18 @@ export const EscalatedCallReview: React.FC = () => {
                   placeholder="Enter resolution details..."
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value)}
-                  sx={{ mb: 2 }}
+                  sx={{
+                    mb: 2,
+                    '& .MuiOutlinedInput-root': {
+                      fontSize: '14px',
+                    },
+                  }}
                 />
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
+                <FormControl fullWidth size="small">
                   <Select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
+                    sx={{ fontSize: '14px' }}
                   >
                     <MenuItem value="pending">Pending</MenuItem>
                     <MenuItem value="in-review">In Review</MenuItem>
@@ -342,16 +600,33 @@ export const EscalatedCallReview: React.FC = () => {
                     <MenuItem value="closed">Closed</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleCloseDialog}
+            sx={{
+              textTransform: 'none',
+              fontSize: '14px',
+              color: '#6B7280',
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={handleResolveCall}
-            startIcon={<CheckCircle />}
+            startIcon={<CheckCircle size={16} />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '14px',
+              bgcolor: '#00897b',
+              '&:hover': {
+                bgcolor: '#00796b',
+              },
+            }}
           >
             Update Call
           </Button>
@@ -359,4 +634,4 @@ export const EscalatedCallReview: React.FC = () => {
       </Dialog>
     </Box>
   );
-};
+}

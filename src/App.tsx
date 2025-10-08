@@ -26,7 +26,20 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { LiveCallInterface } from './pages/agent/LiveCallInterface/LiveCallInterface';
 import { CallSummaryScreen } from './pages/agent/CallSummaryScreen/CallSummaryScreen';
 import { SupervisorDashboard } from './pages/supervisor/SupervisorDashboard/SupervisorDashboard';
-import { EscalatedCallReview } from './pages/supervisor/EscalatedCallReview/EscalatedCallReview';
+import  Demographics  from './pages/supervisor/Demographics/Demographics';
+
+import  StaffPerformance  from './pages/supervisor/StaffPerformance/StaffPerformance';
+import  SupervisorAnalytics   from './pages/supervisor/Analytics/Analytics';
+import  TopicAnalysis  from './pages/supervisor/TopicAnalysis/TopicAnalysis';
+import QualityMetrics from './pages/supervisor/QualityMetrics/QualityMetrics';
+//import QualityMetricsPopup from './pages/supervisor/SuperviserPopup/QualityMetricsPopup';
+import  CallAgentLeaderboard from './pages/supervisor/SuperviserPopup/CallAgentLeaderboard';
+import AreasForImprovementDrawer from './pages/supervisor/SuperviserPopup/AreasForImprovementDrawer';
+import CallHistoryTab from './pages/supervisor/CallHistoryTab/CallHistoryTab';
+import EscalatedCallReview from './pages/supervisor/EscalatedCallReview/EscalatedCallReview';
+import StaffDetailsPage from './pages/supervisor/StaffDetailsPage/StaffDetailsPage';
+import { CallHistory as SupervisorCallHistory } from './pages/supervisor/CallHistory/CallHistory';
+import { CallDetails as SupervisorCallDetails } from './pages/supervisor/CallDetails/CallDetails';
 import { AdminDashboard } from './pages/admin/AdminDashboard/AdminDashboard';
 import { UserManagement } from './pages/admin/UserManagement/UserManagement';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
@@ -79,9 +92,19 @@ const SupervisorRoutes: React.FC = () => {
       <Route path="live-monitoring" element={<LiveMonitoring />} />
       <Route path="escalations" element={<EscalatedCallReview />} />
       <Route path="escalated-reviews" element={<EscalatedCallReview />} />
-      <Route path="call-history" element={<div>Call History Page</div>} />
-      <Route path="staff-performance" element={<div>Staff Performance Page</div>} />
-      <Route path="analytics" element={<div>Analytics Page</div>} />
+      <Route path="call-history" element={<SupervisorCallHistory />} />
+      <Route path="call-detail" element={<SupervisorCallDetails />} />
+    
+      <Route path="staff-performance" element={<StaffPerformance/>} />
+      <Route path="analytics" element={<SupervisorAnalytics/>} />
+      <Route path="Demographics" element={<Demographics/>} />
+      <Route path="TopicAnalysis" element={<TopicAnalysis/>} />
+      <Route path="QualityMetrics" element={<QualityMetrics/>} />
+      <Route path="StaffDetailsPage" element={<StaffDetailsPage/>} />
+      <Route path="CallHistoryTab" element={<CallHistoryTab/>} />
+     
+     
+
       <Route path="training" element={<div>Training Materials Page</div>} />
       <Route path="help" element={<div>Help and Support Page</div>} />
       <Route path="settings" element={<div>Settings Page</div>} />
@@ -175,6 +198,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute roles={['supervisor']}>
                       <Navigate to="/supervisor/escalated-reviews" replace />
+                    </ProtectedRoute>
+                  }
+                />
+                                <Route
+                  path="/CallHistory"
+                  element={
+                    <ProtectedRoute roles={['supervisor']}>
+                      <Navigate to="/supervisor/CallHistory" replace />
                     </ProtectedRoute>
                   }
                 />
