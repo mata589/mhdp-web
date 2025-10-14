@@ -40,8 +40,14 @@ import EscalatedCallReview from './pages/supervisor/EscalatedCallReview/Escalate
 import StaffDetailsPage from './pages/supervisor/StaffDetailsPage/StaffDetailsPage';
 import { CallHistory as SupervisorCallHistory } from './pages/supervisor/CallHistory/CallHistory';
 import { CallDetails as SupervisorCallDetails } from './pages/supervisor/CallDetails/CallDetails';
-import { AdminDashboard } from './pages/admin/AdminDashboard/AdminDashboard';
+import AdminDashboard  from './pages/admin/AdminDashboard/AdminDashboard';
+import FacilityUsersPage  from './pages/admin/FacilityUsersPage/FacilityUsersPage';
+import DashboardOverviewPage  from './pages/admin/DashboardOverviewPage/DashboardOverviewPage';
 import { UserManagement } from './pages/admin/UserManagement/UserManagement';
+import FacilitiesManagement from './pages/admin/FacilitiesManagement/FacilitiesManagement';
+import FacilitiesManagement2 from './pages/admin/FacilitiesManagement2/FacilitiesManagement2';
+import FacilityUserManagement from './pages/admin/FacilityUserManagement/FacilityUserManagement';
+import FacilityDetails from './pages/admin/FacilityDetails/FacilityDetails';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import { LandingPage } from './pages/public/LandingPage';
 import { CallHistory } from './pages/agent/CallHistory/CallHistory';
@@ -117,13 +123,18 @@ const SupervisorRoutes: React.FC = () => {
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/users" element={<UserManagement />} />
+      <Route path="/admin/" element={<AdminDashboard />} />
+      <Route path="/admin/FacilitiesManagement" element={<FacilitiesManagement />} />
+      <Route path="/admin/FacilitiesManagement2" element={<FacilitiesManagement2/>} />
+      <Route path="/admin/FacilityDetails" element={<FacilityDetails />} />
+      <Route path="/admin/FacilityUsersPage" element={<FacilityUsersPage/>} />
+      <Route path="/admin/FacilityUserManagement" element={<FacilityUserManagement/>} />
+      <Route path="/admin/DashboardOverviewPage" element={<DashboardOverviewPage/>} />
       <Route path="/admin/system" element={<div>System Health Page</div>} />
       <Route path="/admin/analytics" element={<div>Analytics Page</div>} />
       <Route path="/admin/security" element={<div>Security Page</div>} />
       <Route path="/admin/settings" element={<div>Settings Page</div>} />
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to="/admin/admin" replace />} />
     </Routes>
   );
 };
@@ -267,7 +278,7 @@ const RoleBasedDashboardRedirect: React.FC = () => {
     case 'supervisor':
       return <Navigate to="/supervisor" replace />;
     case 'admin':
-      return <Navigate to="/admin" replace />;
+      return <Navigate to="/admin/" replace />;
     default:
       return <Navigate to="/login" replace />;
   }

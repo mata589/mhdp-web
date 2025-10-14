@@ -1,310 +1,353 @@
-// File: src/pages/admin/AdminDashboard/AdminDashboard.tsx
-import React, { useState } from 'react';
-import { GridLegacy as Grid } from '@mui/material';
+// HealthcareDashboard.jsx
+import React from 'react';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
   Button,
-  Avatar,
-  LinearProgress,
+  Chip,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider
+  Avatar,
+  MenuItem,
+  Select,
+  FormControl,
 } from '@mui/material';
 import {
-  Dashboard,
-  People,
-  Phone,
   TrendingUp,
-  Warning,
-  Settings,
-  Storage,
-  Security,
-  Assessment,
-  Notifications,
-  SystemUpdate
+  TrendingDown,
+  MoreVert,
+  FilterList,
 } from '@mui/icons-material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-export const AdminDashboard: React.FC = () => {
-  const systemMetrics = {
-    totalUsers: 45,
-    activeAgents: 12,
-    totalCalls: 2847,
-    systemUptime: '99.8%',
-    storageUsed: 67,
-    securityAlerts: 3
-  };
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#00897B',
+    },
+  },
+});
 
-  const recentActivities = [
-    { action: 'New user registered', user: 'Dr. Mukasa', time: '5 min ago', type: 'user' },
-    { action: 'System backup completed', user: 'System', time: '1 hour ago', type: 'system' },
-    { action: 'Security policy updated', user: 'Admin', time: '2 hours ago', type: 'security' },
-    { action: 'Performance report generated', user: 'System', time: '4 hours ago', type: 'report' }
+export default function HealthcareDashboard() {
+  const statsCards = [
+    {
+      iconPath: '/phone1.png', // Replace with your actual icon path
+      label: 'Calls Today',
+      value: '1247',
+      trend: '+1%',
+      trendText: 'vs yesterday',
+      isPositive: true
+    },
+    {
+      iconPath: '/vian.png', // Replace with your actual icon path
+      label: 'Total Facilities',
+      value: '2',
+      trend: '+1%',
+      trendText: 'vs last month',
+      isPositive: true,
+      
+    },
+    {
+      iconPath: '/Staff3.png', // Replace with your actual icon path
+      label: 'Total Users',
+      value: '281',
+      trend: '+1%',
+      trendText: 'vs last week',
+      isPositive: true,
+      
+    },
+    {
+      iconPath: '/star2.png', // Replace with your actual icon path
+      label: 'System Uptime',
+      value: '99%',
+      trend: '-0%',
+      trendText: 'vs last 30 days',
+      isPositive: false,
+    
+    },
   ];
 
-  const systemHealth = [
-    { component: 'Database', status: 'healthy', uptime: 99.9 },
-    { component: 'API Gateway', status: 'healthy', uptime: 99.7 },
-    { component: 'Call Service', status: 'warning', uptime: 98.5 },
-    { component: 'Authentication', status: 'healthy', uptime: 100 },
-    { component: 'File Storage', status: 'healthy', uptime: 99.6 }
+  const facilities = [
+    {
+      id: 1,
+      name: 'Butabika Hospital',
+      status: 'Active',
+      level: 'Referral Hospital',
+      location: 'Kampala, Uganda',
+      hso: 'Nakasa',
+      dateCreated: 'Mon, July 13, 2025',
+      time: '10:31 AM',
+      avatar: 'B',
+      avatarColor: '#E8F5E9',
+      avatarText: '#2E7D32',
+    },
+    {
+      id: 2,
+      name: 'Butabika Hospital',
+      status: 'Active',
+      level: 'Referral Hospital',
+      location: 'Kampala, Uganda',
+      hso: 'Nakasa',
+      dateCreated: 'Mon, July 13, 2025',
+      time: '10:31 AM',
+      avatar: 'B',
+      avatarColor: '#E8F5E9',
+      avatarText: '#2E7D32',
+    },
+    {
+      id: 3,
+      name: 'Menonic Hospital',
+      status: 'inactive',
+      level: 'Health Center IV',
+      location: 'Dodoma, Tanzania',
+      hso: 'Dodoma',
+      dateCreated: 'Mon, July 13, 2025',
+      time: '10:31 AM',
+      avatar: 'M',
+      avatarColor: '#FFF3E0',
+      avatarText: '#E65100',
+    },
   ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'success';
-      case 'warning': return 'warning';
-      case 'error': return 'error';
-      default: return 'default';
-    }
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'user': return <People />;
-      case 'system': return <SystemUpdate />;
-      case 'security': return <Security />;
-      case 'report': return <Assessment />;
-      default: return <Notifications />;
-    }
-  };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-        Admin Dashboard
-      </Typography>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ p: 3, backgroundColor: '#F5F5F5', minHeight: '100vh',ml:-5 }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Hello, Mary Namu
+          </Typography>
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: '#00897B',
+              textTransform: 'none',
+              borderRadius: 1,
+              '&:hover': {
+                backgroundColor: '#00695C',
+              },
+            }}
+          >
+            + Add facility
+          </Button>
+        </Box>
 
-      {/* System Overview Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <People sx={{ fontSize: 40, color: '#1976d2', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {systemMetrics.totalUsers}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Users
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Dashboard sx={{ fontSize: 40, color: '#4caf50', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {systemMetrics.activeAgents}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active Agents
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Phone sx={{ fontSize: 40, color: '#ff9800', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {systemMetrics.totalCalls}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Calls
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <TrendingUp sx={{ fontSize: 40, color: '#9c27b0', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {systemMetrics.systemUptime}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                System Uptime
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Storage sx={{ fontSize: 40, color: '#607d8b', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {systemMetrics.storageUsed}%
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Storage Used
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Warning sx={{ fontSize: 40, color: '#f44336', mb: 1 }} />
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {systemMetrics.securityAlerts}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Security Alerts
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={3}>
-        {/* System Health */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                System Health
-              </Typography>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Component</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Uptime</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {systemHealth.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.component}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={item.status}
-                            color={getStatusColor(item.status)}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <LinearProgress
-                              variant="determinate"
-                              value={item.uptime}
-                              sx={{ width: 60, height: 6, borderRadius: 3 }}
-                              color={item.uptime > 99 ? 'success' : item.uptime > 98 ? 'warning' : 'error'}
-                            />
-                            <Typography variant="caption">
-                              {item.uptime}%
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Recent Activities */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Activities
-              </Typography>
-              <List>
-                {recentActivities.map((activity, index) => (
-                  <React.Fragment key={index}>
-                    <ListItem>
-                      <ListItemIcon>
-                        {getActivityIcon(activity.type)}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={activity.action}
-                        secondary={`${activity.user} • ${activity.time}`}
+        {/* Stats Cards */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+          {statsCards.map((card, index) => (
+            <Box key={index} sx={{ flex: '1 1 calc(25% - 12px)', minWidth: '200px' }}>
+              <Card sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)', height: '100%' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Box
+                      sx={{
+                        
+                        borderRadius: 1,
+                        p: 0.5,
+                        mr: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 32,
+                        height: 32,
+                      }}
+                    >
+                      <img 
+                        src={card.iconPath} 
+                        alt={card.label}
+                        style={{ width: '20px', height: '20px', objectFit: 'contain' }}
                       />
-                    </ListItem>
-                    {index < recentActivities.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {card.label}
+                    </Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    {card.value}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {card.isPositive ? (
+                      <TrendingUp sx={{ fontSize: 16, color: '#00897B', mr: 0.5 }} />
+                    ) : (
+                      <TrendingDown sx={{ fontSize: 16, color: '#D32F2F', mr: 0.5 }} />
+                    )}
+                    <Typography
+                      variant="caption"
+                      sx={{ color: card.isPositive ? '#00897B' : '#D32F2F', mr: 0.5 }}
+                    >
+                      {card.trend}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {card.trendText}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          ))}
+        </Box>
 
-        {/* Quick Actions */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<People />}
-                    sx={{ py: 1.5 }}
+        {/* Facilities Table */}
+        <Card sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Facilities Overview
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Manage all registered healthcare facilities
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1  }}>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <Select defaultValue="all" sx={{ backgroundColor: 'white' }}>
+                    <MenuItem value="all">All status</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="outlined"
+                  startIcon={<FilterList />}
+                  sx={{
+                    textTransform: 'none',
+                    borderColor: '#E0E0E0',
+                    color: 'text.primary',
+                  }}
+                >
+                  Filters
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Table Header */}
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                pb: 1,
+                borderBottom: '1px solid #E0E0E0',
+                mb: 2,
+              }}
+            >
+              <Box sx={{ flex: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Name
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Status
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Level
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Location
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  HSO
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Date Created
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Action
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Table Rows */}
+            {facilities.map((facility) => (
+              <Box
+                key={facility.id}
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  py: 2,
+                  borderBottom: '1px solid #F5F5F5',
+                  alignItems: 'center',
+                }}
+              >
+                <Box sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      backgroundColor: facility.avatarColor,
+                      color: facility.avatarText,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                    }}
                   >
-                    Manage Users
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<Settings />}
-                    sx={{ py: 1.5 }}
-                  >
-                    System Settings
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<Assessment />}
-                    sx={{ py: 1.5 }}
-                  >
-                    Generate Reports
-                  </Button>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<Security />}
-                    sx={{ py: 1.5 }}
-                  >
-                    Security Audit
-                  </Button>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+                    {facility.avatar}
+                  </Avatar>
+                  <Typography variant="body2">{facility.name}</Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Chip
+                    label={facility.status}
+                    size="small"
+                    sx={{
+                      backgroundColor: facility.status === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
+                      color: facility.status === 'ACTIVE' ? '#2E7D32' : '#C62828',
+                      fontWeight: 600,
+                      fontSize: '11px',
+                      height: '24px',
+                    }}
+                  />
+                </Box>
+                <Box sx={{ flex: 1.5 }}>
+                  <Typography variant="body2">{facility.level}</Typography>
+                </Box>
+                <Box sx={{ flex: 1.5 }}>
+                  <Typography variant="body2">{facility.location}</Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2">{facility.hso}</Typography>
+                </Box>
+                <Box sx={{ flex: 1.5 }}>
+                  <Typography variant="body2">{facility.dateCreated}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {facility.time}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 0.5 }}>
+                  <IconButton size="small">
+                    <MoreVert fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            ))}
+
+            {/* View All Button */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                sx={{
+                  textTransform: 'none',
+                  color: '#00897B',
+                  fontWeight: 500,
+                }}
+              >
+                View All
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </ThemeProvider>
   );
-};
+}
+

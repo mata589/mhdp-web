@@ -9,7 +9,6 @@ import {
   ListItemText,
   Box,
   Typography,
-  Avatar,
   Divider,
 } from '@mui/material';
 import {
@@ -17,23 +16,22 @@ import {
   People as UsersIcon,
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
-  Security as SecurityIcon,
-  Storage as SystemIcon,
   ExitToApp as SignOutIcon,
+  Business as FacilityIcon,
+  HealthAndSafety as SystemHealthIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 
-
 const adminNavItems = [
   { path: '/admin', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/admin/users', label: 'User Management', icon: UsersIcon },
-  { path: '/admin/system', label: 'System Health', icon: SystemIcon },
-  { path: '/admin/analytics', label: 'Analytics', icon: AnalyticsIcon },
-  { path: '/admin/security', label: 'Security', icon: SecurityIcon },
+  { path: '/admin/admin/FacilitiesManagement2', label: 'Facility management', icon: FacilityIcon },
+  { path: '/admin/admin/FacilityUsersPage', label: 'User management', icon: UsersIcon },
+  { path: '/admin/DashboardOverviewPage', label: 'System health', icon: SystemHealthIcon },
+  { path: '/admin/admin/DashboardOverviewPage', label: 'Analytics', icon: AnalyticsIcon },
 ];
 
-const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH = 280;
 
 export const AdminSidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -58,65 +56,87 @@ export const AdminSidebar: React.FC = () => {
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
-          mt: '64px',
-          height: 'calc(100vh - 64px)',
-          borderRight: '1px solid #e0e0e0',
+          height: '100vh',
+          borderRight: '1px solid #E5E7EB',
+          bgcolor: '#FFFFFF',
         },
       }}
     >
       {/* Hospital Logo and Title */}
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar
-          sx={{ 
-            width: 32, 
-            height: 32, 
-            bgcolor: 'primary.main',
-            fontSize: '0.875rem',
-            fontWeight: 600,
+      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          component="img"
+          src="/hosiptal.png"
+          alt="Hospital Logo"
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            objectFit: 'cover',
           }}
-        >
-          BH
-        </Avatar>
+        />
         <Box>
-          <Typography variant="subtitle1" fontWeight={600}>
+          <Typography 
+            variant="subtitle1" 
+            fontWeight={600}
+            sx={{ 
+              fontSize: '0.95rem',
+              lineHeight: 1.2,
+              color: '#1F2937'
+            }}
+          >
             Butabika Hospital
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: '#6B7280',
+              fontSize: '0.75rem'
+            }}
+          >
             Admin portal
           </Typography>
         </Box>
       </Box>
 
-      <Divider />
+      <Divider sx={{ borderColor: '#E5E7EB' }} />
 
       {/* Main Navigation */}
-      <List sx={{ px: 1, py: 2 }}>
+      <List sx={{ px: 2, py: 3, flexGrow: 1 }}>
         {adminNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           
           return (
-            <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
               <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 sx={{
-                  borderRadius: 3,
-                  mx: 1,
-                  bgcolor: isActive ? 'primary.main' : 'transparent',
-                  color: isActive ? 'white' : 'text.primary',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1.25,
+                  bgcolor: isActive ? '#0D9488' : 'transparent',
+                  color: isActive ? '#FFFFFF' : '#6B7280',
                   '&:hover': {
-                    bgcolor: isActive ? 'primary.dark' : 'action.hover',
+                    bgcolor: isActive ? '#0F766E' : '#E3F2FD',
+                    color: isActive ? '#FFFFFF' : '#1976D2',
                   },
                 }}
               >
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
-                  <Icon fontSize="small" />
+                <ListItemIcon 
+                  sx={{ 
+                    color: 'inherit', 
+                    minWidth: 36,
+                  }}
+                >
+                  <Icon sx={{ fontSize: 20 }} />
                 </ListItemIcon>
                 <ListItemText 
                   primary={item.label}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
                     fontWeight: isActive ? 600 : 500,
+                    color: 'inherit',
                   }}
                 />
               </ListItemButton>
@@ -126,28 +146,31 @@ export const AdminSidebar: React.FC = () => {
       </List>
 
       {/* Bottom Navigation */}
-      <Box sx={{ mt: 'auto', p: 1 }}>
-        <Divider sx={{ mx: 1, mb: 1 }} />
+      <Box sx={{ p: 2, pb: 3 }}>
+        <Divider sx={{ mb: 2, borderColor: '#E5E7EB' }} />
         
         <ListItemButton
           onClick={() => handleNavigation('/admin/settings')}
           sx={{
-            borderRadius: 3,
-            mx: 1,
-            mb: 0.5,
+            borderRadius: 2,
+            px: 2,
+            py: 1.25,
+            mb: 1,
+            color: '#6B7280',
             '&:hover': {
-              bgcolor: 'action.hover',
+              bgcolor: '#F3F4F6',
             },
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40 }}>
-            <SettingsIcon fontSize="small" color="action" />
+          <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+            <SettingsIcon sx={{ fontSize: 20 }} />
           </ListItemIcon>
           <ListItemText 
             primary="Settings"
             primaryTypographyProps={{
               fontSize: '0.875rem',
-              color: 'text.secondary',
+              fontWeight: 500,
+              color: 'inherit',
             }}
           />
         </ListItemButton>
@@ -155,22 +178,25 @@ export const AdminSidebar: React.FC = () => {
         <ListItemButton
           onClick={handleSignOut}
           sx={{
-            borderRadius: 3,
-            mx: 1,
-            color: 'error.main',
+            borderRadius: 2,
+            px: 2,
+            py: 1.25,
+            color: '#6B7280',
             '&:hover': {
-              bgcolor: 'error.lighter',
+              bgcolor: '#FEF2F2',
+              color: '#DC2626',
             },
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40 }}>
-            <SignOutIcon fontSize="small" color="error" />
+          <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+            <SignOutIcon sx={{ fontSize: 20 }} />
           </ListItemIcon>
           <ListItemText 
             primary="Sign out"
             primaryTypographyProps={{
               fontSize: '0.875rem',
-              color: 'error.main',
+              fontWeight: 500,
+              color: 'inherit',
             }}
           />
         </ListItemButton>
