@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { theme } from './theme';
 import { useAuth } from './contexts/AuthContext';
+import { FacilityAdminLayout } from './components/layouts/FacilityAdminLayout/FacilityAdminLayout';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -56,7 +57,7 @@ import { LiveMonitoring } from './pages/supervisor/LiveMonitoring/LiveMonitoring
 import { VoicemailListPage } from './pages/agent/VoicemailListPage/VoicemailListPage';
 import { VoicemailPage } from './pages/agent/VoicemailPage/VoicemailPage';
 import { MissedCallsPage } from './pages/agent/MissedCallsPage/MissedCallsPage';
-
+import ViewFacilityAdmin from './pages/FacilityAdmin/ViewFacilityAdmin/ViewFacilityAdmin';
 // Create a query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -135,6 +136,17 @@ const AdminRoutes: React.FC = () => {
       <Route path="/admin/security" element={<div>Security Page</div>} />
       <Route path="/admin/settings" element={<div>Settings Page</div>} />
       <Route path="*" element={<Navigate to="/admin/admin" replace />} />
+    </Routes>
+  );
+};
+const FacilityAdminRoutes: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/ViewFacilityAdmin" element={<ViewFacilityAdmin/>} />
+      <Route path="/facility-admin/users" element={<div>Manage Facility Users</div>} />
+      <Route path="/facility-admin/reports" element={<div>Reports Page</div>} />
+      <Route path="/facility-admin/settings" element={<div>Settings Page</div>} />
+      <Route path="*" element={<Navigate to="/facility-admin/dashboard" replace />} />
     </Routes>
   );
 };
@@ -252,7 +264,7 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
-
+                
                 {/* Catch all route */}
                 <Route path="*" element={<Navigate to="/dashboard-redirect" replace />} />
               </Routes>
