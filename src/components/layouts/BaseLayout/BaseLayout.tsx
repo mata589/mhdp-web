@@ -14,14 +14,21 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({
 }) => {
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* Fixed Sidebar */}
-      <Box sx={{ width: 320, flexShrink: 0 }}>
+      {/* Fixed Sidebar - Hidden on mobile */}
+      <Box sx={{ 
+        width: { xs: 0, md: 320 }, 
+        flexShrink: 0,
+        display: { xs: 'none', md: 'block' }
+      }}>
         <Sidebar />
       </Box>
 
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Fixed Header */}
-        <Box sx={{ height: 64, flexShrink: 0 }}>
+        <Box sx={{ 
+          height: { xs: 64, md: 102 }, 
+          flexShrink: 0 
+        }}>
           <Header />
         </Box>
 
@@ -31,8 +38,9 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({
           sx={{
             flexGrow: 1,
             bgcolor: 'background.default',
-            p: 3,
+            p: { xs: 2, md: 3 },
             overflow: 'auto',
+            mt: { xs: 0, md: 0 }, // Account for header height difference
           }}
         >
           {children}

@@ -82,39 +82,84 @@ export const theme = createTheme({
       900: '#212121',
     },
   },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
   typography: {
     fontFamily: 'Inter, "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontSize: '2.5rem',
       fontWeight: 600,
+      [createTheme().breakpoints.down('md')]: {
+        fontSize: '2rem',
+      },
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '1.75rem',
+      },
     },
     h2: {
       fontSize: '2rem',
       fontWeight: 600,
+      [createTheme().breakpoints.down('md')]: {
+        fontSize: '1.75rem',
+      },
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '1.5rem',
+      },
     },
     h3: {
       fontSize: '1.75rem',
       fontWeight: 500,
+      [createTheme().breakpoints.down('md')]: {
+        fontSize: '1.5rem',
+      },
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '1.25rem',
+      },
     },
     h4: {
       fontSize: '1.5rem',
       fontWeight: 500,
+      [createTheme().breakpoints.down('md')]: {
+        fontSize: '1.25rem',
+      },
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '1.125rem',
+      },
     },
     h5: {
       fontSize: '1.25rem',
       fontWeight: 500,
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '1.125rem',
+      },
     },
     h6: {
       fontSize: '1rem',
       fontWeight: 500,
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '0.875rem',
+      },
     },
     body1: {
       fontSize: '1rem',
       lineHeight: 1.6,
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '0.875rem',
+      },
     },
     body2: {
       fontSize: '0.875rem',
       lineHeight: 1.5,
+      [createTheme().breakpoints.down('sm')]: {
+        fontSize: '0.75rem',
+      },
     },
   },
   shape: {

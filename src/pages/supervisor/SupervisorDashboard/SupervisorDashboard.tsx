@@ -254,13 +254,19 @@ export const SupervisorDashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3, bgcolor: '#f9fafb', minHeight: '100vh' }}>
+    <Box sx={{ 
+      p: { xs: 2, md: 3 }, 
+      bgcolor: '#f9fafb', 
+      minHeight: '100vh' 
+    }}>
       {/* Header */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        mb: 3 
+        mb: 3,
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 2, sm: 0 }
       }}>
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
           Hello, {user?.name || 'Bosco Kimuli'}

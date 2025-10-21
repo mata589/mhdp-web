@@ -11,7 +11,10 @@ import {
   Paper,
   Typography,
   Box,
-  Chip,
+  useMediaQuery,
+  useTheme,
+  Card,
+  CardContent,
 } from '@mui/material';
 
 interface Column {
@@ -46,8 +49,77 @@ export const DataTable: React.FC<DataTableProps> = ({
   onPageChange,
   onRowsPerPageChange,
   onRowClick,
-  isLoading = false,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  if (isMobile) {
+    // Mobile Card Layout
+    return (
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        {title && (
+          <Box p={2}>
+            <Typography variant="h6">{title}</Typography>
+          </Box>
+        )}
+        <Box sx={{ p: 2 }}>
+          {data.map((row, index) => (
+            <Card
+              key={index}
+              sx={{
+                mb: 2,
+                cursor: onRowClick ? 'pointer' : 'default',
+                '&:hover': onRowClick ? { boxShadow: 2 } : {},
+              }}
+              onClick={() => onRowClick?.(row)}
+            >
+              <CardContent>
+                {columns.map((column) => {
+                  const value = row[column.id];
+                  return (
+                    <Box key={column.id} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        {column.label}:
+                      </Typography>
+                      <Box>
+                        {column.renderCell
+                          ? column.renderCell(value, row)
+                          : column.format
+                          ? column.format(value)
+                          : value}
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          component="div"
+          count={totalCount}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => onPageChange(newPage)}
+          onRowsPerPageChange={(event) =>
+            onRowsPerPageChange(parseInt(event.target.value, 10))
+          }
+          sx={{
+            '& .MuiTablePagination-toolbar': {
+              flexDirection: 'column',
+              gap: 1,
+            },
+            '& .MuiTablePagination-spacer': {
+              display: 'none',
+            },
+          }}
+        />
+      </Paper>
+    );
+  }
+
+  // Desktop Table Layout
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       {title && (

@@ -22,7 +22,7 @@ import { AdminLayout } from './components/layouts/AdminLayout/AdminLayout';
 import { ProtectedRoute } from './components/common/ProtectedRoute/ProtectedRoute';
 
 // Pages
-import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
+// import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
 import { LoginPage } from './pages/auth/LoginPage';
 import { LiveCallInterface } from './pages/agent/LiveCallInterface/LiveCallInterface';
 import { CallSummaryScreen } from './pages/agent/CallSummaryScreen/CallSummaryScreen';
@@ -49,7 +49,7 @@ import FacilitiesManagement from './pages/admin/FacilitiesManagement/FacilitiesM
 import FacilitiesManagement2 from './pages/admin/FacilitiesManagement2/FacilitiesManagement2';
 import FacilityUserManagement from './pages/admin/FacilityUserManagement/FacilityUserManagement';
 import FacilityDetails from './pages/admin/FacilityDetails/FacilityDetails';
-import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
+// import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import { LandingPage } from './pages/public/LandingPage';
 import { CallHistory } from './pages/agent/CallHistory/CallHistory';
 import { Analytics } from './pages/agent/Analytics/Analytics';
@@ -58,6 +58,11 @@ import { VoicemailListPage } from './pages/agent/VoicemailListPage/VoicemailList
 import { VoicemailPage } from './pages/agent/VoicemailPage/VoicemailPage';
 import { MissedCallsPage } from './pages/agent/MissedCallsPage/MissedCallsPage';
 import ViewFacilityAdmin from './pages/FacilityAdmin/ViewFacilityAdmin/ViewFacilityAdmin';
+import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
+import { CallDetailsPage } from './components/common/CallDetailsPage';
+import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
+
+// import AgentDashboard from './pages/agent/AgentDashboard/AgentDashboard';
 // Create a query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +80,7 @@ const AgentRoutes: React.FC = () => {
       <Route path="/dashboard" element={<AgentDashboard />} />
       <Route path="/active-calls" element={<LiveCallInterface />} />
       <Route path="/live-call" element={<LiveCallInterface />} />
+      <Route path="/call-details/:callId" element={<CallDetailsPage />} />
       <Route path="/call-summary/:callId" element={<CallSummaryScreen />} />
       <Route path="/call-history" element={<CallHistory />} />
       <Route path="/voicemail" element={<VoicemailListPage />} />

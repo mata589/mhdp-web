@@ -1,6 +1,6 @@
 // src/pages/agent/AgentDashboard/AgentDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom';
 import { GridLegacy as Grid } from '@mui/material';
 
 import {
@@ -8,17 +8,13 @@ import {
   Typography,
   Box,
   Button,
-  Alert,
   Chip,
   Card,
-  CardContent,
   Avatar,
   Stack,
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
-  Divider,
 } from '@mui/material';
 import {
   Call,
@@ -33,19 +29,13 @@ import {
   FilterList,
   Star,
 } from '@mui/icons-material';
-import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
-import { DataTable } from '../../../components/common/DataTable/DataTable';
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
 
-import { useAuth } from '../../../contexts/AuthContext';
-import { useCallData } from '../../../hooks/useCallData';
-import StatusChip from '../../../components/common/StatusChip/StatusChip';
 
-const statusColors = {
-  'Available': '#4caf50',
-  'Busy': '#ff9800', 
-  'Break': '#607d8b'
-};
+import { useAuth } from '../../../contexts/AuthContext';
+import StatusChip from '../../../components/common/StatusChip/StatusChip';
+import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
+import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
 
 // Custom chip component for Risk Level (with dot)
 const RiskChip: React.FC<{ riskLevel: 'Low' | 'Medium' | 'High' }> = ({ riskLevel }) => {
@@ -148,13 +138,14 @@ const formatDateTime = (dateTimeString: string) => {
 };
 
 export const AgentDashboard: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate();
   
   const [status, setStatus] = useState<'Available' | 'Busy' | 'Break'>('Available');
   const [statusFilter, setStatusFilter] = useState('All status');
   const [languageFilter, setLanguageFilter] = useState('All languages');
   const [showIncomingCall, setShowIncomingCall] = useState(false);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
+  const [playingCallId, setPlayingCallId] = useState<string | null>(null);
 
   // Mock data for recent call activity
   const recentCalls = [
@@ -165,7 +156,9 @@ export const AgentDashboard: React.FC = () => {
       primaryTopic: 'Anxiety Management',
       riskLevel: 'Medium' as const,
       outcome: 'Advice Given' as const,
-      qualityScore: '78%'
+      qualityScore: '78%',
+      duration: '8:15',
+      recordingUrl: 'https://example.com/recording-2031.mp3'
     },
     {
       id: '#2089',
@@ -174,7 +167,9 @@ export const AgentDashboard: React.FC = () => {
       primaryTopic: 'Depression',
       riskLevel: 'High' as const,
       outcome: 'Escalated' as const,
-      qualityScore: '78%'
+      qualityScore: '78%',
+      duration: '12:34',
+      recordingUrl: 'https://example.com/recording-2089.mp3'
     },
     {
       id: '#2031',
@@ -183,7 +178,9 @@ export const AgentDashboard: React.FC = () => {
       primaryTopic: 'Psychosis',
       riskLevel: 'Medium' as const,
       outcome: 'Advice Given' as const,
-      qualityScore: '80%'
+      qualityScore: '80%',
+      duration: '15:22',
+      recordingUrl: 'https://example.com/recording-2031-2.mp3'
     },
     {
       id: '#2070',
@@ -192,7 +189,9 @@ export const AgentDashboard: React.FC = () => {
       primaryTopic: 'Psychosis',
       riskLevel: 'Low' as const,
       outcome: 'Referred' as const,
-      qualityScore: '78%'
+      qualityScore: '78%',
+      duration: '6:45',
+      recordingUrl: 'https://example.com/recording-2070.mp3'
     },
     {
       id: '#2031',
@@ -201,12 +200,26 @@ export const AgentDashboard: React.FC = () => {
       primaryTopic: 'Depression',
       riskLevel: 'Medium' as const,
       outcome: 'Advice Given' as const,
-      qualityScore: '78%'
+      qualityScore: '78%',
+      duration: '10:18',
+      recordingUrl: 'https://example.com/recording-2031-3.mp3'
     }
   ];
 
   const handleStatusChange = (newStatus: 'Available' | 'Busy' | 'Break') => {
     setStatus(newStatus);
+  };
+
+  const handleViewCall = (callId: string) => {
+    setSelectedCallId(callId);
+  };
+
+  const handlePlayCall = (callId: string) => {
+    setPlayingCallId(callId);
+  };
+
+  const handleClosePlayer = () => {
+    setPlayingCallId(null);
   };
 
   // Simulate incoming call for demo purposes
@@ -220,7 +233,7 @@ export const AgentDashboard: React.FC = () => {
   const handleAnswer = () => {
     setShowIncomingCall(false);
     // Navigate to live call interface
-    navigate('/live-call');
+    navigate('/agent/live-call');
   };
 
   const handleDecline = () => {
@@ -233,18 +246,48 @@ export const AgentDashboard: React.FC = () => {
     // Handle voicemail logic here
   };
 
+  // If a call is selected, show the call details page
+  if (selectedCallId) {
+    return (
+      <CallDetailsPage
+        callId={selectedCallId}
+        onBack={() => setSelectedCallId(null)}
+      />
+    );
+  }
+
+  // Find the call being played
+  const playingCall = recentCalls.find(call => call.id === playingCallId);
+
   return (
-    <Box sx={{ p: 3, backgroundColor: '#fafafa', minHeight: '100vh', position: 'relative' }}>
+    <Box sx={{ 
+      p: { xs: 2, md: 3 }, 
+      backgroundColor: '#fafafa', 
+      minHeight: '100vh', 
+      position: 'relative' 
+    }}>
+      {/* Call Recording Player Popup */}
+      {playingCallId && playingCall && (
+        <CallRecordingPlayer
+          callId={playingCallId}
+          duration={`0:00 / ${playingCall.duration}`}
+          recordingUrl={playingCall.recordingUrl}
+          isPopup={true}
+          open={true}
+          onClose={handleClosePlayer}
+        />
+      )}
+
       {/* Incoming Call Popup */}
-     {/* Incoming Call Popup */}
-   {/* Incoming Call Popup */}
-   {showIncomingCall && (
+      {showIncomingCall && (
         <Box
           sx={{
             position: 'fixed',
-            top: 120,
-            right: 20,
-            width: 320,
+            top: { xs: 80, md: 120 },
+            right: { xs: 10, md: 20 },
+            left: { xs: 10, md: 'auto' },
+            width: { xs: 'calc(100vw - 20px)', md: 320 },
+            maxWidth: 320,
             height: 320,
             backgroundColor: 'linear-gradient(to bottom, #CCE5E5, #F2FAFA)',
             background: 'linear-gradient(to bottom, #CCE5E5, #F2FAFA)',
@@ -422,9 +465,20 @@ export const AgentDashboard: React.FC = () => {
       )}
       {/* Header Section */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 600, color: '#212121' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          gap: 2, 
+          mb: 2,
+          flexDirection: { xs: 'column', sm: 'row' }
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 600, 
+              color: '#212121',
+              fontSize: { xs: '1.5rem', md: '2rem' }
+            }}>
               Hey, James
             </Typography>
             <StatusChip status={status} />
@@ -436,7 +490,9 @@ export const AgentDashboard: React.FC = () => {
               border: '2px solid #e0e0e0',
               borderRadius: '25px',
               overflow: 'hidden',
-              backgroundColor: 'white'
+              backgroundColor: 'white',
+              width: { xs: '100%', sm: 'auto' },
+              justifyContent: { xs: 'center', sm: 'flex-start' }
             }}
           >
             {(['Available', 'Busy', 'Break'] as const).map((statusOption, index) => (
@@ -453,7 +509,7 @@ export const AgentDashboard: React.FC = () => {
                   border: 'none',
                   borderRight: index < 2 ? '1px solid #e0e0e0' : 'none',
                   textTransform: 'none',
-                  minWidth: 80,
+                  minWidth: { xs: '33.33%', sm: 80 },
                   '&:hover': {
                     backgroundColor: status === statusOption ? 'white' : '#f5f5f5',
                   },
@@ -500,14 +556,17 @@ export const AgentDashboard: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }
-          }}>
+          <Card 
+            onClick={() => navigate('/agent/call-history')}
+            sx={{ 
+              p: 3, 
+              backgroundColor: '#ffffff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Avatar sx={{ backgroundColor: '#ffa500', width: 48, height: 48 }}>
                 <History />
@@ -687,7 +746,7 @@ export const AgentDashboard: React.FC = () => {
 
         {/* Table Headers */}
         <Box sx={{ 
-          display: 'grid', 
+          display: { xs: 'none', md: 'grid' }, 
           gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1.5fr',
           gap: 2,
           p: 2,
@@ -726,7 +785,7 @@ export const AgentDashboard: React.FC = () => {
               <Box
                 key={index}
                 sx={{
-                  display: 'grid',
+                  display: { xs: 'block', md: 'grid' },
                   gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1.5fr',
                   gap: 2,
                   p: 2,
@@ -735,37 +794,86 @@ export const AgentDashboard: React.FC = () => {
                   borderRadius: '8px'
                 }}
               >
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {date}
+                {/* Desktop Layout */}
+                <Box sx={{ display: { xs: 'none', md: 'contents' } }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {date}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {time}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {call.id}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {call.caller}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2">
+                    {call.primaryTopic}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {time}
-                  </Typography>
+                  <RiskChip riskLevel={call.riskLevel} />
+                  <OutcomeChip outcome={call.outcome} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Star sx={{ color: '#ffd700', fontSize: 16 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {call.qualityScore}
+                    </Typography>
+                  </Box>
+                  <ActionButtonsGroup
+                    onPlay={() => handlePlayCall(call.id)}
+                    onView={() => handleViewCall(call.id)}
+                  />
                 </Box>
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {call.id}
+
+                {/* Mobile Layout */}
+                <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                        Call {call.id}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {call.caller}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <RiskChip riskLevel={call.riskLevel} />
+                      <OutcomeChip outcome={call.outcome} />
+                    </Box>
+                  </Box>
+                  
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                    {call.primaryTopic}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {call.caller}
-                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                        {date}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+                        {time}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Star sx={{ color: '#ffd700', fontSize: 16 }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {call.qualityScore}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <ActionButtonsGroup
+                      onPlay={() => handlePlayCall(call.id)}
+                      onView={() => handleViewCall(call.id)}
+                    />
+                  </Box>
                 </Box>
-                <Typography variant="body2">
-                  {call.primaryTopic}
-                </Typography>
-                <RiskChip riskLevel={call.riskLevel} />
-                <OutcomeChip outcome={call.outcome} />
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Star sx={{ color: '#ffd700', fontSize: 16 }} />
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {call.qualityScore}
-                  </Typography>
-                </Box>
-                <ActionButtonsGroup
-                  onPlay={() => console.log('Play call:', call.id)}
-                  onView={() => console.log('View call:', call.id)}
-                />
               </Box>
             );
           })}
@@ -777,6 +885,7 @@ export const AgentDashboard: React.FC = () => {
           </Typography>
           <Button
             variant="text"
+            onClick={() => navigate('/agent/call-history')}
             sx={{ color: '#008080', fontWeight: 500 }}
           >
             View All Call History

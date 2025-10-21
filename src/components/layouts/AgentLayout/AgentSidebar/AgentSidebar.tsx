@@ -69,6 +69,7 @@ export const AgentSidebar: React.FC = () => {
       sx={{
         width: DRAWER_WIDTH,
         flexShrink: 0,
+        display: { xs: 'none', md: 'block' },
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',

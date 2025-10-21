@@ -30,6 +30,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
+import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
+
 
 interface VoicemailItem {
   id: string;
@@ -43,6 +45,7 @@ interface VoicemailItem {
   riskLevel: 'Low' | 'Medium' | 'High' | 'Critical';
   status: 'Unresolved' | 'Resolved' | 'In progress';
   priority: 'urgent' | 'normal';
+  recordingUrl?: string;
 }
 
 // Updated mock data to match the design
@@ -59,6 +62,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'Medium',
     status: 'Resolved',
     priority: 'normal',
+    recordingUrl: 'https://example.com/voicemail-2090.mp3'
   },
   {
     id: '2031',
@@ -72,6 +76,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'Critical',
     status: 'Unresolved',
     priority: 'urgent',
+    recordingUrl: 'https://example.com/voicemail-2031.mp3'
   },
   {
     id: '2034',
@@ -85,6 +90,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'Low',
     status: 'Resolved',
     priority: 'normal',
+    recordingUrl: 'https://example.com/voicemail-2034.mp3'
   },
   {
     id: '2031b',
@@ -98,6 +104,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'High',
     status: 'In progress',
     priority: 'urgent',
+    recordingUrl: 'https://example.com/voicemail-2031b.mp3'
   },
   {
     id: '2063',
@@ -111,6 +118,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'Low',
     status: 'Resolved',
     priority: 'normal',
+    recordingUrl: 'https://example.com/voicemail-2063.mp3'
   },
   {
     id: '2031c',
@@ -124,6 +132,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'Low',
     status: 'In progress',
     priority: 'normal',
+    recordingUrl: 'https://example.com/voicemail-2031c.mp3'
   },
   {
     id: '2012',
@@ -137,6 +146,7 @@ const mockVoicemails: VoicemailItem[] = [
     riskLevel: 'Medium',
     status: 'Resolved',
     priority: 'normal',
+    recordingUrl: 'https://example.com/voicemail-2012.mp3'
   },
 ];
 
@@ -148,6 +158,7 @@ export const VoicemailListPage: React.FC = () => {
   const [riskLevelFilter, setRiskLevelFilter] = useState('All risk levels');
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersMenuAnchor, setFiltersMenuAnchor] = useState<null | HTMLElement>(null);
+  const [playingVoicemailId, setPlayingVoicemailId] = useState<string | null>(null);
 
   const itemsPerPage = 10;
   const totalItems = 60; // Updated to match design
@@ -158,7 +169,11 @@ export const VoicemailListPage: React.FC = () => {
   };
 
   const handlePlayVoicemail = (voicemailId: string) => {
-    console.log('Playing voicemail:', voicemailId);
+    setPlayingVoicemailId(voicemailId);
+  };
+
+  const handleClosePlayer = () => {
+    setPlayingVoicemailId(null);
   };
 
   const handleCallBack = (callId: string) => {
@@ -196,8 +211,23 @@ export const VoicemailListPage: React.FC = () => {
     setFiltersMenuAnchor(null);
   };
 
+  // Find the voicemail being played
+  const playingVoicemail = mockVoicemails.find(vm => vm.id === playingVoicemailId);
+
   return (
     <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
+      {/* Call Recording Player Popup */}
+      {playingVoicemailId && playingVoicemail && (
+        <CallRecordingPlayer
+          callId={playingVoicemail.callerId}
+          duration={`0:00 / ${playingVoicemail.duration}`}
+          recordingUrl={playingVoicemail.recordingUrl}
+          isPopup={true}
+          open={true}
+          onClose={handleClosePlayer}
+        />
+      )}
+
       {/* Filters Bar */}
       <Box sx={{ 
         display: 'flex', 
