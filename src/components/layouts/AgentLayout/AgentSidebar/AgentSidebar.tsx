@@ -200,7 +200,7 @@ export const AgentSidebar: React.FC = () => {
       <Divider sx={{ mx: 2, my: 3, borderColor: '#e5e7eb' }} />
 
       {/* Secondary Navigation */}
-      <List sx={{ px: 2, py: 0 }}>
+      {/* <List sx={{ px: 2, py: 0 }}>
         {secondaryNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPath === item.path;
@@ -245,7 +245,7 @@ export const AgentSidebar: React.FC = () => {
             </ListItem>
           );
         })}
-      </List>
+      </List> */}
 
       {/* Bottom Navigation */}
       <Box sx={{ mt: 'auto', p: 2 }}>

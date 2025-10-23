@@ -61,6 +61,7 @@ import ViewFacilityAdmin from './pages/FacilityAdmin/ViewFacilityAdmin/ViewFacil
 import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
 import { CallDetailsPage } from './components/common/CallDetailsPage';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
+import Settings from './components/Settings/settings';
 
 // import AgentDashboard from './pages/agent/AgentDashboard/AgentDashboard';
 // Create a query client
@@ -90,7 +91,7 @@ const AgentRoutes: React.FC = () => {
       <Route path="/training" element={<div>Training Materials Page</div>} />
       <Route path="/emergency" element={<div>Emergency Guide Page</div>} />
       <Route path="/help" element={<div>Help and Support Page</div>} />
-      <Route path="/settings" element={<div>Settings Page</div>} />
+      <Route path="/settings" element={<Settings />} /> {/* Changed this line */}
       <Route path="/call-review/:callId" element={<CallReviewScreen />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -120,7 +121,7 @@ const SupervisorRoutes: React.FC = () => {
 
       <Route path="training" element={<div>Training Materials Page</div>} />
       <Route path="help" element={<div>Help and Support Page</div>} />
-      <Route path="settings" element={<div>Settings Page</div>} />
+      <Route path="settings" element={<Settings />} /> {/* Changed this line */}
       <Route path="call-review/:callId" element={<CallReviewScreen />} />
       <Route path="*" element={<Navigate to="/supervisor" replace />} />
     </Routes>
@@ -140,7 +141,7 @@ const AdminRoutes: React.FC = () => {
       <Route path="/admin/system" element={<div>System Health Page</div>} />
       <Route path="/admin/analytics" element={<div>Analytics Page</div>} />
       <Route path="/admin/security" element={<div>Security Page</div>} />
-      <Route path="/admin/settings" element={<div>Settings Page</div>} />
+      <Route path="/admin/settings" element={<Settings />} />
       <Route path="*" element={<Navigate to="/admin/admin" replace />} />
     </Routes>
   );
@@ -151,7 +152,7 @@ const FacilityAdminRoutes: React.FC = () => {
       <Route path="/ViewFacilityAdmin" element={<ViewFacilityAdmin/>} />
       <Route path="/facility-admin/users" element={<div>Manage Facility Users</div>} />
       <Route path="/facility-admin/reports" element={<div>Reports Page</div>} />
-      <Route path="/facility-admin/settings" element={<div>Settings Page</div>} />
+      <Route path="/facility-admin/settings" element={<Settings />} /> {/* Changed this line */}
       <Route path="*" element={<Navigate to="/facility-admin/dashboard" replace />} />
     </Routes>
   );
