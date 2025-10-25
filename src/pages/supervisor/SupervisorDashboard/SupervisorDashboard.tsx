@@ -9,8 +9,6 @@ import {
   Button,
   Avatar,
   IconButton,
-  Tabs,
-  Tab,
   Chip,
   Table,
   TableBody,
@@ -28,13 +26,13 @@ import {
   Star,
   Visibility,
   Refresh,
-  TrendingUp,
-  TrendingDown,
   PlayArrow,
   PhoneInTalk,
   FilterList,
 } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/AuthContext';
+import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
+
 import {
   BarChart,
   Bar,
@@ -44,48 +42,63 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import ToggleTabs from '../../../components/common/ToggleTabs/ToggleTabs';
 
 export const SupervisorDashboard: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<number>(0);
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const tabOptions = [
+    { label: 'Overview', value: 0 },
+    { label: 'Alerts & Escalations', value: 1 },
+    { label: 'Staff Performance', value: 2 },
+  ];
 
   const metrics = [
     {
-      icon: Phone,
-      iconBg: '#14b8a6',
-      label: 'Total Calls',
+      icon: <Phone sx={{ fontSize: 24, color: 'white' }} />,
+      color: 'teal' as const,
+      title: 'Total Calls',
       value: '489',
-      change: '+5%',
-      changeLabel: 'vs last month',
-      isPositive: true,
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
     },
     {
-      icon: Phone,
-      iconBg: '#f59e0b',
-      label: 'Calls Today',
+      icon: <Phone sx={{ fontSize: 24, color: 'white' }} />,
+      color: 'amber' as const,
+      title: 'Calls Today',
       value: '156',
-      change: '-1%',
-      changeLabel: 'vs yesterday',
-      isPositive: false,
+      change: {
+        value: -1,
+        type: 'decrease' as const,
+        period: 'vs yesterday',
+      },
     },
     {
-      icon: Warning,
-      iconBg: '#ef4444',
-      label: 'Escalated Calls',
+      icon: <Warning sx={{ fontSize: 24, color: 'white' }} />,
+      color: 'red' as const,
+      title: 'Escalated Calls',
       value: '7',
-      change: '-1%',
-      changeLabel: 'vs yesterday',
-      isPositive: true,
+      change: {
+        value: -1,
+        type: 'decrease' as const,
+        period: 'vs yesterday',
+      },
     },
     {
-      icon: Star,
-      iconBg: '#3b82f6',
-      label: 'Avg. Quality Score',
+      icon: <Star sx={{ fontSize: 24, color: 'white' }} />,
+      color: 'blue' as const,
+      title: 'Avg. Quality Score',
       value: '82%',
-      change: '+5%',
-      changeLabel: 'vs last month',
-      isPositive: true,
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
     },
   ];
 
@@ -249,10 +262,6 @@ export const SupervisorDashboard: React.FC = () => {
     },
   ];
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
   return (
     <Box sx={{ 
       p: { xs: 2, md: 3 }, 
@@ -290,101 +299,30 @@ export const SupervisorDashboard: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Metrics Cards */}
+      {/* Metrics Cards - Using MetricCard Component */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Card 
-                sx={{ 
-                  bgcolor: 'white',
-                  borderRadius: 2,
-                  boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-                  '&:hover': {
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                  },
-                  transition: 'all 0.2s',
-                }}
-              >
-                <CardContent sx={{ p: 2.5 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 2,
-                        bgcolor: metric.iconBg,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Icon sx={{ fontSize: 20, color: 'white' }} />
-                    </Box>
-                    <Box sx={{ textAlign: 'right' }}>
-                      <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.75rem' }}>
-                        {metric.label}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#111827', mb: 0.5 }}>
-                    {metric.value}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {metric.isPositive ? (
-                      <TrendingUp sx={{ fontSize: 14, color: '#10b981' }} />
-                    ) : (
-                      <TrendingDown sx={{ fontSize: 14, color: '#ef4444' }} />
-                    )}
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: metric.isPositive ? '#10b981' : '#ef4444',
-                        fontWeight: 600,
-                        fontSize: '0.75rem'
-                      }}
-                    >
-                      {metric.change}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.75rem' }}>
-                      {metric.changeLabel}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
+        {metrics.map((metric, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <MetricCard
+              title={metric.title}
+              value={metric.value}
+              change={metric.change}
+              icon={metric.icon}
+              color={metric.color}
+              onClick={() => console.log(`Clicked ${metric.title}`)}
+            />
+          </Grid>
+        ))}
       </Grid>
 
-      {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: '#e5e7eb', mb: 3 }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              color: '#6b7280',
-              minHeight: 48,
-              '&.Mui-selected': {
-                color: '#14b8a6',
-                fontWeight: 600,
-              },
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#14b8a6',
-              height: 2,
-            },
-          }}
-        >
-          <Tab label="Overview" />
-          <Tab label="Alerts & Escalations" />
-          <Tab label="Staff Performance" />
-        </Tabs>
+      {/* Toggle Tabs */}
+      <Box sx={{ mb: 3 }}>
+        <ToggleTabs
+          tabs={tabOptions}
+          value={activeTab}
+          onChange={(value) => setActiveTab(value as number)}
+          sx={{ width: '100%' }}
+        />
       </Box>
 
       {/* Tab Content */}

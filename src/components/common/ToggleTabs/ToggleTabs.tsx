@@ -22,11 +22,12 @@ export const ToggleTabs: React.FC<ToggleTabsProps> = ({
   return (
     <Box
       sx={{
-        display: 'inline-flex',
+        display: 'flex',
         bgcolor: '#E8E8E8',
         borderRadius: 2,
         p: 0.5,
-        gap: 0,
+        gap: 0.5,
+        width: '100%',
         ...sx
       }}
     >
@@ -41,7 +42,8 @@ export const ToggleTabs: React.FC<ToggleTabsProps> = ({
             fontWeight: 500,
             textTransform: 'none',
             borderRadius: 1.5,
-            minWidth: 100,
+            flex: 1,
+            minWidth: 0,
             transition: 'all 0.2s ease',
             border: 'none',
             outline: 'none',
