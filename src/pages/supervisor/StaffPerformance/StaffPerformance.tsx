@@ -14,10 +14,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
   Avatar,
-  IconButton,
   MenuItem,
   Select,
   FormControl
@@ -26,9 +23,11 @@ import {
   Search,
   ChevronRight,
   ChevronLeft,
-  Visibility,
   FilterList
 } from '@mui/icons-material';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
+import { ViewButton } from '../../../components/common/ViewButton/ViewButton';
+
 
 const StaffDashboard = () => {
   const navigate = useNavigate();
@@ -46,8 +45,7 @@ const StaffDashboard = () => {
     {
       name: 'James Gjoir',
       avatar: 'J',
-      status: 'On call',
-      statusColor: '#004242',
+      status: 'Busy' as const,
       lastActive: 'Mon, July 13, 2025',
       time: '10:43 AM',
       callsToday: 150,
@@ -57,8 +55,7 @@ const StaffDashboard = () => {
     {
       name: 'Sarah Mukasa',
       avatar: 'S',
-      status: 'Available',
-      statusColor: '#FFE5B2',
+      status: 'Available' as const,
       lastActive: 'Mon, July 20, 2025',
       time: '10:43 AM',
       callsToday: 45,
@@ -68,8 +65,7 @@ const StaffDashboard = () => {
     {
       name: 'Mary Namu',
       avatar: 'M',
-      status: 'On call',
-      statusColor: '#DBE6F0',
+      status: 'Busy' as const,
       lastActive: 'Sun, July 21, 2025',
       time: '10:43 AM',
       callsToday: 20,
@@ -79,8 +75,7 @@ const StaffDashboard = () => {
     {
       name: 'Flavia Nabukenya',
       avatar: 'F',
-      status: 'Break',
-      statusColor: '#FFE5B2',
+      status: 'Break' as const,
       lastActive: 'Wed, July 10, 2025',
       time: '10:43 AM',
       callsToday: 23,
@@ -90,8 +85,7 @@ const StaffDashboard = () => {
     {
       name: 'James Gjoir',
       avatar: 'J',
-      status: 'Break',
-      statusColor: '#CCE5E5',
+      status: 'Break' as const,
       lastActive: 'Mon, July 21, 2025',
       time: '10:43 AM',
       callsToday: 200,
@@ -100,7 +94,6 @@ const StaffDashboard = () => {
     }
   ];
   
-
   const getAvatarColor = (name: string): string => {
     const colors: { [key: string]: string } = {
       'J': '#CCE5E5',
@@ -122,24 +115,6 @@ const StaffDashboard = () => {
     return colorMap[bgColor] || '#000000';
   };
 
-  const getStatusDotColor = (status: string): string => {
-    const colors: { [key: string]: string } = {
-      'On call': '#ff5630',
-      'Available': '#00a76f',
-      'Break': '#ffab00'
-    };
-    return colors[status] || '#757575';
-  };
-
-  const getStatusBackgroundColor = (status: string): string => {
-    const colors: { [key: string]: string } = {
-      'On call': '#FFE5E5',
-      'Available': '#E0F7F0',
-      'Break': '#FFF4E5'
-    };
-    return colors[status] || '#F5F5F5';
-  };
-
   return (
     <Box sx={{ p: 3, bgcolor: '#f9fafb', minHeight: '100vh' }}>
       {/* Stats Cards */}
@@ -155,7 +130,6 @@ const StaffDashboard = () => {
                         width: 40,
                         height: 40,
                         borderRadius: '8px',
-                        
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -214,8 +188,8 @@ const StaffDashboard = () => {
                 displayEmpty
               >
                 <MenuItem value="All status">All status</MenuItem>
-                <MenuItem value="On call">On call</MenuItem>
                 <MenuItem value="Available">Available</MenuItem>
+                <MenuItem value="Busy">Busy</MenuItem>
                 <MenuItem value="Break">Break</MenuItem>
               </Select>
             </FormControl>
@@ -265,27 +239,12 @@ const StaffDashboard = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: 0.75,
-                        border: '1px solid',
-                        borderColor: getStatusDotColor(staff.status) + '40',
-                        backgroundColor: getStatusBackgroundColor(staff.status),
-                        borderRadius: '16px',
-                        px: 1.5,
-                        py: 0.5
-                      }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor: getStatusDotColor(staff.status)
-                          }}
-                        />
-                        <Typography variant="body2">{staff.status}</Typography>
-                      </Box>
+                      <CustomChip 
+                        label={staff.status} 
+                        variant="status" 
+                        size="small"
+                        showDot={true}
+                      />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ color: 'text.primary' }}>
@@ -315,27 +274,9 @@ const StaffDashboard = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        startIcon={<Visibility sx={{ fontSize: 18 }} />}
-                        size="small"
+                      <ViewButton 
                         onClick={() => navigate('/supervisor/StaffDetailsPage')}
-                        sx={{
-                          textTransform: 'none',
-                          color: '#00a76f',
-                          fontWeight: 500,
-                          minWidth: 'auto',
-                          px: 1.5,
-                          border: '1px solid',
-                          borderColor: '#00a76f40',
-                          borderRadius: '6px',
-                          '&:hover': {
-                            borderColor: '#00a76f',
-                            bgcolor: '#00a76f08'
-                          }
-                        }}
-                      >
-                        View
-                      </Button>
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -30,6 +30,38 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material';
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
+import type { CallOutcome, RiskLevel } from '../../../components/common/CustomChip/CustomChip';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
+//import CustomChip, { RiskLevel, CallOutcome } from '../../../components/common/CustomChip/CustomChip';
+
+// Map risk levels from string to RiskLevel type
+const mapRiskLevel = (risk: string): RiskLevel => {
+  switch (risk.toLowerCase()) {
+    case 'high':
+    case 'critical':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    case 'low':
+      return 'Low';
+    default:
+      return 'Medium';
+  }
+};
+
+// Map outcome to CallOutcome type
+const mapOutcome = (outcome: string): CallOutcome => {
+  switch (outcome) {
+    case 'Advice Given':
+      return 'Advice Given';
+    case 'Escalated':
+      return 'Escalated';
+    case 'Referred':
+      return 'Referred';
+    default:
+      return 'Advice Given';
+  }
+};
 
 const mockCallHistory = [
   {
@@ -97,9 +129,6 @@ const mockCallHistory = [
   },
 ];
 
-
-
-
 // Mock data for call details
 const getCallDetails = (callId: string) => {
   const baseCall = {
@@ -162,68 +191,13 @@ The agent responded with empathy, provided guidance on coping strategies (e.g., 
   return baseCall;
 };
 
-const getRiskLevelColor = (riskLevel: string) => {
-  switch (riskLevel) {
-    case 'high':
-    case 'critical':
-      return { dotColor: '#dc2626', textColor: '#dc2626', label: 'High' };
-    case 'medium':
-      return { dotColor: '#d97706', textColor: '#d97706', label: 'Medium' };
-    case 'low':
-      return { dotColor: '#16a34a', textColor: '#16a34a', label: 'Low' };
-    default:
-      return { dotColor: '#6b7280', textColor: '#6b7280', label: 'Unknown' };
-  }
-};
-
-const getOutcomeChipProps = (outcome: string) => {
-  switch (outcome) {
-    case 'Advice Given':
-      return { 
-        sx: { 
-          bgcolor: '#f0fdf4', 
-          color: '#16a34a', 
-          border: '1px solid #bbf7d0',
-          '& .MuiChip-label': { fontWeight: 500 }
-        } 
-      };
-    case 'Escalated':
-      return { 
-        sx: { 
-          bgcolor: '#fef2f2', 
-          color: '#dc2626', 
-          border: '1px solid #fecaca',
-          '& .MuiChip-label': { fontWeight: 500 }
-        } 
-      };
-    case 'Referred':
-      return { 
-        sx: { 
-          bgcolor: '#eff6ff', 
-          color: '#2563eb', 
-          border: '1px solid #bfdbfe',
-          '& .MuiChip-label': { fontWeight: 500 }
-        } 
-      };
-    default:
-      return { 
-        sx: { 
-          bgcolor: '#f9fafb', 
-          color: '#6b7280', 
-          border: '1px solid #e5e7eb',
-          '& .MuiChip-label': { fontWeight: 500 }
-        } 
-      };
-  }
-};
-
 const getQualityScoreColor = (score: number) => {
   if (score >= 80) return '#16a34a';
   if (score >= 60) return '#d97706';
   return '#dc2626';
 };
 
-// Call Details Component (embedded in the same file to avoid import issues)
+// Call Details Component
 const CallDetails: React.FC<{ callId: string; onBack: () => void }> = ({ callId, onBack }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const callDetails = getCallDetails(callId);
@@ -262,16 +236,10 @@ const CallDetails: React.FC<{ callId: string; onBack: () => void }> = ({ callId,
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
           Outgoing Call {callDetails.id}
         </Typography>
-        <Chip
-          label="Escalated"
+        <CustomChip 
+          label={mapOutcome(callDetails.outcome.status)}
+          variant="outcome"
           size="small"
-          sx={{
-            bgcolor: '#fef2f2',
-            color: '#dc2626',
-            border: '1px solid #fecaca',
-            fontWeight: 500,
-            fontSize: '12px'
-          }}
         />
         <Box sx={{ ml: 'auto' }}>
           <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
@@ -347,23 +315,11 @@ const CallDetails: React.FC<{ callId: string; onBack: () => void }> = ({ callId,
                 <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '12px', mb: 0.5 }}>
                   Risk Level
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: getRiskColor(callDetails.riskLevel),
-                    }}
-                  />
-                  <Typography variant="body2" sx={{ 
-                    color: getRiskColor(callDetails.riskLevel), 
-                    fontSize: '14px',
-                    fontWeight: 500 
-                  }}>
-                    {callDetails.riskLevel}
-                  </Typography>
-                </Box>
+                <CustomChip 
+                  label={mapRiskLevel(callDetails.riskLevel)}
+                  variant="risk"
+                  size="small"
+                />
               </Box>
               <Box>
                 <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '12px', mb: 0.5 }}>
@@ -745,16 +701,10 @@ const CallDetails: React.FC<{ callId: string; onBack: () => void }> = ({ callId,
               <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', fontSize: '16px' }}>
                 Outcome
               </Typography>
-              <Chip
-                label={callDetails.outcome.status}
+              <CustomChip 
+                label={mapOutcome(callDetails.outcome.status)}
+                variant="outcome"
                 size="small"
-                sx={{
-                  bgcolor: '#fef2f2',
-                  color: '#dc2626',
-                  border: '1px solid #fecaca',
-                  fontWeight: 500,
-                  fontSize: '12px'
-                }}
               />
             </Box>
 
@@ -952,8 +902,6 @@ export const CallHistory: React.FC = () => {
             </TableHead>
             <TableBody>
               {displayedCalls.map((call) => {
-                const riskStyle = getRiskLevelColor(call.riskLevel);
-                const outcomeProps = getOutcomeChipProps(call.outcome);
                 const scoreColor = getQualityScoreColor(call.qualityScore);
                 
                 return (
@@ -999,30 +947,18 @@ export const CallHistory: React.FC = () => {
                     </TableCell>
                     
                     <TableCell sx={{ py: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor: riskStyle.dotColor,
-                          }}
-                        />
-                        <Typography 
-                          variant="body2" 
-                          sx={{ fontSize: '14px', color: riskStyle.textColor }}
-                        >
-                          {riskStyle.label}
-                        </Typography>
-                      </Box>
+                      <CustomChip 
+                        label={mapRiskLevel(call.riskLevel)} 
+                        variant="risk" 
+                        size="small"
+                      />
                     </TableCell>
                     
                     <TableCell sx={{ py: 2 }}>
-                      <Chip
-                        label={call.outcome}
+                      <CustomChip 
+                        label={mapOutcome(call.outcome)} 
+                        variant="outcome" 
                         size="small"
-                        variant="outlined"
-                        {...outcomeProps}
                       />
                     </TableCell>
                     
@@ -1080,8 +1016,8 @@ export const CallHistory: React.FC = () => {
           </Button>
           
           <Button
-              component={Link}
-  to="/supervisor/call-detail"
+            component={Link}
+            to="/supervisor/call-detail"
             sx={{
               color: '#6b7280',
               fontSize: '14px',

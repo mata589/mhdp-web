@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CallAgentLeaderboard from '../SuperviserPopup/CallAgentLeaderboard';
+import ToggleTabs from '../../../components/common/ToggleTabs/ToggleTabs';
 import {
   Box,
-  Tabs,
-  Tab,
   Button,
   Typography,
   Card,
@@ -32,21 +31,29 @@ import {
 } from 'lucide-react';
 
 export default function CallCenterDashboard() {
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState<number>(0);
   const navigate = useNavigate();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-    navigate(tabs[newValue].url);
-  };
-
   const tabs = [
-    { label: 'Overview', url: '/supervisor/Analytics' },
-    { label: 'Demographics', url: '/supervisor/Demographics' },
-    { label: 'Topic Analysis', url: '/supervisor/TopicAnalysis' },
-    { label: 'Quality Metrics', url: '/supervisor/QualityMetrics' },
+    { label: 'Overview', value: 0 },
+    { label: 'Demographics', value: 1 },
+    { label: 'Topic Analysis', value: 2 },
+    { label: 'Quality Metrics', value: 3 },
   ];
+
+  const tabUrls = [
+    '/supervisor/Analytics',
+    '/supervisor/Demographics',
+    '/supervisor/TopicAnalysis',
+    '/supervisor/QualityMetrics',
+  ];
+
+  const handleTabChange = (value: string | number) => {
+    const tabIndex = value as number;
+    setSelectedTab(tabIndex);
+    navigate(tabUrls[tabIndex]);
+  };
 
   // Data
   const callVolumeData = [
@@ -178,29 +185,18 @@ export default function CallCenterDashboard() {
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          mb: 2,
-          bgcolor: 'f5f5f5',
-          p: 2,
-          borderRadius: '8px',
+          gap: 2,
+          mb: 3,
         }}
       >
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          textColor="primary"
-          indicatorColor="primary"
-          sx={{
-            px: 2,
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 500,
-            },
-          }}
-        >
-          {tabs.map((tab, index) => (
-            <Tab key={index} label={tab.label} />
-          ))}
-        </Tabs>
+        <Box sx={{ flex: 1, minWidth: { xs: '100%', md: '400px' }, maxWidth: '600px' }}>
+          <ToggleTabs
+            tabs={tabs}
+            value={selectedTab}
+            onChange={handleTabChange}
+            sx={{ width: '100%' }}
+          />
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box
             sx={{

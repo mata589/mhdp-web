@@ -4,63 +4,67 @@ import {
   Box,
   Paper,
   Typography,
-  Chip,
-  TextField,
-  InputAdornment,
-  MenuItem,
-  Select,
-  FormControl,
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  Phone as PhoneIcon,
-} from '@mui/icons-material';
+import { Phone as PhoneIcon } from '@mui/icons-material';
+import { SearchFilterBar } from '../../../components/common/SearchBar/SearchFilterBar';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
+
+// Map urgency levels to our CustomChip risk levels
+type UrgencyLevel = 'critical' | 'high' | 'medium' | 'low';
+
+const mapUrgencyToRisk = (urgency: UrgencyLevel): 'High' | 'Medium' | 'Low' => {
+  switch (urgency) {
+    case 'critical':
+      return 'High';
+    case 'high':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    case 'low':
+      return 'Low';
+    default:
+      return 'Low';
+  }
+};
 
 const mockActiveCalls = [
   {
     id: '1031',
     agent: 'Sarah Mukasa',
-    urgency: 'critical',
+    urgency: 'critical' as UrgencyLevel,
     startTime: '10:15 AM',
     duration: '08:42',
   },
   {
     id: '1045',
     agent: 'Sarah Mukasa',
-    urgency: 'high',
+    urgency: 'high' as UrgencyLevel,
     startTime: '10:15 AM',
     duration: '08:42',
   },
   {
     id: '1050',
     agent: 'Sarah Mukasa',
-    urgency: 'low',
+    urgency: 'low' as UrgencyLevel,
     startTime: '10:15 AM',
     duration: '08:42',
   },
   {
     id: '1053',
     agent: 'Sarah Mukasa',
-    urgency: 'medium',
+    urgency: 'medium' as UrgencyLevel,
     startTime: '10:15 AM',
     duration: '08:42',
   },
 ];
 
-const getUrgencyColor = (urgency: string) => {
-  switch (urgency) {
-    case 'critical':
-      return { bgcolor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' };
-    case 'high':
-      return { bgcolor: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa' };
-    case 'medium':
-      return { bgcolor: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a' };
-    case 'low':
-      return { bgcolor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' };
-    default:
-      return { bgcolor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' };
-  }
-};
+const statusFilterOptions = [
+  { value: 'all', label: 'All status' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+];
 
 export const LiveMonitoring: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,43 +73,14 @@ export const LiveMonitoring: React.FC = () => {
   return (
     <Box sx={{ p: 3, bgcolor: '#f9fafb', minHeight: '100vh' }}>
       {/* Search and Filter Bar */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <TextField
-          placeholder="Search by agent..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{
-            flex: 1,
-            bgcolor: 'white',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-            },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: '#9ca3af' }} />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <FormControl sx={{ minWidth: 150, bgcolor: 'white', borderRadius: 2 }}>
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            displayEmpty
-            sx={{
-              borderRadius: 2,
-            }}
-          >
-            <MenuItem value="all">All status</MenuItem>
-            <MenuItem value="critical">Critical</MenuItem>
-            <MenuItem value="high">High</MenuItem>
-            <MenuItem value="medium">Medium</MenuItem>
-            <MenuItem value="low">Low</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by agent..."
+        filterValue={statusFilter}
+        onFilterChange={setStatusFilter}
+        filterOptions={statusFilterOptions}
+      />
 
       {/* Active Calls Section */}
       <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -173,19 +148,11 @@ export const LiveMonitoring: React.FC = () => {
                   </Typography>
                 </Box>
 
-                {/* Urgency Badge */}
+                {/* Urgency Badge - Now using CustomChip */}
                 <Box sx={{ mx: 3 }}>
-                  <Chip
-                    label={call.urgency.charAt(0).toUpperCase() + call.urgency.slice(1)}
-                    sx={{
-                      ...getUrgencyColor(call.urgency),
-                      fontWeight: 500,
-                      fontSize: '0.813rem',
-                      height: 28,
-                      '& .MuiChip-label': {
-                        px: 2,
-                      },
-                    }}
+                  <CustomChip 
+                    label={mapUrgencyToRisk(call.urgency)} 
+                    variant="risk" 
                   />
                 </Box>
 

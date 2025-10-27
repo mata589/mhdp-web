@@ -284,7 +284,7 @@ export const SupervisorDashboard: React.FC = () => {
           variant="contained"
           startIcon={<Visibility />}
           sx={{
-            bgcolor: '#14b8a6',
+            bgcolor: '#008080',
             color: 'white',
             textTransform: 'none',
             px: 3,
@@ -371,7 +371,7 @@ export const SupervisorDashboard: React.FC = () => {
                     />
                     <Bar 
                       dataKey="calls" 
-                      fill="#14b8a6" 
+                      fill="#008080" 
                       radius={[4, 4, 0, 0]}
                       maxBarSize={40}
                     />

@@ -10,7 +10,6 @@ import {
   MenuItem,
   Select,
   FormControl,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -26,9 +25,28 @@ import {
   Play,
   ChevronLeft,
   ChevronRight,
-  
   CheckCircle,
 } from 'lucide-react';
+import CustomChip, { type RiskLevel } from '../../../components/common/CustomChip/CustomChip';
+//import CustomChip, { RiskLevel } from '../../../components/common/CustomChip/CustomChip';
+
+// Map severity to risk level
+type SeverityLevel = 'Critical' | 'High' | 'Medium' | 'Low';
+
+const mapSeverityToRisk = (severity: SeverityLevel): RiskLevel => {
+  switch (severity) {
+    case 'Critical':
+      return 'High';
+    case 'High':
+      return 'High';
+    case 'Medium':
+      return 'Medium';
+    case 'Low':
+      return 'Low';
+    default:
+      return 'Medium';
+  }
+};
 
 export default function EscalatedCallsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,7 +83,7 @@ export default function EscalatedCallsPage() {
     {
       id: 'ESC-001',
       type: 'Suicidal intent',
-      severity: 'Critical',
+      severity: 'Critical' as SeverityLevel,
       callerId: 'Caller ID: 2001',
       caller: 'John Doe',
       phone: '+256 700 123 456',
@@ -74,12 +92,11 @@ export default function EscalatedCallsPage() {
       duration: '15:30',
       reason: 'Complex medical query regarding drug interactions',
       category: 'Medical Consultation',
-      severityColor: '#DC2626',
     },
     {
       id: 'ESC-002',
       type: 'Severe depression',
-      severity: 'High',
+      severity: 'High' as SeverityLevel,
       callerId: 'Caller ID: 1821',
       caller: 'Mary Smith',
       phone: '+256 701 987 654',
@@ -88,12 +105,11 @@ export default function EscalatedCallsPage() {
       duration: '12:15',
       reason: 'Patient expressing symptoms of severe depression',
       category: 'Mental Health',
-      severityColor: '#F59E0B',
     },
     {
       id: 'ESC-003',
       type: 'Suicidal intent',
-      severity: 'Critical',
+      severity: 'Critical' as SeverityLevel,
       callerId: 'Caller ID: 2001',
       caller: 'Peter Kato',
       phone: '+256 702 456 789',
@@ -102,7 +118,6 @@ export default function EscalatedCallsPage() {
       duration: '8:45',
       reason: 'Emergency consultation request',
       category: 'Emergency',
-      severityColor: '#DC2626',
     },
   ];
 
@@ -154,7 +169,6 @@ export default function EscalatedCallsPage() {
                     width: 40,
                     height: 40,
                     borderRadius: '8px',
-                    
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -322,19 +336,10 @@ export default function EscalatedCallsPage() {
                       <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
                         {call.type}
                       </Typography>
-                      <Chip
-                        label={call.severity}
+                      <CustomChip 
+                        label={mapSeverityToRisk(call.severity)} 
+                        variant="risk" 
                         size="small"
-                        sx={{
-                          height: '22px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          bgcolor: call.severityColor,
-                          color: 'white',
-                          '& .MuiChip-label': {
-                            px: 1,
-                          },
-                        }}
                       />
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -471,7 +476,7 @@ export default function EscalatedCallsPage() {
               Call Review - {selectedCall?.id}
             </Typography>
             <IconButton onClick={handleCloseDialog} size="small">
-              
+              {/* Close icon */}
             </IconButton>
           </Box>
         </DialogTitle>
@@ -540,21 +545,21 @@ export default function EscalatedCallsPage() {
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
                       Category
                     </Typography>
-                    <Chip label={selectedCall.category} size="small" sx={{ fontSize: '12px' }} />
+                    <CustomChip 
+                      label={selectedCall.category as any} 
+                      variant="outcome" 
+                      size="small"
+                      showDot={false}
+                    />
                   </Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
                       Severity
                     </Typography>
-                    <Chip
-                      label={selectedCall.severity}
+                    <CustomChip 
+                      label={mapSeverityToRisk(selectedCall.severity)} 
+                      variant="risk" 
                       size="small"
-                      sx={{
-                        bgcolor: selectedCall.severityColor,
-                        color: 'white',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}
                     />
                   </Box>
                   <Box sx={{ mb: 2 }}>

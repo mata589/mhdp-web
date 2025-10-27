@@ -160,7 +160,7 @@ export const SupervisorSidebar: React.FC = () => {
                   borderRadius: '8px',
                   py: '10px',
                   px: '12px',
-                  bgcolor: isActive ? '#14b8a6' : 'transparent',
+                  bgcolor: isActive ? '#008080' : 'transparent',
                   color: isActive ? 'white' : '#6b7280',
                   '&:hover': {
                     bgcolor: isActive ? '#0d9488' : '#f9fafb',

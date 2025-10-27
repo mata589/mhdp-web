@@ -8,7 +8,6 @@ import {
   Typography,
   Box,
   Button,
-  Chip,
   Card,
   Avatar,
   Stack,
@@ -30,102 +29,12 @@ import {
   Star,
 } from '@mui/icons-material';
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
-
-
+//import CustomChip, { RiskLevel, CallOutcome, AgentStatus } from '../../../components/common/CustomChip/CustomChip';
 import { useAuth } from '../../../contexts/AuthContext';
-import StatusChip from '../../../components/common/StatusChip/StatusChip';
 import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
 import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
-
-// Custom chip component for Risk Level (with dot)
-const RiskChip: React.FC<{ riskLevel: 'Low' | 'Medium' | 'High' }> = ({ riskLevel }) => {
-  const riskStyles = {
-    'Low': {
-      backgroundColor: 'rgba(74, 222, 128, 0.1)',
-      borderColor: '#22c55e',
-      color: '#15803d',
-      dotColor: '#22c55e'
-    },
-    'Medium': {
-      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-      borderColor: '#f59e0b',
-      color: '#d97706',
-      dotColor: '#f59e0b'
-    },
-    'High': {
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      borderColor: '#ef4444',
-      color: '#dc2626',
-      dotColor: '#ef4444'
-    }
-  };
-
-  const currentStyle = riskStyles[riskLevel];
-
-  return (
-    <Chip 
-      label={riskLevel}
-      sx={{ 
-        backgroundColor: currentStyle.backgroundColor,
-        color: currentStyle.color,
-        border: `2px solid ${currentStyle.borderColor}`,
-        fontWeight: 700,
-        fontSize: '0.75rem',
-        width: 'fit-content',
-        '& .MuiChip-label': {
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          fontWeight: 700,
-          '&::before': {
-            content: '""',
-            width: '8px',
-            height: '8px',
-            backgroundColor: currentStyle.dotColor,
-            borderRadius: '50%'
-          }
-        }
-      }}
-    />
-  );
-};
-
-// Custom chip component for Outcome (without dot)
-const OutcomeChip: React.FC<{ outcome: 'Advice Given' | 'Escalated' | 'Referred' }> = ({ outcome }) => {
-  const outcomeStyles = {
-    'Advice Given': {
-      backgroundColor: 'rgba(74, 222, 128, 0.1)',
-      borderColor: '#22c55e',
-      color: '#15803d',
-    },
-    'Escalated': {
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      borderColor: '#ef4444',
-      color: '#dc2626',
-    },
-    'Referred': {
-      backgroundColor: 'rgba(96, 125, 139, 0.1)',
-      borderColor: '#607d8b',
-      color: '#455a64',
-    }
-  };
-
-  const currentStyle = outcomeStyles[outcome];
-
-  return (
-    <Chip 
-      label={outcome}
-      sx={{ 
-        backgroundColor: currentStyle.backgroundColor,
-        color: currentStyle.color,
-        border: `2px solid ${currentStyle.borderColor}`,
-        fontWeight: 700,
-        fontSize: '0.75rem',
-        width: 'fit-content'
-      }}
-    />
-  );
-};
+import type { AgentStatus, CallOutcome, RiskLevel } from '../../../components/common/CustomChip/CustomChip';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
 
 // Helper function to format date and time
 const formatDateTime = (dateTimeString: string) => {
@@ -140,7 +49,7 @@ const formatDateTime = (dateTimeString: string) => {
 export const AgentDashboard: React.FC = () => {
   const navigate = useNavigate();
   
-  const [status, setStatus] = useState<'Available' | 'Busy' | 'Break'>('Available');
+  const [status, setStatus] = useState<AgentStatus>('Available');
   const [statusFilter, setStatusFilter] = useState('All status');
   const [languageFilter, setLanguageFilter] = useState('All languages');
   const [showIncomingCall, setShowIncomingCall] = useState(false);
@@ -154,8 +63,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'English',
       primaryTopic: 'Anxiety Management',
-      riskLevel: 'Medium' as const,
-      outcome: 'Advice Given' as const,
+      riskLevel: 'Medium' as RiskLevel,
+      outcome: 'Advice Given' as CallOutcome,
       qualityScore: '78%',
       duration: '8:15',
       recordingUrl: 'https://example.com/recording-2031.mp3'
@@ -165,8 +74,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'French',
       primaryTopic: 'Depression',
-      riskLevel: 'High' as const,
-      outcome: 'Escalated' as const,
+      riskLevel: 'High' as RiskLevel,
+      outcome: 'Escalated' as CallOutcome,
       qualityScore: '78%',
       duration: '12:34',
       recordingUrl: 'https://example.com/recording-2089.mp3'
@@ -176,8 +85,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Tue, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'English',
       primaryTopic: 'Psychosis',
-      riskLevel: 'Medium' as const,
-      outcome: 'Advice Given' as const,
+      riskLevel: 'Medium' as RiskLevel,
+      outcome: 'Advice Given' as CallOutcome,
       qualityScore: '80%',
       duration: '15:22',
       recordingUrl: 'https://example.com/recording-2031-2.mp3'
@@ -187,8 +96,8 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'English',
       primaryTopic: 'Psychosis',
-      riskLevel: 'Low' as const,
-      outcome: 'Referred' as const,
+      riskLevel: 'Low' as RiskLevel,
+      outcome: 'Referred' as CallOutcome,
       qualityScore: '78%',
       duration: '6:45',
       recordingUrl: 'https://example.com/recording-2070.mp3'
@@ -198,15 +107,15 @@ export const AgentDashboard: React.FC = () => {
       dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
       caller: 'Spanish',
       primaryTopic: 'Depression',
-      riskLevel: 'Medium' as const,
-      outcome: 'Advice Given' as const,
+      riskLevel: 'Medium' as RiskLevel,
+      outcome: 'Advice Given' as CallOutcome,
       qualityScore: '78%',
       duration: '10:18',
       recordingUrl: 'https://example.com/recording-2031-3.mp3'
     }
   ];
 
-  const handleStatusChange = (newStatus: 'Available' | 'Busy' | 'Break') => {
+  const handleStatusChange = (newStatus: AgentStatus) => {
     setStatus(newStatus);
   };
 
@@ -463,6 +372,7 @@ export const AgentDashboard: React.FC = () => {
           </Box>
         </Box>
       )}
+      
       {/* Header Section */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ 
@@ -481,7 +391,7 @@ export const AgentDashboard: React.FC = () => {
             }}>
               Hey, James
             </Typography>
-            <StatusChip status={status} />
+            <CustomChip label={status} variant="status" />
           </Box>
           
           <Box 
@@ -815,8 +725,8 @@ export const AgentDashboard: React.FC = () => {
                   <Typography variant="body2">
                     {call.primaryTopic}
                   </Typography>
-                  <RiskChip riskLevel={call.riskLevel} />
-                  <OutcomeChip outcome={call.outcome} />
+                  <CustomChip label={call.riskLevel} variant="risk" />
+                  <CustomChip label={call.outcome} variant="outcome" />
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <Star sx={{ color: '#ffd700', fontSize: 16 }} />
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -841,8 +751,8 @@ export const AgentDashboard: React.FC = () => {
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <RiskChip riskLevel={call.riskLevel} />
-                      <OutcomeChip outcome={call.outcome} />
+                      <CustomChip label={call.riskLevel} variant="risk" size="small" />
+                      <CustomChip label={call.outcome} variant="outcome" size="small" />
                     </Box>
                   </Box>
                   
