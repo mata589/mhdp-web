@@ -20,7 +20,7 @@ import {
   Paper,
   IconButton,
   InputAdornment,
-  Drawer // ✅ Added
+  Drawer
 } from '@mui/material';
 import {
   MoreHorizontal as MoreVert,
@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Filter
 } from 'lucide-react';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
 
 const FacilitiesManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +37,6 @@ const FacilitiesManagement = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFacility, setSelectedFacility] = useState<any>(null);
 
-  // ✅ Added new Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const handleDrawerOpen = () => setDrawerOpen(true);
   const handleDrawerClose = () => setDrawerOpen(false);
@@ -45,7 +45,7 @@ const FacilitiesManagement = () => {
     {
       id: 1,
       name: 'Butabika Hospital',
-      status: 'Active',
+      status: 'Available' as const,
       level: 'Referral Hospital',
       location: 'Kampala, Uganda',
       hsd: 'Nakawa',
@@ -58,7 +58,7 @@ const FacilitiesManagement = () => {
     {
       id: 2,
       name: 'Mirembe Hospital',
-      status: 'Inactive',
+      status: 'Break' as const,
       level: 'Health Center IV',
       location: 'Dodoma, Tanzania',
       hsd: 'Dodoma',
@@ -99,12 +99,12 @@ const FacilitiesManagement = () => {
           },
           {
             title: 'Active Facilities',
-            value: facilities.filter((f) => f.status === 'Active').length,
+            value: facilities.filter((f) => f.status === 'Available').length,
             icon: '/vien1.png'
           },
           {
             title: 'Inactive Facilities',
-            value: facilities.filter((f) => f.status === 'Inactive').length,
+            value: facilities.filter((f) => f.status === 'Break').length,
             icon: '/vien2.png'
           }
         ].map((item, i) => (
@@ -171,8 +171,9 @@ const FacilitiesManagement = () => {
               sx={{ borderRadius: 2, minWidth: 150 }}
             >
               <MenuItem value="All status">All status</MenuItem>
-              <MenuItem value="Active">Active</MenuItem>
-              <MenuItem value="Inactive">Inactive</MenuItem>
+              <MenuItem value="Available">Available</MenuItem>
+              <MenuItem value="Busy">Busy</MenuItem>
+              <MenuItem value="Break">Break</MenuItem>
             </Select>
           </FormControl>
 
@@ -186,7 +187,6 @@ const FacilitiesManagement = () => {
 
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* ✅ Added onClick handler */}
           <Button
             variant="contained"
             startIcon={<Add size={16} />}
@@ -245,21 +245,12 @@ const FacilitiesManagement = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Box
-                      sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: '9999px',
-                        bgcolor: facility.status === 'Active' ? '#E8F5E9' : '#FFEBEE',
-                        color: facility.status === 'Active' ? '#2E7D32' : '#C62828',
-                        fontSize: 12,
-                        fontWeight: 500
-                      }}
-                    >
-                      ● {facility.status}
-                    </Box>
+                    <CustomChip
+                      label={facility.status}
+                      variant="status"
+                      size="small"
+                      showDot={true}
+                    />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">{facility.level}</Typography>
@@ -311,7 +302,7 @@ const FacilitiesManagement = () => {
         <MenuItem sx={{ color: 'error.main' }}>🗑 Delete</MenuItem>
       </Menu>
 
-      {/* ✅ Add Facility Drawer */}
+      {/* Add Facility Drawer */}
       <Drawer
         anchor="right"
         open={drawerOpen}

@@ -6,26 +6,15 @@ import {
   Button,
   Paper,
   Avatar,
-  Chip,
 } from '@mui/material';
 import {
-  TrendingUp,
-  TrendingDown,
   Phone,
   Business,
   People,
   BarChart,
   FileDownload,
 } from '@mui/icons-material';
-
-interface MetricCard {
-  title: string;
-  value: string;
-  change: string;
-  trend: 'up' | 'down';
-  icon: React.ReactNode;
-  iconBg: string;
-}
+import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
 
 interface FacilityPerformance {
   name: string;
@@ -43,38 +32,141 @@ interface UserDistribution {
 }
 
 export default function DashboardOverview() {
-  const metrics: MetricCard[] = [
-    {
-      title: 'Calls Today',
-      value: '1247',
-      change: '+3% vs yesterday',
-      trend: 'up',
-      icon: <Phone sx={{ fontSize: 20 }} />,
-      iconBg: '#00897b',
-    },
+  const metrics = [
+    // Row 1 - Facilities
     {
       title: 'Total Facilities',
       value: '2',
-      change: '+3% vs last month',
-      trend: 'up',
-      icon: <Business sx={{ fontSize: 20 }} />,
-      iconBg: '#5e6fd8',
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
+      icon: <Business sx={{ fontSize: 18 }} />,
+      color: 'blue' as const,
     },
+    {
+      title: 'Active Facilities',
+      value: '1',
+      change: {
+        value: 1,
+        type: 'decrease' as const,
+        period: 'vs last week',
+      },
+      icon: <Business sx={{ fontSize: 18 }} />,
+      color: 'green' as const,
+    },
+    {
+      title: 'Inactive Facilities',
+      value: '1',
+      change: {
+        value: 1,
+        type: 'decrease' as const,
+        period: 'vs last week',
+      },
+      icon: <Business sx={{ fontSize: 18 }} />,
+      color: 'red' as const,
+    },
+    {
+      title: 'Facilities Added today',
+      value: '2',
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
+      icon: <Business sx={{ fontSize: 18 }} />,
+      color: 'blue' as const,
+    },
+    // Row 2 - Users
     {
       title: 'Total Users',
-      value: '281',
-      change: '-1% vs last week',
-      trend: 'down',
-      icon: <People sx={{ fontSize: 20 }} />,
-      iconBg: '#00897b',
+      value: '2',
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
+      icon: <People sx={{ fontSize: 18 }} />,
+      color: 'blue' as const,
     },
     {
-      title: 'System Uptime',
-      value: '99%',
-      change: '-1% vs last 30 days',
-      trend: 'down',
-      icon: <BarChart sx={{ fontSize: 20 }} />,
-      iconBg: '#ffa726',
+      title: 'Active Users',
+      value: '281',
+      change: {
+        value: 1,
+        type: 'decrease' as const,
+        period: 'vs last week',
+      },
+      icon: <People sx={{ fontSize: 18 }} />,
+      color: 'green' as const,
+    },
+    {
+      title: 'Inactive Users',
+      value: '281',
+      change: {
+        value: 1,
+        type: 'decrease' as const,
+        period: 'vs last week',
+      },
+      icon: <People sx={{ fontSize: 18 }} />,
+      color: 'red' as const,
+    },
+    {
+      title: 'Users Added today',
+      value: '2',
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
+      icon: <People sx={{ fontSize: 18 }} />,
+      color: 'blue' as const,
+    },
+    // Row 3 - Calls
+    {
+      title: 'Total Calls',
+      value: '2',
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs last month',
+      },
+      icon: <Phone sx={{ fontSize: 18 }} />,
+      color: 'blue' as const,
+    },
+    {
+      title: 'Calls Today',
+      value: '1247',
+      change: {
+        value: 5,
+        type: 'increase' as const,
+        period: 'vs yesterday',
+      },
+      icon: <Phone sx={{ fontSize: 18 }} />,
+      color: 'teal' as const,
+    },
+    {
+      title: 'Incoming Calls',
+      value: '281',
+      change: {
+        value: 1,
+        type: 'decrease' as const,
+        period: 'vs last week',
+      },
+      icon: <Phone sx={{ fontSize: 18 }} />,
+      color: 'green' as const,
+    },
+    {
+      title: 'Outgoing Calls',
+      value: '281',
+      change: {
+        value: 1,
+        type: 'decrease' as const,
+        period: 'vs last week',
+      },
+      icon: <Phone sx={{ fontSize: 18 }} />,
+      color: 'orange' as const,
     },
   ];
 
@@ -99,19 +191,19 @@ export default function DashboardOverview() {
     {
       role: 'Agents',
       count: 892,
-      icon: <People sx={{ fontSize: 16 }} />,
+      icon: <People sx={{ fontSize: 20 }} />,
       iconBg: '#00897b',
     },
     {
       role: 'Supervisors',
       count: 156,
-      icon: <People sx={{ fontSize: 16 }} />,
+      icon: <People sx={{ fontSize: 20 }} />,
       iconBg: '#ffa726',
     },
     {
       role: 'Facility Admins',
       count: 48,
-      icon: <People sx={{ fontSize: 16 }} />,
+      icon: <People sx={{ fontSize: 20 }} />,
       iconBg: '#5e6fd8',
     },
   ];
@@ -170,68 +262,46 @@ export default function DashboardOverview() {
           </Box>
         </Box>
 
-        {/* Metrics Cards */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mb: 3 }}>
-          {metrics.map((metric, index) => (
-            <Paper key={index} sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: metric.iconBg,
-                    borderRadius: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                  }}
-                >
-                  {metric.icon}
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                  {metric.title}
-                </Typography>
-              </Box>
-              <Typography variant="h4" fontWeight="600" sx={{ mb: 0.5 }}>
-                {metric.value}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                {metric.trend === 'up' ? (
-                  <TrendingUp sx={{ fontSize: 16, color: '#2e7d32' }} />
-                ) : (
-                  <TrendingDown sx={{ fontSize: 16, color: '#d32f2f' }} />
-                )}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontSize: '0.75rem',
-                    color: metric.trend === 'up' ? '#2e7d32' : '#d32f2f',
-                  }}
-                >
-                  {metric.change}
-                </Typography>
-              </Box>
-            </Paper>
-          ))}
+        {/* Metrics Cards - Using MetricCard Component */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 3 }}>
+          {/* Row 1 - Facilities */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+            {metrics.slice(0, 4).map((metric, index) => (
+              <MetricCard key={index} {...metric} />
+            ))}
+          </Box>
+          
+          {/* Row 2 - Users */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+            {metrics.slice(4, 8).map((metric, index) => (
+              <MetricCard key={index} {...metric} />
+            ))}
+          </Box>
+          
+          {/* Row 3 - Calls */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+            {metrics.slice(8, 12).map((metric, index) => (
+              <MetricCard key={index} {...metric} />
+            ))}
+          </Box>
         </Box>
 
         {/* Main Content */}
         <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 2 }}>
           {/* Call Volume Trends */}
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: 3, borderRadius: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Box>
-                <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1rem', mb: 0.5 }}>
+                <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.125rem', mb: 0.5, color: '#1F2937' }}>
                   a. Call volume trends
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                   Hourly call distribution
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#00897b' }} />
-                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
                   Total calls
                 </Typography>
               </Box>
@@ -332,8 +402,8 @@ export default function DashboardOverview() {
           {/* Right Column */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* Facility Performance */}
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1rem', mb: 2 }}>
+            <Paper sx={{ p: 3, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.125rem', mb: 3, color: '#1F2937' }}>
                 b. Facility performance
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -344,34 +414,38 @@ export default function DashboardOverview() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: '#F9FAFB',
+                      border: '1px solid #F3F4F6',
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Avatar
                         sx={{
                           bgcolor: facility.avatarBg,
-                          width: 32,
-                          height: 32,
-                          fontSize: '0.875rem',
+                          width: 48,
+                          height: 48,
+                          fontSize: '1.125rem',
                           fontWeight: 600,
                         }}
                       >
                         {facility.avatar}
                       </Avatar>
                       <Box>
-                        <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.875rem' }}>
+                        <Typography variant="body1" fontWeight="600" sx={{ fontSize: '1rem', color: '#1F2937', mb: 0.25 }}>
                           {facility.name}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                           {facility.location}
                         </Typography>
                       </Box>
                     </Box>
                     <Box sx={{ textAlign: 'right' }}>
-                      <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1rem' }}>
+                      <Typography variant="h5" fontWeight="700" sx={{ fontSize: '1.5rem', color: '#1F2937', mb: 0.25 }}>
                         {facility.totalCalls}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                         Total Calls
                       </Typography>
                     </Box>
@@ -381,8 +455,8 @@ export default function DashboardOverview() {
             </Paper>
 
             {/* User Distribution */}
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1rem', mb: 2 }}>
+            <Paper sx={{ p: 3, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.125rem', mb: 3, color: '#1F2937' }}>
                 c. User distribution
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -393,15 +467,19 @@ export default function DashboardOverview() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: '#F9FAFB',
+                      border: '1px solid #F3F4F6',
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Box
                         sx={{
-                          width: 32,
-                          height: 32,
+                          width: 48,
+                          height: 48,
                           bgcolor: user.iconBg,
-                          borderRadius: 1,
+                          borderRadius: 1.5,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -410,11 +488,11 @@ export default function DashboardOverview() {
                       >
                         {user.icon}
                       </Box>
-                      <Typography variant="body2" fontWeight="500" sx={{ fontSize: '0.875rem' }}>
+                      <Typography variant="body1" fontWeight="600" sx={{ fontSize: '1rem', color: '#1F2937' }}>
                         {user.role}
                       </Typography>
                     </Box>
-                    <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1rem' }}>
+                    <Typography variant="h5" fontWeight="700" sx={{ fontSize: '1.5rem', color: '#1F2937' }}>
                       {user.count}
                     </Typography>
                   </Box>

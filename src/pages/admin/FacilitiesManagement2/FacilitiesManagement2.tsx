@@ -18,7 +18,6 @@ import {
   Menu,
   MenuItem,
   Avatar,
-  Chip,
   InputAdornment,
   Select,
   FormControl,
@@ -37,11 +36,12 @@ import {
   ChevronRight,
   ChevronLeft,
 } from '@mui/icons-material';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
 
 interface Facility {
   id: number;
   name: string;
-  status: 'Active' | 'Inactive';
+  status: 'Available' | 'Busy' | 'Break';
   level: string;
   location: string;
   hsd: string;
@@ -96,7 +96,7 @@ export default function FacilitiesManagement() {
     {
       id: 1,
       name: 'Butabika Hospital',
-      status: 'Active',
+      status: 'Available',
       level: 'Referral Hospital',
       location: 'Kampala, Uganda',
       hsd: 'Nakawa',
@@ -107,7 +107,7 @@ export default function FacilitiesManagement() {
     {
       id: 2,
       name: 'Mirembe Hospital',
-      status: 'Inactive',
+      status: 'Break',
       level: 'Health Center IV',
       location: 'Dodoma, Tanzania',
       hsd: 'Dodoma',
@@ -225,8 +225,9 @@ export default function FacilitiesManagement() {
           <InputLabel>All status</InputLabel>
           <Select label="All status" defaultValue="">
             <MenuItem value="">All status</MenuItem>
-            <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="inactive">Inactive</MenuItem>
+            <MenuItem value="available">Available</MenuItem>
+            <MenuItem value="busy">Busy</MenuItem>
+            <MenuItem value="break">Break</MenuItem>
           </Select>
         </FormControl>
         <Button
@@ -310,30 +311,11 @@ export default function FacilitiesManagement() {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip
+                  <CustomChip
                     label={facility.status}
+                    variant="status"
                     size="small"
-                    icon={
-                      <Box
-                        sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          bgcolor: facility.status === 'Active' ? '#22C55E' : '#EF4444',
-                          ml: 1,
-                        }}
-                      />
-                    }
-                    sx={{
-                      bgcolor: facility.status === 'Active' ? '#DCFCE7' : '#FEE2E2',
-                      color: facility.status === 'Active' ? '#16A34A' : '#DC2626',
-                      fontWeight: 500,
-                      fontSize: 12,
-                      border: 'none',
-                      '& .MuiChip-icon': {
-                        ml: 1,
-                      }
-                    }}
+                    showDot={true}
                   />
                 </TableCell>
                 <TableCell>
