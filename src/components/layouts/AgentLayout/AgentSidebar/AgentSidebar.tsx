@@ -17,9 +17,6 @@ import {
   Phone as PhoneIcon,
   History as HistoryIcon,
   Analytics as AnalyticsIcon,
-  MenuBook as TrainingIcon,
-  Warning as EmergencyIcon,
-  Help as HelpIcon,
   Settings as SettingsIcon,
   ExitToApp as SignOutIcon,
   Voicemail as VoicemailIcon,
@@ -38,18 +35,12 @@ const agentNavItems = [
   { path: '/agent/analytics', label: 'Analytics', icon: AnalyticsIcon },
 ];
 
-const secondaryNavItems = [
-  { path: '/agent/training', label: 'Training materials', icon: TrainingIcon },
-  { path: '/agent/emergency', label: 'Emergency guide', icon: EmergencyIcon },
-  { path: '/agent/help', label: 'Help and support', icon: HelpIcon },
-];
-
 const DRAWER_WIDTH = 320;
 
 export const AgentSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   // Set dashboard as default if at root or no specific path
   const currentPath = location.pathname === '/agent' ? '/agent/dashboard' : location.pathname;

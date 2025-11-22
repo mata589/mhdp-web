@@ -1,57 +1,40 @@
-// src/pages/agent/AgentDashboard/AgentDashboard.tsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { GridLegacy as Grid } from '@mui/material';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { GridLegacy as Grid } from "@mui/material";
 
 import {
-  Paper,
   Typography,
   Box,
   Button,
-  Card,
   Avatar,
-  Stack,
-  Select,
-  MenuItem,
-  FormControl,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Call,
   CallEnd,
   Escalator,
   Assessment,
   History,
-  Warning,
   Phone,
   TrendingUp,
   Person,
-  FilterList,
-  Star,
-} from '@mui/icons-material';
-import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
-//import CustomChip, { RiskLevel, CallOutcome, AgentStatus } from '../../../components/common/CustomChip/CustomChip';
-import { useAuth } from '../../../contexts/AuthContext';
-import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
-import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
-import type { AgentStatus, CallOutcome, RiskLevel } from '../../../components/common/CustomChip/CustomChip';
-import CustomChip from '../../../components/common/CustomChip/CustomChip';
-
-// Helper function to format date and time
-const formatDateTime = (dateTimeString: string) => {
-  // Extract date and time parts from the string
-  const parts = dateTimeString.split(' ');
-  const date = `${parts[1]} ${parts[2]} ${parts[3]}`;
-  const time = `${parts[4]} ${parts[5]} - ${parts[7]} ${parts[8]}`;
-  
-  return { date, time };
-};
+  Voicemail,
+} from "@mui/icons-material";
+import { CallDetailsPage } from "../../../components/common/CallDetailsPage";
+import { CallRecordingPlayer } from "../../../components/common/CallRecordingPlayer";
+import type {
+  AgentStatus,
+  CallOutcome,
+  RiskLevel,
+} from "../../../components/common/CustomChip/CustomChip";
+import CustomChip from "../../../components/common/CustomChip/CustomChip";
+import { ActionCard } from "../../../components/cards/ActionCard";
+import { MetricCard } from "../../../components/cards/MetricCard";
+import CallActivityTable from "../../../components/table/CallActivityTable";
 
 export const AgentDashboard: React.FC = () => {
   const navigate = useNavigate();
-  
-  const [status, setStatus] = useState<AgentStatus>('Available');
-  const [statusFilter, setStatusFilter] = useState('All status');
-  const [languageFilter, setLanguageFilter] = useState('All languages');
+
+  const [status, setStatus] = useState<AgentStatus>("Available");
   const [showIncomingCall, setShowIncomingCall] = useState(false);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [playingCallId, setPlayingCallId] = useState<string | null>(null);
@@ -59,60 +42,60 @@ export const AgentDashboard: React.FC = () => {
   // Mock data for recent call activity
   const recentCalls = [
     {
-      id: '#2031',
-      dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
-      caller: 'English',
-      primaryTopic: 'Anxiety Management',
-      riskLevel: 'Medium' as RiskLevel,
-      outcome: 'Advice Given' as CallOutcome,
-      qualityScore: '78%',
-      duration: '8:15',
-      recordingUrl: 'https://example.com/recording-2031.mp3'
+      id: "#2031",
+      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
+      caller: "English",
+      primaryTopic: "Anxiety Management",
+      riskLevel: "Medium" as RiskLevel,
+      outcome: "Advice Given" as CallOutcome,
+      qualityScore: "78%",
+      duration: "8:15",
+      recordingUrl: "https://example.com/recording-2031.mp3",
     },
     {
-      id: '#2089',
-      dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
-      caller: 'French',
-      primaryTopic: 'Depression',
-      riskLevel: 'High' as RiskLevel,
-      outcome: 'Escalated' as CallOutcome,
-      qualityScore: '78%',
-      duration: '12:34',
-      recordingUrl: 'https://example.com/recording-2089.mp3'
+      id: "#2089",
+      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
+      caller: "French",
+      primaryTopic: "Depression",
+      riskLevel: "High" as RiskLevel,
+      outcome: "Escalated" as CallOutcome,
+      qualityScore: "78%",
+      duration: "12:34",
+      recordingUrl: "https://example.com/recording-2089.mp3",
     },
     {
-      id: '#2031',
-      dateTime: 'Tue, July 13, 2025 10:43 AM - 10:51 AM',
-      caller: 'English',
-      primaryTopic: 'Psychosis',
-      riskLevel: 'Medium' as RiskLevel,
-      outcome: 'Advice Given' as CallOutcome,
-      qualityScore: '80%',
-      duration: '15:22',
-      recordingUrl: 'https://example.com/recording-2031-2.mp3'
+      id: "#2031",
+      dateTime: "Tue, July 13, 2025 10:43 AM - 10:51 AM",
+      caller: "English",
+      primaryTopic: "Psychosis",
+      riskLevel: "Medium" as RiskLevel,
+      outcome: "Advice Given" as CallOutcome,
+      qualityScore: "80%",
+      duration: "15:22",
+      recordingUrl: "https://example.com/recording-2031-2.mp3",
     },
     {
-      id: '#2070',
-      dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
-      caller: 'English',
-      primaryTopic: 'Psychosis',
-      riskLevel: 'Low' as RiskLevel,
-      outcome: 'Referred' as CallOutcome,
-      qualityScore: '78%',
-      duration: '6:45',
-      recordingUrl: 'https://example.com/recording-2070.mp3'
+      id: "#2070",
+      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
+      caller: "English",
+      primaryTopic: "Psychosis",
+      riskLevel: "Low" as RiskLevel,
+      outcome: "Referred" as CallOutcome,
+      qualityScore: "78%",
+      duration: "6:45",
+      recordingUrl: "https://example.com/recording-2070.mp3",
     },
     {
-      id: '#2031',
-      dateTime: 'Mon, July 13, 2025 10:43 AM - 10:51 AM',
-      caller: 'Spanish',
-      primaryTopic: 'Depression',
-      riskLevel: 'Medium' as RiskLevel,
-      outcome: 'Advice Given' as CallOutcome,
-      qualityScore: '78%',
-      duration: '10:18',
-      recordingUrl: 'https://example.com/recording-2031-3.mp3'
-    }
+      id: "#2031",
+      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
+      caller: "Spanish",
+      primaryTopic: "Depression",
+      riskLevel: "Medium" as RiskLevel,
+      outcome: "Advice Given" as CallOutcome,
+      qualityScore: "78%",
+      duration: "10:18",
+      recordingUrl: "https://example.com/recording-2031-3.mp3",
+    },
   ];
 
   const handleStatusChange = (newStatus: AgentStatus) => {
@@ -142,7 +125,7 @@ export const AgentDashboard: React.FC = () => {
   const handleAnswer = () => {
     setShowIncomingCall(false);
     // Navigate to live call interface
-    navigate('/agent/live-call');
+    navigate("/agent/live-call");
   };
 
   const handleDecline = () => {
@@ -166,15 +149,17 @@ export const AgentDashboard: React.FC = () => {
   }
 
   // Find the call being played
-  const playingCall = recentCalls.find(call => call.id === playingCallId);
+  const playingCall = recentCalls.find((call) => call.id === playingCallId);
 
   return (
-    <Box sx={{ 
-      p: { xs: 2, md: 3 }, 
-      backgroundColor: '#fafafa', 
-      minHeight: '100vh', 
-      position: 'relative' 
-    }}>
+    <Box
+      sx={{
+        p: { xs: 2, md: 3 },
+        backgroundColor: "#fafafa",
+        minHeight: "100vh",
+        position: "relative",
+      }}
+    >
       {/* Call Recording Player Popup */}
       {playingCallId && playingCall && (
         <CallRecordingPlayer
@@ -191,82 +176,92 @@ export const AgentDashboard: React.FC = () => {
       {showIncomingCall && (
         <Box
           sx={{
-            position: 'fixed',
+            position: "fixed",
             top: { xs: 80, md: 120 },
             right: { xs: 10, md: 20 },
-            left: { xs: 10, md: 'auto' },
-            width: { xs: 'calc(100vw - 20px)', md: 320 },
+            left: { xs: 10, md: "auto" },
+            width: { xs: "calc(100vw - 20px)", md: 320 },
             maxWidth: 320,
             height: 320,
-            backgroundColor: 'linear-gradient(to bottom, #CCE5E5, #F2FAFA)',
-            background: 'linear-gradient(to bottom, #CCE5E5, #F2FAFA)',
-            borderRadius: '18px',
+            backgroundColor: "linear-gradient(to bottom, #CCE5E5, #F2FAFA)",
+            background: "linear-gradient(to bottom, #CCE5E5, #F2FAFA)",
+            borderRadius: "18px",
             p: 3,
             pt: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
             zIndex: 1000,
           }}
         >
-          <Box sx={{ textAlign: 'center', width: '100%' }}>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 700, 
-                color: '#2c3e50',
+          <Box sx={{ textAlign: "center", width: "100%" }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                color: "#2c3e50",
                 mb: 1,
-                fontSize: '1.5rem'
+                fontSize: "1.5rem",
               }}
             >
               Call #2031
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', mb: 3 }}>
-              <Box 
-                sx={{ 
-                  width: 10, 
-                  height: 10, 
-                  backgroundColor: '#22c55e', 
-                  borderRadius: '50%' 
-                }} 
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                justifyContent: "center",
+                mb: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: "#22c55e",
+                  borderRadius: "50%",
+                }}
               />
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  color: '#5a6c7d',
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "#5a6c7d",
                   fontWeight: 500,
-                  fontSize: '1rem'
+                  fontSize: "1rem",
                 }}
               >
                 Incoming...
               </Typography>
             </Box>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 2, 
-              justifyContent: 'center',
-              mb: 3,
-            }}>
-              <Avatar 
-                sx={{ 
-                  backgroundColor: '#7fa8a3', 
-                  color: 'white',
-                  width: 50, 
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                justifyContent: "center",
+                mb: 3,
+              }}
+            >
+              <Avatar
+                sx={{
+                  backgroundColor: "#7fa8a3",
+                  color: "white",
+                  width: 50,
                   height: 50,
                 }}
               >
-                <Person sx={{ fontSize: '1.5rem' }} />
+                <Person sx={{ fontSize: "1.5rem" }} />
               </Avatar>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 600, 
-                  color: '#2c3e50',
-                  fontSize: '1.4rem'
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 600,
+                  color: "#2c3e50",
+                  fontSize: "1.4rem",
                 }}
               >
                 039 701 234 567
@@ -274,40 +269,44 @@ export const AgentDashboard: React.FC = () => {
             </Box>
           </Box>
 
-          <Box sx={{ 
-            display: 'flex', 
-            gap: 2, 
-            width: '100%',
-            justifyContent: 'space-between',
-            px: 1,
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}>
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 2, 
-              width: '100%',
-              justifyContent: 'space-between',
-              px: 1
-            }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              width: "100%",
+              justifyContent: "space-between",
+              px: 1,
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                width: "100%",
+                justifyContent: "space-between",
+                px: 1,
+              }}
+            >
               <Button
                 onClick={handleVoicemail}
                 sx={{
                   width: 70,
                   height: 50,
-                  backgroundColor: '#e8eaed',
-                  color: '#5f6368',
-                  borderRadius: '25px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: 'unset',
-                  '&:hover': {
-                    backgroundColor: '#dadce0'
-                  }
+                  backgroundColor: "#e8eaed",
+                  color: "#5f6368",
+                  borderRadius: "25px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "unset",
+                  "&:hover": {
+                    backgroundColor: "#dadce0",
+                  },
                 }}
               >
-                <Phone sx={{ fontSize: 24, transform: 'rotate(15deg)' }} />
+                <Phone sx={{ fontSize: 24, transform: "rotate(15deg)" }} />
               </Button>
 
               <Button
@@ -315,16 +314,16 @@ export const AgentDashboard: React.FC = () => {
                 sx={{
                   width: 70,
                   height: 50,
-                  backgroundColor: '#ea4335',
-                  color: 'white',
-                  borderRadius: '25px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: 'unset',
-                  '&:hover': {
-                    backgroundColor: '#d33b2c'
-                  }
+                  backgroundColor: "#ea4335",
+                  color: "white",
+                  borderRadius: "25px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "unset",
+                  "&:hover": {
+                    backgroundColor: "#d33b2c",
+                  },
                 }}
               >
                 <CallEnd sx={{ fontSize: 24 }} />
@@ -335,105 +334,153 @@ export const AgentDashboard: React.FC = () => {
                 sx={{
                   width: 70,
                   height: 50,
-                  backgroundColor: '#34a853',
-                  color: 'white',
-                  borderRadius: '25px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: 'unset',
-                  '&:hover': {
-                    backgroundColor: '#2d8f47'
-                  }
+                  backgroundColor: "#34a853",
+                  color: "white",
+                  borderRadius: "25px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "unset",
+                  "&:hover": {
+                    backgroundColor: "#2d8f47",
+                  },
                 }}
               >
                 <Call sx={{ fontSize: 24 }} />
               </Button>
             </Box>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 2, 
-              width: '100%',
-              justifyContent: 'space-between',
-              px: 1,
-              mt: 1
-            }}>
-              <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#2c3e50', width: 70, textAlign: 'center' }}>
+
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                width: "100%",
+                justifyContent: "space-between",
+                px: 1,
+                mt: 1,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "0.85rem",
+                  color: "#2c3e50",
+                  width: 70,
+                  textAlign: "center",
+                }}
+              >
                 Voicemail
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#2c3e50', width: 70, textAlign: 'center' }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "0.85rem",
+                  color: "#2c3e50",
+                  width: 70,
+                  textAlign: "center",
+                }}
+              >
                 Decline
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#2c3e50', width: 70, textAlign: 'center' }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "0.85rem",
+                  color: "#2c3e50",
+                  width: 70,
+                  textAlign: "center",
+                }}
+              >
                 Answer
               </Typography>
             </Box>
           </Box>
         </Box>
       )}
-      
+
       {/* Header Section */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          gap: 2, 
-          mb: 2,
-          flexDirection: { xs: 'column', sm: 'row' }
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <Typography variant="h4" sx={{ 
-              fontWeight: 600, 
-              color: '#212121',
-              fontSize: { xs: '1.5rem', md: '2rem' }
-            }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+            mb: 2,
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 600,
+                color: "#212121",
+                fontSize: { xs: "1.5rem", md: "2rem" },
+              }}
+            >
               Hey, James
             </Typography>
             <CustomChip label={status} variant="status" />
           </Box>
-          
-          <Box 
-            sx={{ 
-              display: 'flex',
-              border: '2px solid #e0e0e0',
-              borderRadius: '25px',
-              overflow: 'hidden',
-              backgroundColor: 'white',
-              width: { xs: '100%', sm: 'auto' },
-              justifyContent: { xs: 'center', sm: 'flex-start' }
+
+          <Box
+            sx={{
+              display: "flex",
+              border: "2px solid #e0e0e0",
+              borderRadius: "25px",
+              overflow: "hidden",
+              backgroundColor: "white",
+              width: { xs: "100%", sm: "auto" },
+              justifyContent: { xs: "center", sm: "flex-start" },
             }}
           >
-            {(['Available', 'Busy', 'Break'] as const).map((statusOption, index) => (
-              <Button
-                key={statusOption}
-                onClick={() => handleStatusChange(statusOption)}
-                sx={{
-                  px: 3,
-                  py: 1,
-                  backgroundColor: status === statusOption ? 'white' : 'transparent',
-                  color: status === statusOption ? '#000' : '#666',
-                  fontWeight: status === statusOption ? 600 : 400,
-                  borderRadius: 0,
-                  border: 'none',
-                  borderRight: index < 2 ? '1px solid #e0e0e0' : 'none',
-                  textTransform: 'none',
-                  minWidth: { xs: '33.33%', sm: 80 },
-                  '&:hover': {
-                    backgroundColor: status === statusOption ? 'white' : '#f5f5f5',
-                  },
-                  '&::before': status === statusOption ? {
-                    content: '"✓"',
-                    marginRight: '8px',
-                    fontSize: '14px',
-                    fontWeight: 600
-                  } : {}
-                }}
-              >
-                {statusOption}
-              </Button>
-            ))}
+            {(["Available", "Busy", "Break"] as const).map(
+              (statusOption, index) => (
+                <Button
+                  key={statusOption}
+                  onClick={() => handleStatusChange(statusOption)}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    backgroundColor:
+                      status === statusOption ? "white" : "transparent",
+                    color: status === statusOption ? "#000" : "#666",
+                    fontWeight: status === statusOption ? 600 : 400,
+                    borderRadius: 0,
+                    border: "none",
+                    borderRight: index < 2 ? "1px solid #e0e0e0" : "none",
+                    textTransform: "none",
+                    minWidth: { xs: "33.33%", sm: 80 },
+                    "&:hover": {
+                      backgroundColor:
+                        status === statusOption ? "white" : "#f5f5f5",
+                    },
+                    "&::before":
+                      status === statusOption
+                        ? {
+                            content: '"✓"',
+                            marginRight: "8px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                          }
+                        : {},
+                  }}
+                >
+                  {statusOption}
+                </Button>
+              )
+            )}
           </Box>
         </Box>
       </Box>
@@ -441,367 +488,87 @@ export const AgentDashboard: React.FC = () => {
       {/* Action Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ backgroundColor: '#008080', width: 48, height: 48 }}>
-                <Phone />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Make call
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                  Take outgoing helpline calls
-                </Typography>
-              </Box>
-            </Box>
-          </Card>
+          <ActionCard
+            icon={<History />}
+            iconBgColor="#ffa500"
+            title="View call history"
+            subtitle="Review past calls and insights"
+          />
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card 
-            onClick={() => navigate('/agent/call-history')}
-            sx={{ 
-              p: 3, 
-              backgroundColor: '#ffffff',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ backgroundColor: '#ffa500', width: 48, height: 48 }}>
-                <History />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  View call history
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                  Review past calls and insights
-                </Typography>
-              </Box>
-            </Box>
-          </Card>
+          <ActionCard
+            icon={<Voicemail />}
+            iconBgColor="#f44336"
+            title="Check Voice Mail"
+            subtitle="Listen to voice mail messages"
+            onClick={() => navigate("/agent/call-history")}
+          />
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ backgroundColor: '#f44336', width: 48, height: 48 }}>
-                <Warning />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Escalate a case
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                  Flag urgent cases to supervisor
-                </Typography>
-              </Box>
-            </Box>
-          </Card>
+          <ActionCard
+            icon={<Call />}
+            iconBgColor="#008080"
+            title="Make a call"
+            subtitle="Take outline going calls"
+          />
         </Grid>
       </Grid>
 
       {/* Metrics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Avatar sx={{ backgroundColor: '#008080', width: 40, height: 40 }}>
-                <Call sx={{ fontSize: 20 }} />
-              </Avatar>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Total Calls
-              </Typography>
-            </Box>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: '#212121' }}>
-              32
-            </Typography>
-          </Card>
+          <MetricCard
+            icon={<Call />}
+            iconBgColor="#008080"
+            label="Total Calls"
+            value={32}
+            trend={{ value: "+5% vs last month", isPositive: true }}
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Avatar sx={{ backgroundColor: '#ffa500', width: 40, height: 40 }}>
-                <Assessment sx={{ fontSize: 20 }} />
-              </Avatar>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Calls Today
-              </Typography>
-            </Box>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: '#212121' }}>
-              12
-            </Typography>
-          </Card>
+          <MetricCard
+            icon={<Assessment />}
+            iconBgColor="#ffa500"
+            label="Calls Today"
+            value={12}
+            trend={{ value: "-1% vs yesterday", isPositive: false }}
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Avatar sx={{ backgroundColor: '#f44336', width: 40, height: 40 }}>
-                <Escalator sx={{ fontSize: 20 }} />
-              </Avatar>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Escalated Calls
-              </Typography>
-            </Box>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: '#212121' }}>
-              2
-            </Typography>
-          </Card>
+          <MetricCard
+            icon={<Escalator />}
+            iconBgColor="#f44336"
+            label="Escalated Calls"
+            value={2}
+            trend={{ value: "-1% vs yesterday", isPositive: false }}
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ 
-            p: 3, 
-            backgroundColor: '#ffffff',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Avatar sx={{ backgroundColor: '#607d8b', width: 40, height: 40 }}>
-                <TrendingUp sx={{ fontSize: 20 }} />
-              </Avatar>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Conversation Score
-              </Typography>
-            </Box>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: '#212121' }}>
-              82%
-            </Typography>
-          </Card>
+          <MetricCard
+            icon={<TrendingUp />}
+            iconBgColor="#607d8b"
+            label="Quality Score"
+            value="82%"
+          />
         </Grid>
       </Grid>
 
       {/* Recent Call Activity */}
-      <Paper sx={{ p: 3, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-              Recent call activity
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Your most recent interactions with complete call details
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                displayEmpty
-                sx={{ borderRadius: '8px' }}
-              >
-                <MenuItem value="All status">All status</MenuItem>
-                <MenuItem value="Low">Low</MenuItem>
-                <MenuItem value="Medium">Medium</MenuItem>
-                <MenuItem value="High">High</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 140 }}>
-              <Select
-                value={languageFilter}
-                onChange={(e) => setLanguageFilter(e.target.value)}
-                displayEmpty
-                sx={{ borderRadius: '8px' }}
-              >
-                <MenuItem value="All languages">All languages</MenuItem>
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="French">French</MenuItem>
-                <MenuItem value="Spanish">Spanish</MenuItem>
-              </Select>
-            </FormControl>
-            <Button
-              variant="outlined"
-              startIcon={<FilterList />}
-              sx={{ borderRadius: '8px' }}
-            >
-              More Filters
-            </Button>
-          </Box>
-        </Box>
-
-        {/* Table Headers */}
-        <Box sx={{ 
-          display: { xs: 'none', md: 'grid' }, 
-          gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1.5fr',
-          gap: 2,
-          p: 2,
-          backgroundColor: '#f5f5f5',
-          borderRadius: '8px',
-          mb: 2
-        }}>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Date & Time
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Caller ID
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Primary Topic
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Risk level
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Outcome
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Quality Score
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: '#757575' }}>
-            Action
-          </Typography>
-        </Box>
-
-        {/* Table Rows */}
-        <Stack spacing={1}>
-          {recentCalls.map((call, index) => {
-            const { date, time } = formatDateTime(call.dateTime);
-            return (
-              <Box
-                key={index}
-                sx={{
-                  display: { xs: 'block', md: 'grid' },
-                  gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr 1fr 1.5fr',
-                  gap: 2,
-                  p: 2,
-                  alignItems: 'center',
-                  '&:hover': { backgroundColor: '#f9f9f9' },
-                  borderRadius: '8px'
-                }}
-              >
-                {/* Desktop Layout */}
-                <Box sx={{ display: { xs: 'none', md: 'contents' } }}>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {date}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {time}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {call.id}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {call.caller}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2">
-                    {call.primaryTopic}
-                  </Typography>
-                  <CustomChip label={call.riskLevel} variant="risk" />
-                  <CustomChip label={call.outcome} variant="outcome" />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Star sx={{ color: '#ffd700', fontSize: 16 }} />
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {call.qualityScore}
-                    </Typography>
-                  </Box>
-                  <ActionButtonsGroup
-                    onPlay={() => handlePlayCall(call.id)}
-                    onView={() => handleViewCall(call.id)}
-                  />
-                </Box>
-
-                {/* Mobile Layout */}
-                <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '1rem' }}>
-                        Call {call.id}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {call.caller}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <CustomChip label={call.riskLevel} variant="risk" size="small" />
-                      <CustomChip label={call.outcome} variant="outcome" size="small" />
-                    </Box>
-                  </Box>
-                  
-                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                    {call.primaryTopic}
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-                        {date}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-                        {time}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Star sx={{ color: '#ffd700', fontSize: 16 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {call.qualityScore}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <ActionButtonsGroup
-                      onPlay={() => handlePlayCall(call.id)}
-                      onView={() => handleViewCall(call.id)}
-                    />
-                  </Box>
-                </Box>
-              </Box>
-            );
-          })}
-        </Stack>
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            Page 1-10 of 50 results
-          </Typography>
-          <Button
-            variant="text"
-            onClick={() => navigate('/agent/call-history')}
-            sx={{ color: '#008080', fontWeight: 500 }}
-          >
-            View All Call History
-          </Button>
-        </Box>
-      </Paper>
+      <CallActivityTable
+        calls={recentCalls.map((call) => ({
+          ...call,
+          onPlay: () => handlePlayCall(call.id),
+          onView: () => handleViewCall(call.id),
+        }))}
+        showFilters={true}
+        showPagination={false}
+        onViewAll={() => navigate("/agent/call-history")}
+      />
     </Box>
   );
 };

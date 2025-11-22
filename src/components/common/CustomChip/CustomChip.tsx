@@ -2,28 +2,30 @@
 import React from 'react';
 import { Chip } from '@mui/material';
 
-export type RiskLevel = 'Low' | 'Medium' | 'High';
+export type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 export type CallOutcome = 'Advice Given' | 'Escalated' | 'Referred';
 export type AgentStatus = 'Available' | 'Busy' | 'Break';
+export type CallerType = 'Patient';
+export type Sentiment = 'Positive' | 'Neutral';
 
-type ChipVariant = RiskLevel | CallOutcome | AgentStatus;
+type ChipVariant = RiskLevel | CallOutcome | AgentStatus | CallerType | Sentiment;
 
 interface CustomChipProps {
   label: ChipVariant;
-  variant: 'risk' | 'outcome' | 'status';
+  variant: 'risk' | 'outcome' | 'status' | 'caller' | 'sentiment';
   size?: 'small' | 'medium';
   showDot?: boolean;
 }
 
-const CustomChip: React.FC<CustomChipProps> = ({ 
-  label, 
-  variant, 
-  size = 'medium', 
-  showDot 
+const CustomChip: React.FC<CustomChipProps> = ({
+  label,
+  variant,
+  size = 'medium',
+  showDot
 }) => {
   // Determine if dot should be shown based on variant
-  const shouldShowDot = showDot !== undefined ? showDot : (variant === 'risk' || variant === 'status');
-
+  const shouldShowDot = showDot !== undefined ? showDot : (variant === 'risk' || variant === 'status' || variant === 'caller' || variant === 'sentiment');
+  
   const chipStyles: Record<string, {
     backgroundColor: string;
     borderColor: string;
@@ -44,6 +46,12 @@ const CustomChip: React.FC<CustomChipProps> = ({
       dotColor: '#f59e0b',
     },
     'High': {
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      borderColor: '#ef4444',
+      color: '#dc2626',
+      dotColor: '#ef4444',
+    },
+    'Critical': {
       backgroundColor: 'rgba(239, 68, 68, 0.1)',
       borderColor: '#ef4444',
       color: '#dc2626',
@@ -83,6 +91,26 @@ const CustomChip: React.FC<CustomChipProps> = ({
     },
     'Break': {
       backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      borderColor: '#f59e0b',
+      color: '#d97706',
+      dotColor: '#f59e0b',
+    },
+    // Caller Type Styles
+    'Patient': {
+      backgroundColor: 'rgba(14, 165, 233, 0.1)',
+      borderColor: '#0ea5e9',
+      color: '#0369a1',
+      dotColor: '#0ea5e9',
+    },
+    // Sentiment Styles
+    'Positive': {
+      backgroundColor: 'rgba(74, 222, 128, 0.1)',
+      borderColor: '#22c55e',
+      color: '#15803d',
+      dotColor: '#22c55e',
+    },
+    'Neutral': {
+      backgroundColor: 'rgba(251, 191, 36, 0.1)',
       borderColor: '#f59e0b',
       color: '#d97706',
       dotColor: '#f59e0b',
