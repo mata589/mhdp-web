@@ -24,7 +24,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const adminNavItems = [
-  { path: '/admin', label: 'Dashboard', icon: DashboardIcon },
+  { path: '/admin/admin', label: 'Dashboard', icon: DashboardIcon },
   { path: '/admin/admin/FacilitiesManagement2', label: 'Facility management', icon: FacilityIcon },
   { path: '/admin/admin/FacilityUsersPage', label: 'User management', icon: UsersIcon },
   { path: '/admin/DashboardOverviewPage', label: 'System health', icon: SystemHealthIcon },
@@ -105,7 +105,7 @@ export const AdminSidebar: React.FC = () => {
       <List sx={{ px: 2, py: 3, flexGrow: 1 }}>
         {adminNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path;       
           
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>

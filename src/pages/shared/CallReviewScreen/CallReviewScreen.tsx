@@ -1,238 +1,414 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Card,
-  Typography,
-  Grid,
-  Chip,
-  Button,
-  TextField,
-  IconButton
-} from '@mui/material';
-import {
-  ArrowBack,
-  Phone,
-  PhoneMissed
-} from '@mui/icons-material';
+import React, { useState } from "react";
+import { ArrowLeft, Phone, PhoneMissed, Clock } from 'lucide-react';
 
 export const CallReviewScreen = () => {
-  const [callNotes, setCallNotes] = useState('I tried reaching the caller, but they were unavailable.');
+  const [callNotes, setCallNotes] = useState(
+    "I tried reaching the caller, but they were unavailable."
+  );
 
   const callData = {
-    id: '2031',
-    callerId: '#2031',
-    status: 'Returned',
-    lastCall: 'Jul 13, 2025 | 10:43AM',
+    id: "2031",
+    callerId: "#2031",
+    status: "Missed",
+    lastCall: "Jul 13, 2025 | 10:43AM",
     callCount: 10,
-    riskLevel: 'Critical'
+    riskLevel: "Critical",
   };
 
   const callHistory = [
-    { time: '10:40 AM', status: 'Missed', id: '#2031' },
-    { time: '10:40 AM', status: 'Missed', id: '#2031' },
-    { time: '10:39 AM', status: 'Missed', id: '#2031' },
-    { time: '10:38 AM', status: 'Missed', id: '#2031' },
-    { time: '10:36 AM', status: 'Missed', id: '#2031' }
+    { time: "10:40 AM", status: "Missed", id: "#2031" },
+    { time: "10:40 AM", status: "Missed", id: "#2031" },
+    { time: "10:39 AM", status: "Missed", id: "#2031" },
+    { time: "10:38 AM", status: "Missed", id: "#2031" },
+    { time: "10:36 AM", status: "Missed", id: "#2031" },
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-      <Grid container>
-        {/* Main Content */}
-        <Grid item xs={12} md={8} sx={{ p: 4, maxWidth: '1200px' }}>
-          {/* Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-            <IconButton sx={{ bgcolor: 'white', '&:hover': { bgcolor: 'grey.100' } }}>
-              <ArrowBack />
-            </IconButton>
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                  Missed call #{callData.id}
-                </Typography>
-                <Chip
-                  label={callData.status}
-                  sx={{
-                    bgcolor: '#d4f4dd',
-                    color: '#0d7c3a',
-                    fontWeight: 500,
-                    border: 'none'
-                  }}
-                  size="small"
-                />
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Last call: {callData.lastCall}
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<Phone />}
-              sx={{
-                bgcolor: '#0d7c3a',
-                '&:hover': { bgcolor: '#0a6330' },
-                textTransform: 'none',
-                px: 3,
-                py: 1.5,
-                borderRadius: 2
-              }}
-            >
-              Call back
-            </Button>
-          </Box>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr",
+        gap: "0",
+        maxWidth: "1280px",
+        margin: "0 auto"
+      }}>
+        <style>{`
+          @media (min-width: 1024px) {
+            .desktop-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 24px;
+              padding: 16px;
+            }
+          }
 
-          {/* Info Card */}
-          <Card sx={{ mb: 4, p: 4, borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: 6,
-                bgcolor: '#f8f9fa',
-                p: 4,
-                borderRadius: 2
-              }}
-            >
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Caller ID
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {callData.callerId}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Status
-                </Typography>
-                <Chip
-                  label={callData.status}
-                  sx={{
-                    bgcolor: '#d4f4dd',
-                    color: '#0d7c3a',
-                    fontWeight: 500,
-                    border: 'none',
-                    mt: 0.5
-                  }}
-                  size="small"
-                />
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Call Count
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {callData.callCount}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Risk Level
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: '#dc3545'
-                    }}
-                  />
-                  <Typography variant="body1" sx={{ fontWeight: 500, color: '#dc3545' }}>
-                    {callData.riskLevel}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </Card>
+           @media (max-width: 1023px) {
+            .desktop-grid > div {
+              padding-right: 0;
+            }
+            
+            /* Add mobile-specific padding: 8px for outer container */
+            .mobile-outer-container {
+              padding: 5px !important;
+            }
+            
+            /* Add mobile-specific padding: 10px for all cards */
+            .mobile-card {
+              padding: 5px !important;
+            }
+          }
+          
+        `}</style>
 
-          {/* Call Notes */}
-          <Card sx={{ p: 4, borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-              Call Notes
-            </Typography>
-            <TextField
-              multiline
-              rows={6}
-              fullWidth
-              value={callNotes}
-              onChange={(e) => setCallNotes(e.target.value)}
-              placeholder="Add notes about this call..."
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'white',
-                  '& fieldset': { borderColor: '#e0e0e0' }
-                }
-              }}
-            />
-          </Card>
-        </Grid>
+        <div className="desktop-grid mobile-outer-container">
+          
+          {/* Main Content - Left Side */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            
+            {/* Call Info Card */}
+            <div  className="mobile-card" style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              border: "1px solid #e5e5e5",
+              padding: "24px"
+            }}>
+              
+              {/* Header Section */}
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                marginBottom: "24px"
+              }}>
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                  <button style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "0",
+                    display: "flex",
+                    alignItems: "center",
+                    color: "#333333"
+                  }}>
+                    <ArrowLeft size={24} />
+                  </button>
 
-        {/* Sidebar - Call History */}
-        <Grid
-          item
-          xs={12}
-          md={4}
-          sx={{
-            bgcolor: 'white',
-            borderLeft: '1px solid #e0e0e0',
-            p: 4,
-            minWidth: '420px'
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-            Call history
-          </Typography>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      marginBottom: "4px",
+                      flexWrap: "wrap"
+                    }}>
+                      <h1 style={{
+                        fontSize: "28px",
+                        fontWeight: "bold",
+                        color: "#000000",
+                        margin: "0"
+                      }}>
+                        Missed call #{callData.id}
+                      </h1>
+                      <span style={{
+                        backgroundColor: "#fce4ec",
+                        color: "#c2185b",
+                        padding: "4px 12px",
+                        borderRadius: "16px",
+                        fontSize: "12px",
+                        fontWeight: "600"
+                      }}>
+                        Missed
+                      </span>
+                    </div>
+                    <p style={{
+                      fontSize: "14px",
+                      color: "#666666",
+                      margin: "0"
+                    }}>
+                      Last call: {callData.lastCall}
+                    </p>
+                  </div>
+                </div>
 
-          <Typography
-            variant="subtitle2"
-            color="text.secondary"
-            sx={{ mb: 2, fontWeight: 500 }}
-          >
-            Jul 13, 2025
-          </Typography>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {callHistory.map((call, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  p: 2,
-                  bgcolor: '#f8f9fa',
-                  borderRadius: 2,
-                  '&:hover': { bgcolor: '#f0f0f0' },
-                  cursor: 'pointer'
+                <button style={{
+                  backgroundColor: "#17a2b8",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "12px 24px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s",
+                  width: "100%"
                 }}
-              >
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    bgcolor: '#fee',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0f8896"}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#17a2b8"}
                 >
-                  <PhoneMissed sx={{ fontSize: 20, color: '#dc3545' }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {call.time}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {call.status} | Call ID: {call.id}
-                  </Typography>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+                  <Phone size={18} />
+                  Call back
+                </button>
+              </div>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                gap: "24px",
+                backgroundColor: "#f9f9f9",
+                padding: "24px",
+                borderRadius: "8px"
+              }}>
+                <div>
+                  <p style={{
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "#999999",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    margin: "0 0 8px 0"
+                  }}>
+                    Caller ID
+                  </p>
+                  <p style={{
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    color: "#000000",
+                    margin: "0"
+                  }}>
+                    {callData.callerId}
+                  </p>
+                </div>
+
+                <div>
+                  <p style={{
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "#999999",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    margin: "0 0 8px 0"
+                  }}>
+                    Status
+                  </p>
+                  <span style={{
+                    backgroundColor: "#fce4ec",
+                    color: "#c2185b",
+                    padding: "6px 12px",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    display: "inline-block"
+                  }}>
+                    Missed
+                  </span>
+                </div>
+
+                <div>
+                  <p style={{
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "#999999",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    margin: "0 0 8px 0"
+                  }}>
+                    Call Count
+                  </p>
+                  <p style={{
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    color: "#000000",
+                    margin: "0"
+                  }}>
+                    {callData.callCount}
+                  </p>
+                </div>
+
+                <div>
+                  <p style={{
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "#999999",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    margin: "0 0 8px 0"
+                  }}>
+                    Risk Level
+                  </p>
+                  <span style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    color: "#d32f2f",
+                    fontSize: "14px",
+                    fontWeight: "600"
+                  }}>
+                    <span style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: "#d32f2f"
+                    }}></span>
+                    Critical
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Call Notes Card */}
+            <div style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              border: "1px solid #e5e5e5",
+              padding: "24px"
+            }}>
+              <h2 style={{
+                fontSize: "20px",
+                fontWeight: "bold",
+                color: "#000000",
+                margin: "0 0 16px 0"
+              }}>
+                Call Notes
+              </h2>
+              
+              <textarea
+                value={callNotes}
+                onChange={(e) => setCallNotes(e.target.value)}
+                placeholder="Add notes about the call, symptoms discussed, recommendations given"
+                style={{
+                  width: "100%",
+                  height: "200px",
+                  padding: "16px",
+                  border: "1px solid #dddddd",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  color: "#333333",
+                  fontFamily: "inherit",
+                  resize: "none",
+                  boxSizing: "border-box"
+                }}
+              />
+              
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: "16px",
+                gap: "12px"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#666666",
+                  fontSize: "14px"
+                }}>
+                  <Clock size={16} />
+                  Auto-save enabled
+                </div>
+                <button style={{
+                  backgroundColor: "#17a2b8",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 20px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0f8896"}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#17a2b8"}
+                >
+                  Save Notes
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Call History Sidebar - Right Side */}
+          <div style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "8px",
+            border: "1px solid #e5e5e5",
+            padding: "24px"
+          }}>
+            
+            <h2 style={{
+              fontSize: "20px",
+              fontWeight: "bold",
+              color: "#000000",
+              margin: "0 0 16px 0"
+            }}>
+              Call history
+            </h2>
+            
+            <p style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#666666",
+              margin: "0 0 16px 0"
+            }}>
+              Jul 13, 2025
+            </p>
+
+            {/* Call History Items */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {callHistory.map((call, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "12px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e5e5",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f5f5f5"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    backgroundColor: "#ffebee",
+                    flexShrink: 0
+                  }}>
+                    <PhoneMissed size={18} style={{ color: "#d32f2f" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      color: "#000000",
+                      margin: "0 0 4px 0"
+                    }}>
+                      {call.time}
+                    </p>
+                    <p style={{
+                      fontSize: "12px",
+                      color: "#666666",
+                      margin: "0"
+                    }}>
+                      {call.status} | Call ID: {call.id}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

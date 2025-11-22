@@ -57,6 +57,7 @@ const Settings = () => {
           boxShadow: 'none',
           borderRadius: 3,
           border: '1px solid #CCE5E5',
+          backgroundColor: "#f8fffe",
           //bgcolor: '#CCE5E5'
         }}>
           <Box sx={{ 

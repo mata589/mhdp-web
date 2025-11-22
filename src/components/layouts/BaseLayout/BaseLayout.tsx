@@ -38,7 +38,7 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({
           sx={{
             flexGrow: 1,
             bgcolor: 'background.default',
-            p: { xs: 2, md: 3 },
+         
             overflow: 'auto',
             mt: { xs: 0, md: 0 }, // Account for header height difference
           }}
