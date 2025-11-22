@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import {
   Box,
   Card,
@@ -12,8 +13,6 @@ import {
 import {
   ArrowLeft,
   Download,
-  Phone,
-  Calendar,
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
@@ -29,8 +28,8 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 
 export default function StaffDetailsPage() {
+  const navigate = useNavigate(); // Add this line
   const location = useLocation();
-
   const conversationTrendData = [
     { month: 'Jan', score: 20 },
     { month: 'Feb', score: 25 },
@@ -45,7 +44,6 @@ export default function StaffDetailsPage() {
     { month: 'Nov', score: 20 },
     { month: 'Dec', score: 0 },
   ];
-
   const metrics = [
     {
       title: 'Total Calls',
@@ -88,7 +86,6 @@ export default function StaffDetailsPage() {
       isPositive: true,
     },
   ];
-
   const dialogueData = [
     { label: 'Rapport', value: 15, color: '#10B981' },
     { label: 'Listening', value: 30, color: '#14B8A6' },
@@ -96,18 +93,20 @@ export default function StaffDetailsPage() {
     { label: 'Motivating', value: 65, color: '#F59E0B' },
     { label: 'Ending', value: 85, color: '#DC2626' },
   ];
-
   return (
-    <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: 3 }}>
+    <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: { xs: 2, sm: 3 } }}>
       {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
         <Button
           startIcon={<ArrowLeft size={18} />}
+          onClick={() => navigate('/supervisor/staff-performance')} // Add this onClick
           sx={{
             textTransform: 'none',
             color: '#6B7280',
             fontSize: '14px',
             fontWeight: 500,
+            width: { xs: '100%', sm: 'auto' },
+            justifyContent: 'flex-start',
             '&:hover': {
               bgcolor: '#F3F4F6',
             },
@@ -116,11 +115,10 @@ export default function StaffDetailsPage() {
           Staff Details - James Gipir
         </Button>
       </Box>
-
       {/* Staff Info Card */}
       <Card sx={{ mb: 3, boxShadow: 'none', border: '1px solid #E5E7EB' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: { xs: 2, sm: 3 } }}>
             <Box>
               <Typography sx={{ fontSize: '12px', color: '#6B7280', mb: 0.5 }}>
                 Full Name
@@ -171,33 +169,34 @@ export default function StaffDetailsPage() {
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ mt: 2 }}>
-            <Typography sx={{ fontSize: '12px', color: '#6B7280', mb: 0.5 }}>
-              Status
-            </Typography>
-            <Chip
-              label="On call"
-              size="small"
-              sx={{
-                bgcolor: '#FEE2E2',
-                color: '#DC2626',
-                fontSize: '12px',
-                fontWeight: 600,
-                height: '24px',
-              }}
-            />
-          </Box>
-          <Box sx={{ mt: 2 }}>
-            <Typography sx={{ fontSize: '12px', color: '#6B7280', mb: 0.5 }}>
-              Last Call
-            </Typography>
-            <Typography sx={{ fontSize: '14px', color: '#111827' }}>
-              Mon, Jul 13, 2025 | 10:43 AM
-            </Typography>
+          <Box sx={{ mt: { xs: 1, sm: 2 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 0, sm: 2 }, justifyContent: { xs: 'flex-start', sm: 'space-between' } }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontSize: '12px', color: '#6B7280', mb: 0.5 }}>
+                Status
+              </Typography>
+              <Chip
+                label="On call"
+                size="small"
+                sx={{
+                  bgcolor: '#FEE2E2',
+                  color: '#DC2626',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  height: '24px',
+                }}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontSize: '12px', color: '#6B7280', mb: 0.5 }}>
+                Last Call
+              </Typography>
+              <Typography sx={{ fontSize: '14px', color: '#111827' }}>
+                Mon, Jul 13, 2025 | 10:43 AM
+              </Typography>
+            </Box>
           </Box>
         </CardContent>
       </Card>
-
       {/* Tabs */}
       <Box sx={{ mb: 3, borderBottom: '1px solid #E5E7EB' }}>
         <Tabs
@@ -221,7 +220,6 @@ export default function StaffDetailsPage() {
           <Tab label="Call history" component={Link} to="/supervisor/CallHistoryTab" />
         </Tabs>
       </Box>
-
       {/* Performance Summary Header */}
       <Box
         sx={{
@@ -229,9 +227,11 @@ export default function StaffDetailsPage() {
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 3,
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 2, sm: 0 }
         }}
       >
-        <Typography sx={{ fontSize: '18px', fontWeight: 600, color: '#111827' }}>
+        <Typography sx={{ fontSize: { xs: '16px', sm: '18px' }, fontWeight: 600, color: '#111827' }}>
           Performance Summary
         </Typography>
         <Button
@@ -242,6 +242,7 @@ export default function StaffDetailsPage() {
             textTransform: 'none',
             fontSize: '14px',
             fontWeight: 500,
+            width: { xs: '100%', sm: 'auto' },
             '&:hover': {
               bgcolor: '#00796b',
             },
@@ -250,12 +251,11 @@ export default function StaffDetailsPage() {
           Download Performance report
         </Button>
       </Box>
-
       {/* Metrics Cards */}
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(5, 1fr)' },
           gap: 2,
           mb: 3,
         }}
@@ -269,12 +269,12 @@ export default function StaffDetailsPage() {
               borderRadius: '8px',
             }}
           >
-            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <CardContent sx={{ p: { xs: 1.5, sm: 2.5 }, '&:last-child': { pb: { xs: 1.5, sm: 2.5 } } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, mb: 2 }}>
                 <Box
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: { xs: 32, sm: 40 },
+                    height: { xs: 32, sm: 40 },
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -286,15 +286,15 @@ export default function StaffDetailsPage() {
                     src={metric.icon}
                     alt={metric.title}
                     sx={{
-                      width: 20,
-                      height: 20,
+                      width: { xs: 16, sm: 20 },
+                      height: { xs: 16, sm: 20 },
                       objectFit: 'contain',
                     }}
                   />
                 </Box>
                 <Typography
                   sx={{
-                    fontSize: '13px',
+                    fontSize: { xs: '11px', sm: '13px' },
                     fontWeight: 500,
                     color: '#6B7280',
                   }}
@@ -304,7 +304,7 @@ export default function StaffDetailsPage() {
               </Box>
               <Typography
                 sx={{
-                  fontSize: '28px',
+                  fontSize: { xs: '24px', sm: '28px' },
                   fontWeight: 700,
                   color: '#111827',
                   lineHeight: 1,
@@ -336,27 +336,28 @@ export default function StaffDetailsPage() {
           </Card>
         ))}
       </Box>
-
       {/* Charts Section */}
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
           gap: 2,
         }}
       >
         {/* Conversation Quality */}
         <Card sx={{ boxShadow: 'none', border: '1px solid #E5E7EB' }}>
-          <CardContent sx={{ p: 3 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 mb: 3,
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: { xs: 1, sm: 0 },
               }}
             >
-              <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>
+              <Typography sx={{ fontSize: { xs: '14px', sm: '16px' }, fontWeight: 600, color: '#111827' }}>
                 a. James' conversation quality
               </Typography>
               <Chip
@@ -372,7 +373,7 @@ export default function StaffDetailsPage() {
             </Box>
             <Box>
               {dialogueData.map((item, index) => (
-                <Box key={index} sx={{ mb: 2.5 }}>
+                <Box key={index} sx={{ mb: { xs: 1.5, sm: 2.5 } }}>
                   <Box
                     sx={{
                       display: 'flex',
@@ -410,11 +411,10 @@ export default function StaffDetailsPage() {
             </Box>
           </CardContent>
         </Card>
-
         {/* Conversation Quality Trends */}
         <Card sx={{ boxShadow: 'none', border: '1px solid #E5E7EB' }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#111827', mb: 3 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography sx={{ fontSize: { xs: '14px', sm: '16px' }, fontWeight: 600, color: '#111827', mb: 3 }}>
               b. Conversation quality trends
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
