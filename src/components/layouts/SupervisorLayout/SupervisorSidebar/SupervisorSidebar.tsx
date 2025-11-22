@@ -19,8 +19,6 @@ import {
   History as HistoryIcon,
   People as StaffIcon,
   Analytics as AnalyticsIcon,
-  MenuBook as TrainingIcon,
-  Help as HelpIcon,
   Settings as SettingsIcon,
   ExitToApp as SignOutIcon,
 } from '@mui/icons-material';
@@ -37,17 +35,13 @@ const supervisorNavItems = [
   { path: '/supervisor/analytics', label: 'Analytics', icon: AnalyticsIcon },
 ];
 
-const secondaryNavItems = [
-  { path: '/supervisor/training', label: 'Training materials', icon: TrainingIcon },
-  { path: '/supervisor/help', label: 'Help and support', icon: HelpIcon },
-];
 
 const DRAWER_WIDTH = 320;
 
 export const SupervisorSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   // Set dashboard as default if at root or no specific path
   const currentPath = location.pathname === '/supervisor' ? '/supervisor' : location.pathname;

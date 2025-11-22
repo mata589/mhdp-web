@@ -1,6 +1,6 @@
 // File: src/pages/supervisor/SupervisorDashboard/SupervisorDashboard.tsx
-import React, { useState } from 'react';
-import { GridLegacy as Grid } from '@mui/material';
+import React, { useState } from "react";
+import { GridLegacy as Grid } from "@mui/material";
 import {
   Box,
   Card,
@@ -19,7 +19,7 @@ import {
   Select,
   MenuItem,
   FormControl,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Phone,
   Warning,
@@ -29,9 +29,9 @@ import {
   PlayArrow,
   PhoneInTalk,
   FilterList,
-} from '@mui/icons-material';
-import { useAuth } from '../../../contexts/AuthContext';
-import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
+} from "@mui/icons-material";
+import { useAuth } from "../../../contexts/AuthContext";
+import { MetricCard } from "../../../components/cards/MetricCard/MetricCard";
 
 import {
   BarChart,
@@ -41,221 +41,221 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
-import ToggleTabs from '../../../components/common/ToggleTabs/ToggleTabs';
+} from "recharts";
+import ToggleTabs from "../../../components/common/ToggleTabs/ToggleTabs";
 
 export const SupervisorDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const tabOptions = [
-    { label: 'Overview', value: 0 },
-    { label: 'Alerts & Escalations', value: 1 },
-    { label: 'Staff Performance', value: 2 },
+    { label: "Overview", value: 0 },
+    { label: "Alerts & Escalations", value: 1 },
+    { label: "Staff Performance", value: 2 },
   ];
 
   const metrics = [
     {
-      icon: <Phone sx={{ fontSize: 24, color: 'white' }} />,
-      color: 'teal' as const,
-      title: 'Total Calls',
-      value: '489',
+      icon: <Phone sx={{ fontSize: 24, color: "white" }} />,
+      color: "teal" as const,
+      title: "Total Calls",
+      value: "489",
       change: {
         value: 5,
-        type: 'increase' as const,
-        period: 'vs last month',
+        type: "increase" as const,
+        period: "vs last month",
       },
     },
     {
-      icon: <Phone sx={{ fontSize: 24, color: 'white' }} />,
-      color: 'amber' as const,
-      title: 'Calls Today',
-      value: '156',
+      icon: <Phone sx={{ fontSize: 24, color: "white" }} />,
+      color: "amber" as const,
+      title: "Calls Today",
+      value: "156",
       change: {
         value: -1,
-        type: 'decrease' as const,
-        period: 'vs yesterday',
+        type: "decrease" as const,
+        period: "vs yesterday",
       },
     },
     {
-      icon: <Warning sx={{ fontSize: 24, color: 'white' }} />,
-      color: 'red' as const,
-      title: 'Escalated Calls',
-      value: '7',
+      icon: <Warning sx={{ fontSize: 24, color: "white" }} />,
+      color: "red" as const,
+      title: "Escalated Calls",
+      value: "7",
       change: {
         value: -1,
-        type: 'decrease' as const,
-        period: 'vs yesterday',
+        type: "decrease" as const,
+        period: "vs yesterday",
       },
     },
     {
-      icon: <Star sx={{ fontSize: 24, color: 'white' }} />,
-      color: 'blue' as const,
-      title: 'Avg. Quality Score',
-      value: '82%',
+      icon: <Star sx={{ fontSize: 24, color: "white" }} />,
+      color: "blue" as const,
+      title: "Avg. Quality Score",
+      value: "82%",
       change: {
         value: 5,
-        type: 'increase' as const,
-        period: 'vs last month',
+        type: "increase" as const,
+        period: "vs last month",
       },
     },
   ];
 
   const callVolumeData = [
-    { time: '07:00', calls: 98 },
-    { time: '08:00', calls: 89 },
-    { time: '09:00', calls: 92 },
-    { time: '10:00', calls: 32 },
-    { time: '11:00', calls: 68 },
-    { time: '12:00', calls: 78 },
-    { time: '13:00', calls: 132 },
-    { time: '14:00', calls: 142 },
-    { time: '15:00', calls: 118 },
-    { time: '16:00', calls: 98 },
-    { time: '17:00', calls: 78 },
+    { time: "07:00", calls: 98 },
+    { time: "08:00", calls: 89 },
+    { time: "09:00", calls: 92 },
+    { time: "10:00", calls: 32 },
+    { time: "11:00", calls: 68 },
+    { time: "12:00", calls: 78 },
+    { time: "13:00", calls: 132 },
+    { time: "14:00", calls: 142 },
+    { time: "15:00", calls: 118 },
+    { time: "16:00", calls: 98 },
+    { time: "17:00", calls: 78 },
   ];
 
   const agents = [
-    { 
-      id: 1, 
-      name: 'James Gipir', 
-      status: 'In call', 
-      statusColor: '#ef4444',
-      duration: '2:31',
+    {
+      id: 1,
+      name: "James Gipir",
+      status: "In call",
+      statusColor: "#ef4444",
+      duration: "2:31",
       performance: 78,
-      avatar: 'J',
-      avatarBg: '#14b8a6'
+      avatar: "J",
+      avatarBg: "#14b8a6",
     },
-    { 
-      id: 2, 
-      name: 'Sarah Mukasa', 
-      status: 'In call', 
-      statusColor: '#ef4444',
-      duration: '2:31',
+    {
+      id: 2,
+      name: "Sarah Mukasa",
+      status: "In call",
+      statusColor: "#ef4444",
+      duration: "2:31",
       performance: 80,
-      avatar: 'S',
-      avatarBg: '#f59e0b'
+      avatar: "S",
+      avatarBg: "#f59e0b",
     },
-    { 
-      id: 3, 
-      name: 'Mary Namu', 
-      status: 'Available', 
-      statusColor: '#10b981',
+    {
+      id: 3,
+      name: "Mary Namu",
+      status: "Available",
+      statusColor: "#10b981",
       duration: null,
       performance: 78,
-      avatar: 'M',
-      avatarBg: '#3b82f6'
+      avatar: "M",
+      avatarBg: "#3b82f6",
     },
-    { 
-      id: 4, 
-      name: 'Flavia Nabukenya', 
-      status: 'In call', 
-      statusColor: '#ef4444',
-      duration: '18:31',
+    {
+      id: 4,
+      name: "Flavia Nabukenya",
+      status: "In call",
+      statusColor: "#ef4444",
+      duration: "18:31",
       performance: 92,
-      avatar: 'F',
-      avatarBg: '#f59e0b'
+      avatar: "F",
+      avatarBg: "#f59e0b",
     },
-    { 
-      id: 5, 
-      name: 'Amooti Sam', 
-      status: 'Break', 
-      statusColor: '#f59e0b',
+    {
+      id: 5,
+      name: "Amooti Sam",
+      status: "Break",
+      statusColor: "#f59e0b",
       duration: null,
       performance: 78,
-      avatar: 'A',
-      avatarBg: '#14b8a6'
+      avatar: "A",
+      avatarBg: "#14b8a6",
     },
   ];
 
   const escalations = [
     {
-      id: '2031',
-      type: 'Suicidal intent',
-      severity: 'Critical',
-      severityColor: '#ef4444',
-      agent: 'James Gipir',
-      date: 'Jul 13, 2025',
-      time: '10:43AM',
+      id: "2031",
+      type: "Suicidal intent",
+      severity: "Critical",
+      severityColor: "#ef4444",
+      agent: "James Gipir",
+      date: "Jul 13, 2025",
+      time: "10:43AM",
     },
     {
-      id: '1921',
-      type: 'Severe depression',
-      severity: 'High',
-      severityColor: '#f59e0b',
-      agent: 'Emma Sseki',
-      date: 'Jul 13, 2025',
-      time: '10:43AM',
+      id: "1921",
+      type: "Severe depression",
+      severity: "High",
+      severityColor: "#f59e0b",
+      agent: "Emma Sseki",
+      date: "Jul 13, 2025",
+      time: "10:43AM",
     },
     {
-      id: '2031',
-      type: 'Suicidal intent',
-      severity: 'Critical',
-      severityColor: '#ef4444',
-      agent: 'James Gipir',
-      date: 'Jul 13, 2025',
-      time: '10:43AM',
+      id: "2031",
+      type: "Suicidal intent",
+      severity: "Critical",
+      severityColor: "#ef4444",
+      agent: "James Gipir",
+      date: "Jul 13, 2025",
+      time: "10:43AM",
     },
   ];
 
   const staffPerformance = [
     {
-      name: 'James Gipir',
-      avatar: 'J',
-      avatarBg: '#14b8a6',
-      status: 'On call',
-      statusColor: '#ef4444',
-      lastActive: 'Mon, July 13, 2025',
-      lastActiveTime: '10:43 AM',
+      name: "James Gipir",
+      avatar: "J",
+      avatarBg: "#14b8a6",
+      status: "On call",
+      statusColor: "#ef4444",
+      lastActive: "Mon, July 13, 2025",
+      lastActiveTime: "10:43 AM",
       callsHandled: 150,
       escalations: 12,
       qualityScore: 72,
     },
     {
-      name: 'Sarah Mukasa',
-      avatar: 'S',
-      avatarBg: '#f59e0b',
-      status: 'Available',
-      statusColor: '#10b981',
-      lastActive: 'Mon, July 13, 2025',
-      lastActiveTime: '10:43 AM',
+      name: "Sarah Mukasa",
+      avatar: "S",
+      avatarBg: "#f59e0b",
+      status: "Available",
+      statusColor: "#10b981",
+      lastActive: "Mon, July 13, 2025",
+      lastActiveTime: "10:43 AM",
       callsHandled: 150,
       escalations: 12,
       qualityScore: 72,
     },
     {
-      name: 'Mary Namu',
-      avatar: 'M',
-      avatarBg: '#3b82f6',
-      status: 'On call',
-      statusColor: '#ef4444',
-      lastActive: 'Mon, July 13, 2025',
-      lastActiveTime: '10:43 AM',
+      name: "Mary Namu",
+      avatar: "M",
+      avatarBg: "#3b82f6",
+      status: "On call",
+      statusColor: "#ef4444",
+      lastActive: "Mon, July 13, 2025",
+      lastActiveTime: "10:43 AM",
       callsHandled: 150,
       escalations: 12,
       qualityScore: 72,
     },
     {
-      name: 'Flavia Nabukenya',
-      avatar: 'F',
-      avatarBg: '#f59e0b',
-      status: 'Break',
-      statusColor: '#f59e0b',
-      lastActive: 'Mon, July 13, 2025',
-      lastActiveTime: '10:43 AM',
+      name: "Flavia Nabukenya",
+      avatar: "F",
+      avatarBg: "#f59e0b",
+      status: "Break",
+      statusColor: "#f59e0b",
+      lastActive: "Mon, July 13, 2025",
+      lastActiveTime: "10:43 AM",
       callsHandled: 150,
       escalations: 12,
       qualityScore: 72,
     },
     {
-      name: 'James Gipir',
-      avatar: 'J',
-      avatarBg: '#14b8a6',
-      status: 'Break',
-      statusColor: '#f59e0b',
-      lastActive: 'Mon, July 13, 2025',
-      lastActiveTime: '10:43 AM',
+      name: "James Gipir",
+      avatar: "J",
+      avatarBg: "#14b8a6",
+      status: "Break",
+      statusColor: "#f59e0b",
+      lastActive: "Mon, July 13, 2025",
+      lastActiveTime: "10:43 AM",
       callsHandled: 150,
       escalations: 12,
       qualityScore: 72,
@@ -263,35 +263,39 @@ export const SupervisorDashboard: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ 
-      p: { xs: 2, md: 3 }, 
-      bgcolor: '#f9fafb', 
-      minHeight: '100vh' 
-    }}>
+    <Box
+      sx={{
+        p: { xs: 2, md: 3 },
+        bgcolor: "#f9fafb",
+        minHeight: "100vh",
+      }}
+    >
       {/* Header */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 3,
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: { xs: 2, sm: 0 }
-      }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
-          Hello, {user?.name || 'Bosco Kimuli'}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+          flexDirection: { xs: "column", sm: "row" },
+          gap: { xs: 2, sm: 0 },
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 600, color: "#111827" }}>
+          Hello, {user?.name || "Bosco Kimuli"}
         </Typography>
         <Button
           variant="contained"
           startIcon={<Visibility />}
           sx={{
-            bgcolor: '#008080',
-            color: 'white',
-            textTransform: 'none',
+            bgcolor: "#008080",
+            color: "white",
+            textTransform: "none",
             px: 3,
             py: 1,
             borderRadius: 2,
-            '&:hover': {
-              bgcolor: '#0d9488',
+            "&:hover": {
+              bgcolor: "#0d9488",
             },
           }}
         >
@@ -321,7 +325,7 @@ export const SupervisorDashboard: React.FC = () => {
           tabs={tabOptions}
           value={activeTab}
           onChange={(value) => setActiveTab(value as number)}
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         />
       </Box>
 
@@ -330,48 +334,67 @@ export const SupervisorDashboard: React.FC = () => {
         <Grid container spacing={3}>
           {/* Call Volume Trends */}
           <Grid item xs={12} lg={7}>
-            <Card sx={{ 
-              bgcolor: 'white',
-              borderRadius: 2,
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-            }}>
+            <Card
+              sx={{
+                bgcolor: "white",
+                borderRadius: 2,
+                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3,
+                  }}
+                >
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 600, color: "#111827", mb: 0.5 }}
+                    >
                       Call Volume Trends
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                    >
                       Hourly call distribution
                     </Typography>
                   </Box>
                 </Box>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={callVolumeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                    <XAxis 
-                      dataKey="time" 
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#e5e7eb"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="time"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
                     />
-                    <YAxis 
+                    <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
                     />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{
-                        backgroundColor: '#111827',
-                        border: 'none',
+                        backgroundColor: "#111827",
+                        border: "none",
                         borderRadius: 8,
-                        color: 'white',
+                        color: "white",
                       }}
-                      cursor={{ fill: '#f3f4f6' }}
+                      cursor={{ fill: "#f3f4f6" }}
                     />
-                    <Bar 
-                      dataKey="calls" 
-                      fill="#008080" 
+                    <Bar
+                      dataKey="calls"
+                      fill="#008080"
                       radius={[4, 4, 0, 0]}
                       maxBarSize={40}
                     />
@@ -383,89 +406,117 @@ export const SupervisorDashboard: React.FC = () => {
 
           {/* Agent Status Monitor */}
           <Grid item xs={12} lg={5}>
-            <Card sx={{ 
-              bgcolor: 'white',
-              borderRadius: 2,
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-            }}>
+            <Card
+              sx={{
+                bgcolor: "white",
+                borderRadius: 2,
+                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3,
+                  }}
+                >
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 600, color: "#111827", mb: 0.5 }}
+                    >
                       Agent Status Monitor
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                    >
                       Current availability
                     </Typography>
                   </Box>
-                  <IconButton 
-                    size="small" 
-                    sx={{ 
-                      border: '1px solid #e5e7eb',
+                  <IconButton
+                    size="small"
+                    sx={{
+                      border: "1px solid #e5e7eb",
                       borderRadius: 1.5,
-                      '&:hover': { bgcolor: '#f9fafb' }
+                      "&:hover": { bgcolor: "#f9fafb" },
                     }}
                   >
-                    <Refresh sx={{ fontSize: 18, color: '#14b8a6' }} />
+                    <Refresh sx={{ fontSize: 18, color: "#14b8a6" }} />
                   </IconButton>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {agents.map((agent) => (
                     <Box
                       key={agent.id}
                       sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                         p: 2,
-                        bgcolor: '#f9fafb',
+                        bgcolor: "#f9fafb",
                         borderRadius: 2,
-                        '&:hover': {
-                          bgcolor: '#f3f4f6',
+                        "&:hover": {
+                          bgcolor: "#f3f4f6",
                         },
-                        transition: 'all 0.2s',
+                        transition: "all 0.2s",
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          flex: 1,
+                        }}
+                      >
                         <Avatar
                           sx={{
                             width: 40,
                             height: 40,
                             bgcolor: agent.avatarBg,
-                            color: 'white',
+                            color: "white",
                             fontWeight: 600,
-                            fontSize: '1rem',
+                            fontSize: "1rem",
                           }}
                         >
                           {agent.avatar}
                         </Avatar>
                         <Box sx={{ flex: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontWeight: 600, 
-                              color: '#111827',
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 600,
+                              color: "#111827",
                               mb: 0.5,
-                              fontSize: '0.875rem'
+                              fontSize: "0.875rem",
                             }}
                           >
                             {agent.name}
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
                             <Box
                               sx={{
                                 width: 6,
                                 height: 6,
-                                borderRadius: '50%',
+                                borderRadius: "50%",
                                 bgcolor: agent.statusColor,
                               }}
                             />
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                color: '#6b7280',
-                                fontSize: '0.75rem'
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "#6b7280",
+                                fontSize: "0.75rem",
                               }}
                             >
                               {agent.status}
@@ -474,14 +525,16 @@ export const SupervisorDashboard: React.FC = () => {
                           </Box>
                         </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Star sx={{ fontSize: 14, color: '#fbbf24' }} />
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 600, 
-                            color: '#111827',
-                            fontSize: '0.875rem'
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      >
+                        <Star sx={{ fontSize: 14, color: "#fbbf24" }} />
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            color: "#111827",
+                            fontSize: "0.875rem",
                           }}
                         >
                           {agent.performance}%
@@ -497,32 +550,60 @@ export const SupervisorDashboard: React.FC = () => {
       )}
 
       {/* Escalations Tab */}
+      {/* Escalations Tab */}
       {activeTab === 1 && (
-        <Card sx={{ 
-          bgcolor: 'white',
-          borderRadius: 2,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-        }}>
+        <Card
+          sx={{
+            bgcolor: "white",
+            borderRadius: 2,
+            boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: { xs: "flex-start", sm: "center" },
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 2, sm: 0 },
+                mb: 3,
+              }}
+            >
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 600, color: "#111827", mb: 0.5 }}
+                >
                   Escalations Overview
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                >
                   Manage and review flagged calls
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: { xs: 1, sm: 2 },
+                  width: { xs: "100%", sm: "auto" },
+                  justifyContent: { xs: "flex-start", sm: "flex-end" },
+                }}
+              >
+                <FormControl
+                  size="small"
+                  sx={{ minWidth: { xs: "100%", sm: 150 } }}
+                >
                   <Select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     displayEmpty
                     sx={{
-                      bgcolor: 'white',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#e5e7eb',
+                      bgcolor: "white",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#e5e7eb",
                       },
                     }}
                   >
@@ -535,12 +616,13 @@ export const SupervisorDashboard: React.FC = () => {
                   variant="outlined"
                   startIcon={<FilterList />}
                   sx={{
-                    textTransform: 'none',
-                    borderColor: '#e5e7eb',
-                    color: '#6b7280',
-                    '&:hover': {
-                      borderColor: '#d1d5db',
-                      bgcolor: '#f9fafb',
+                    textTransform: "none",
+                    borderColor: "#e5e7eb",
+                    color: "#6b7280",
+                    minWidth: { xs: "100%", sm: "auto" },
+                    "&:hover": {
+                      borderColor: "#d1d5db",
+                      bgcolor: "#f9fafb",
                     },
                   }}
                 >
@@ -548,41 +630,60 @@ export const SupervisorDashboard: React.FC = () => {
                 </Button>
               </Box>
             </Box>
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {escalations.map((escalation, index) => (
                 <Box
                   key={index}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    p: 2.5,
-                    border: '1px solid #e5e7eb',
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "stretch", sm: "center" },
+                    justifyContent: "space-between",
+                    p: { xs: 2, sm: 2.5 },
+                    border: "1px solid #e5e7eb",
                     borderRadius: 2,
-                    '&:hover': {
-                      bgcolor: '#f9fafb',
+                    gap: { xs: 2, sm: 0 },
+                    "&:hover": {
+                      bgcolor: "#f9fafb",
                     },
-                    transition: 'all 0.2s',
+                    transition: "all 0.2s",
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flex: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: { xs: 2, sm: 2.5 },
+                      flex: 1,
+                    }}
+                  >
                     <Box
                       sx={{
                         width: 40,
                         height: 40,
                         borderRadius: 2,
-                        bgcolor: '#f3f4f6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        bgcolor: "#f3f4f6",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
-                      <PhoneInTalk sx={{ fontSize: 20, color: '#6b7280' }} />
+                      <PhoneInTalk sx={{ fontSize: 20, color: "#6b7280" }} />
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#111827' }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1.5,
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{ fontWeight: 600, color: "#111827" }}
+                        >
                           {escalation.type}
                         </Typography>
                         <Chip
@@ -592,34 +693,69 @@ export const SupervisorDashboard: React.FC = () => {
                             bgcolor: `${escalation.severityColor}15`,
                             color: escalation.severityColor,
                             fontWeight: 600,
-                            fontSize: '0.75rem',
+                            fontSize: "0.75rem",
                             height: 22,
                           }}
                         />
                       </Box>
-                      <Box sx={{ display: 'flex', gap: 3 }}>
-                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                          <span style={{ fontWeight: 500, color: '#374151' }}>Caller ID:</span> {escalation.id}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: { xs: "column", sm: "row" },
+                          gap: { xs: 1, sm: 3 },
+                          alignItems: { xs: "flex-start", sm: "center" },
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                        >
+                          <span style={{ fontWeight: 500, color: "#374151" }}>
+                            Caller ID:
+                          </span>{" "}
+                          {escalation.id}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                          <span style={{ fontWeight: 500, color: '#374151' }}>Agent:</span> {escalation.agent}
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                        >
+                          <span style={{ fontWeight: 500, color: "#374151" }}>
+                            Agent:
+                          </span>{" "}
+                          {escalation.agent}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                          <span style={{ fontWeight: 500, color: '#374151' }}>Sent:</span> {escalation.date} | {escalation.time}
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                        >
+                          <span style={{ fontWeight: 500, color: "#374151" }}>
+                            Sent:
+                          </span>{" "}
+                          {escalation.date} | {escalation.time}
                         </Typography>
                       </Box>
                     </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: { xs: 1, sm: 1 },
+                      justifyContent: { xs: "center", sm: "flex-end" },
+                      mt: { xs: 0, sm: 0 },
+                    }}
+                  >
                     <Button
                       variant="text"
                       startIcon={<PlayArrow />}
                       sx={{
-                        textTransform: 'none',
-                        color: '#14b8a6',
+                        textTransform: "none",
+                        color: "#14b8a6",
                         fontWeight: 500,
-                        '&:hover': {
-                          bgcolor: '#14b8a615',
+                        fontSize: { xs: "0.75rem", sm: "inherit" },
+                        minWidth: { xs: "auto", sm: "auto" },
+                        px: { xs: 1, sm: 2 },
+                        "&:hover": {
+                          bgcolor: "#14b8a615",
                         },
                       }}
                     >
@@ -629,11 +765,14 @@ export const SupervisorDashboard: React.FC = () => {
                       variant="text"
                       startIcon={<Visibility />}
                       sx={{
-                        textTransform: 'none',
-                        color: '#14b8a6',
+                        textTransform: "none",
+                        color: "#14b8a6",
                         fontWeight: 500,
-                        '&:hover': {
-                          bgcolor: '#14b8a615',
+                        fontSize: { xs: "0.75rem", sm: "inherit" },
+                        minWidth: { xs: "auto", sm: "auto" },
+                        px: { xs: 1, sm: 2 },
+                        "&:hover": {
+                          bgcolor: "#14b8a615",
                         },
                       }}
                     >
@@ -643,12 +782,15 @@ export const SupervisorDashboard: React.FC = () => {
                       variant="contained"
                       startIcon={<PhoneInTalk />}
                       sx={{
-                        textTransform: 'none',
-                        bgcolor: '#14b8a6',
-                        color: 'white',
+                        textTransform: "none",
+                        bgcolor: "#14b8a6",
+                        color: "white",
                         fontWeight: 500,
-                        '&:hover': {
-                          bgcolor: '#0d9488',
+                        fontSize: { xs: "0.75rem", sm: "inherit" },
+                        minWidth: { xs: "auto", sm: "auto" },
+                        px: { xs: 1, sm: 2 },
+                        "&:hover": {
+                          bgcolor: "#0d9488",
                         },
                       }}
                     >
@@ -658,21 +800,29 @@ export const SupervisorDashboard: React.FC = () => {
                 </Box>
               ))}
             </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                Page <span style={{ color: '#14b8a6', fontWeight: 600 }}>1-10</span> of 60 results
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mt: 3,
+              }}
+            >
+              <Typography variant="body2" sx={{ color: "#6b7280" }}>
+                Page{" "}
+                <span style={{ color: "#14b8a6", fontWeight: 600 }}>1-10</span>{" "}
+                of 60 results
               </Typography>
               <Button
                 variant="outlined"
                 sx={{
-                  textTransform: 'none',
-                  borderColor: '#e5e7eb',
-                  color: '#14b8a6',
+                  textTransform: "none",
+                  borderColor: "#e5e7eb",
+                  color: "#14b8a6",
                   fontWeight: 500,
-                  '&:hover': {
-                    borderColor: '#14b8a6',
-                    bgcolor: '#14b8a615',
+                  "&:hover": {
+                    borderColor: "#14b8a6",
+                    bgcolor: "#14b8a615",
                   },
                 }}
               >
@@ -685,31 +835,58 @@ export const SupervisorDashboard: React.FC = () => {
 
       {/* Staff Performance Tab */}
       {activeTab === 2 && (
-        <Card sx={{ 
-          bgcolor: 'white',
-          borderRadius: 2,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-        }}>
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Card
+          sx={{
+            bgcolor: "white",
+            borderRadius: 2,
+            boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: { xs: "flex-start", sm: "center" },
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 2, sm: 0 },
+                mb: 3,
+              }}
+            >
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 600, color: "#111827", mb: 0.5 }}
+                >
                   Staff Performance Overview
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#6b7280", fontSize: "0.875rem" }}
+                >
                   Quality scores and call metrics by agents
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: { xs: 1, sm: 2 },
+                  width: { xs: "100%", sm: "auto" },
+                  justifyContent: { xs: "flex-start", sm: "flex-end" },
+                }}
+              >
+                <FormControl
+                  size="small"
+                  sx={{ minWidth: { xs: "100%", sm: 150 } }}
+                >
                   <Select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     displayEmpty
                     sx={{
-                      bgcolor: 'white',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#e5e7eb',
+                      bgcolor: "white",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#e5e7eb",
                       },
                     }}
                   >
@@ -723,12 +900,13 @@ export const SupervisorDashboard: React.FC = () => {
                   variant="outlined"
                   startIcon={<FilterList />}
                   sx={{
-                    textTransform: 'none',
-                    borderColor: '#e5e7eb',
-                    color: '#6b7280',
-                    '&:hover': {
-                      borderColor: '#d1d5db',
-                      bgcolor: '#f9fafb',
+                    textTransform: "none",
+                    borderColor: "#e5e7eb",
+                    color: "#6b7280",
+                    minWidth: { xs: "100%", sm: "auto" },
+                    "&:hover": {
+                      borderColor: "#d1d5db",
+                      bgcolor: "#f9fafb",
                     },
                   }}
                 >
@@ -736,101 +914,263 @@ export const SupervisorDashboard: React.FC = () => {
                 </Button>
               </Box>
             </Box>
-
-            <TableContainer>
-              <Table>
+            <TableContainer
+              sx={{
+                overflowX: { xs: "auto", sm: "visible" },
+                borderRadius: 1,
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <Table sx={{ minWidth: { xs: 600, sm: "auto" } }}>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Last Active</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Calls Handled</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Escalations</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Quality Score</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Action</TableCell>
+                  <TableRow sx={{ bgcolor: "#f9fafb" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                      }}
+                    >
+                      Name
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Status
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Last Active
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Calls
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Escalations
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Quality Score
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        p: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Action
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {staffPerformance.map((staff, index) => (
-                    <TableRow 
+                    <TableRow
                       key={index}
                       sx={{
-                        '&:hover': {
-                          bgcolor: '#f9fafb',
+                        "&:hover": {
+                          bgcolor: "#f9fafb",
                         },
                       }}
                     >
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <TableCell sx={{ p: { xs: 1, sm: 2 } }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: { xs: 1, sm: 1.5 },
+                          }}
+                        >
                           <Avatar
                             sx={{
-                              width: 32,
-                              height: 32,
+                              width: { xs: 28, sm: 32 },
+                              height: { xs: 28, sm: 32 },
                               bgcolor: staff.avatarBg,
-                              color: 'white',
+                              color: "white",
                               fontWeight: 600,
-                              fontSize: '0.875rem',
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
                             }}
                           >
                             {staff.avatar}
                           </Avatar>
-                          <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827' }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 500,
+                              color: "#111827",
+                              fontSize: { xs: "0.8125rem", sm: "inherit" },
+                            }}
+                          >
                             {staff.name}
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ p: { xs: 1, sm: 2 } }}>
                         <Chip
                           label={staff.status}
                           size="small"
-                          icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: staff.statusColor, ml: 1 }} />}
+                          icon={
+                            <Box
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                bgcolor: staff.statusColor,
+                                ml: 1,
+                              }}
+                            />
+                          }
                           sx={{
                             bgcolor: `${staff.statusColor}15`,
                             color: staff.statusColor,
                             fontWeight: 500,
-                            fontSize: '0.75rem',
-                            '& .MuiChip-icon': {
+                            fontSize: { xs: "0.625rem", sm: "0.75rem" },
+                            height: { xs: 20, sm: "auto" },
+                            "& .MuiChip-icon": {
                               ml: 1,
                             },
                           }}
                         />
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500 }}>
-                          {staff.lastActive}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#6b7280' }}>
-                          {staff.lastActiveTime}
-                        </Typography>
+                      <TableCell sx={{ p: { xs: 1, sm: 2 } }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: { xs: "column", sm: "row" },
+                            alignItems: { xs: "flex-start", sm: "center" },
+                            gap: { xs: 0, sm: 0.5 },
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#111827",
+                              fontWeight: 500,
+                              fontSize: { xs: "0.8125rem", sm: "inherit" },
+                            }}
+                          >
+                            {staff.lastActive}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "#6b7280",
+                              fontSize: { xs: "0.6875rem", sm: "inherit" },
+                            }}
+                          >
+                            {staff.lastActiveTime}
+                          </Typography>
+                        </Box>
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                      <TableCell
+                        sx={{ p: { xs: 1, sm: 2 }, textAlign: "center" }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#111827",
+                            fontWeight: 600,
+                            fontSize: { xs: "0.8125rem", sm: "inherit" },
+                          }}
+                        >
                           {staff.callsHandled}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                      <TableCell
+                        sx={{ p: { xs: 1, sm: 2 }, textAlign: "center" }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#111827",
+                            fontWeight: 600,
+                            fontSize: { xs: "0.8125rem", sm: "inherit" },
+                          }}
+                        >
                           {staff.escalations}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Star sx={{ fontSize: 14, color: '#fbbf24' }} />
-                          <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                      <TableCell
+                        sx={{ p: { xs: 1, sm: 2 }, textAlign: "center" }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: { xs: 0.25, sm: 0.5 },
+                          }}
+                        >
+                          <Star
+                            sx={{
+                              fontSize: { xs: 12, sm: 14 },
+                              color: "#fbbf24",
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#111827",
+                              fontWeight: 600,
+                              fontSize: { xs: "0.8125rem", sm: "inherit" },
+                            }}
+                          >
                             {staff.qualityScore}%
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={{ p: { xs: 1, sm: 2 }, textAlign: "center" }}
+                      >
                         <Button
                           variant="text"
                           sx={{
-                            textTransform: 'none',
-                            color: '#14b8a6',
+                            textTransform: "none",
+                            color: "#14b8a6",
                             fontWeight: 500,
-                            fontSize: '0.875rem',
-                            '&:hover': {
-                              bgcolor: '#14b8a615',
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            px: { xs: 1, sm: 2 },
+                            "&:hover": {
+                              bgcolor: "#14b8a615",
                             },
                           }}
                         >
@@ -842,21 +1182,29 @@ export const SupervisorDashboard: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                Page <span style={{ color: '#14b8a6', fontWeight: 600 }}>1-10</span> of 60 results
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mt: 3,
+              }}
+            >
+              <Typography variant="body2" sx={{ color: "#6b7280" }}>
+                Page{" "}
+                <span style={{ color: "#14b8a6", fontWeight: 600 }}>1-10</span>{" "}
+                of 60 results
               </Typography>
               <Button
                 variant="outlined"
                 sx={{
-                  textTransform: 'none',
-                  borderColor: '#e5e7eb',
-                  color: '#14b8a6',
+                  textTransform: "none",
+                  borderColor: "#e5e7eb",
+                  color: "#14b8a6",
                   fontWeight: 500,
-                  '&:hover': {
-                    borderColor: '#14b8a6',
-                    bgcolor: '#14b8a615',
+                  "&:hover": {
+                    borderColor: "#14b8a6",
+                    bgcolor: "#14b8a615",
                   },
                 }}
               >
