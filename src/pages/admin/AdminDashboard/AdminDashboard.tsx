@@ -121,7 +121,7 @@ export default function HealthcareDashboard() {
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           Hello, Mary Namu
         </Typography>
-        <Button
+        {/* <Button
           variant="contained"
           sx={{
             backgroundColor: '#00897B',
@@ -133,7 +133,7 @@ export default function HealthcareDashboard() {
           }}
         >
           + Add facility
-        </Button>
+        </Button> */}
       </Box>
 
       {/* Stats Cards - Using imported MetricCard Component */}

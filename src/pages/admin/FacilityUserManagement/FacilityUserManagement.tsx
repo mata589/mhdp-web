@@ -25,6 +25,7 @@ import {
   InputAdornment,
   Card,
   CardContent,
+  Menu,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -36,14 +37,169 @@ import {
   Search,
   FilterList,
   MoreVert,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
+import { SlideDialog, type FormField } from '../../../components/forms/SlideDialogform/SlideDialog';
 
 export default function FacilityDetailsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  const [addFacilityDialogOpen, setAddFacilityDialogOpen] = useState(false);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [editFacilityDialogOpen, setEditFacilityDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  // Define fields for the Add/Edit User dialog
+  const userFields: FormField[] = [
+    { name: 'firstName', label: 'First Name', type: 'text', placeholder: 'Enter first name', required: true },
+    { name: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Enter last name', required: true },
+    { name: 'email', label: 'Email', type: 'email', placeholder: 'Enter email address', gridColumn: '1 / -1', required: true },
+    { name: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+256 700 000 000', gridColumn: '1 / -1' },
+    {
+      name: 'gender',
+      label: 'Gender',
+      type: 'select',
+      placeholder: 'Select gender',
+      options: [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+        { value: 'other', label: 'Other' },
+      ],
+    },
+    {
+      name: 'nationality',
+      label: 'Nationality',
+      type: 'select',
+      placeholder: 'Select country',
+      options: [
+        { value: 'uganda', label: 'Uganda' },
+        { value: 'kenya', label: 'Kenya' },
+        { value: 'tanzania', label: 'Tanzania' },
+      ],
+    },
+    { name: 'address', label: 'Address', type: 'textarea', placeholder: 'Enter address', gridColumn: '1 / -1', rows: 2 },
+  ];
+
+  // Define fields for the Edit Facility dialog
+  const facilityFields: FormField[] = [
+    { 
+      name: 'facilityName', 
+      label: 'Facility Name', 
+      type: 'text', 
+      placeholder: 'Hospital', 
+      gridColumn: '1 / -1',
+      required: true 
+    },
+    { 
+      name: 'facilityCode', 
+      label: 'Facility Code', 
+      type: 'text', 
+      placeholder: 'Code',
+      gridColumn: '1 / -1'
+    },
+    {
+      name: 'facilityLevel',
+      label: 'Facility Level',
+      type: 'select',
+      placeholder: 'Select level',
+      options: [
+        { value: 'referral', label: 'Referral Hospital' },
+        { value: 'hc4', label: 'Health Center IV' },
+        { value: 'hc3', label: 'Health Center III' },
+        { value: 'hc2', label: 'Health Center II' },
+      ],
+      required: true
+    },
+    {
+      name: 'hsd',
+      label: 'Health Sub-District (HSD)',
+      type: 'select',
+      placeholder: 'Select HSD',
+      options: [
+        { value: 'nakawa', label: 'Nakawa' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'rubaga', label: 'Rubaga' },
+        { value: 'central', label: 'Central' },
+      ],
+      required: true
+    },
+    {
+      name: 'country',
+      label: 'Country',
+      type: 'select',
+      placeholder: 'Select country',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'uganda', label: 'Uganda' },
+        { value: 'kenya', label: 'Kenya' },
+        { value: 'tanzania', label: 'Tanzania' },
+        { value: 'rwanda', label: 'Rwanda' },
+      ],
+      required: true
+    },
+    {
+      name: 'district',
+      label: 'District',
+      type: 'select',
+      placeholder: 'Select district',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'wakiso', label: 'Wakiso' },
+        { value: 'mukono', label: 'Mukono' },
+        { value: 'jinja', label: 'Jinja' },
+      ],
+      required: true
+    },
+    {
+      name: 'subcounty',
+      label: 'Subcounty',
+      type: 'select',
+      placeholder: 'Select subcounty',
+      options: [
+        { value: 'central', label: 'Central' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'nakawa', label: 'Nakawa' },
+      ],
+    },
+    {
+      name: 'county',
+      label: 'County',
+      type: 'select',
+      placeholder: 'Select county',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'busiro', label: 'Busiro' },
+        { value: 'kyaddondo', label: 'Kyaddondo' },
+      ],
+    },
+    {
+      name: 'parish',
+      label: 'Parish',
+      type: 'select',
+      placeholder: 'Select parish',
+      options: [
+        { value: 'parish1', label: 'Parish 1' },
+        { value: 'parish2', label: 'Parish 2' },
+        { value: 'parish3', label: 'Parish 3' },
+      ],
+    },
+    {
+      name: 'village',
+      label: 'Village',
+      type: 'select',
+      placeholder: 'Select village',
+      options: [
+        { value: 'village1', label: 'Village 1' },
+        { value: 'village2', label: 'Village 2' },
+        { value: 'village3', label: 'Village 3' },
+      ],
+    },
+  ];
 
   const handleBack = () => {
     console.log('Navigate back');
@@ -58,7 +214,27 @@ export default function FacilityDetailsPage() {
   };
 
   const handleEdit = () => {
-    console.log('Edit facility');
+    setEditFacilityDialogOpen(true);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: any) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedUser(user);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedUser(null);
+  };
+
+  const handleEditUser = () => {
+    setEditUserDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDeleteUser = () => {
+    console.log('Delete user:', selectedUser);
+    handleMenuClose();
   };
 
   const confirmDelete = () => {
@@ -71,14 +247,19 @@ export default function FacilityDetailsPage() {
     setArchiveDialogOpen(false);
   };
 
-  const saveFacility = () => {
-    console.log('Facility saved');
-    setAddFacilityDialogOpen(false);
+  const saveUser = (data: Record<string, any>) => {
+    console.log('User saved:', data);
+    setAddUserDialogOpen(false);
   };
 
-  const saveUser = () => {
-    console.log('User saved');
-    setAddUserDialogOpen(false);
+  const updateUser = (data: Record<string, any>) => {
+    console.log('User updated:', data);
+    setEditUserDialogOpen(false);
+  };
+
+  const updateFacility = (data: Record<string, any>) => {
+    console.log('Facility updated:', data);
+    setEditFacilityDialogOpen(false);
   };
 
   const facilityDetails = [
@@ -94,13 +275,12 @@ export default function FacilityDetailsPage() {
     { label: 'Date Added', value: 'Mon, Jul 13, 2025 | 10:43 AM' },
   ];
 
-const userCounts = [
-  { label: 'Total Users', count: 102, icon: '/Staff.png',},
-  { label: 'Call Agents', count: 5, icon: '/Staff2.png',  },
-  { label: 'Supervisors', count: 7, icon: '/Staff3.png', },
-  { label: 'Facility Admin', count: 1, icon: '/Staff4.png' },
-];
-
+  const userCounts = [
+    { label: 'Total Users', count: 102, icon: '/Staff.png' },
+    { label: 'Call Agents', count: 5, icon: '/Staff2.png' },
+    { label: 'Supervisors', count: 7, icon: '/Staff3.png' },
+    { label: 'Facility Admin', count: 1, icon: '/Staff4.png' },
+  ];
 
   const users = [
     {
@@ -277,35 +457,33 @@ const userCounts = [
             <Card key={index}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-    <Box
-    sx={{
-        width: 40,
-        height: 40,
-
-        borderRadius: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    }}
-    >
-    <img
-        src={item.icon}
-        alt={item.label}
-        style={{ width: 24, height: 24, objectFit: 'contain', filter: 'invert(1)' }}
-    />
-    </Box>
-
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                        {item.label}
-                    </Typography>
-                    </Box>
-                    <Typography variant="h4" fontWeight="600">
-                    {item.count}
-                    </Typography>
-                </CardContent>
-                </Card>
-            ))}
-            </Box>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <img
+                      src={item.icon}
+                      alt={item.label}
+                      style={{ width: 24, height: 24, objectFit: 'contain', filter: 'invert(1)' }}
+                    />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                    {item.label}
+                  </Typography>
+                </Box>
+                <Typography variant="h4" fontWeight="600">
+                  {item.count}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
 
         {/* Users Section */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -422,7 +600,7 @@ const userCounts = [
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <IconButton size="small">
+                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, user)}>
                       <MoreVert />
                     </IconButton>
                   </TableCell>
@@ -517,291 +695,59 @@ const userCounts = [
         </DialogActions>
       </Dialog>
 
-      {/* Add Facility Dialog */}
-      <Dialog
-        open={addFacilityDialogOpen}
-        onClose={() => setAddFacilityDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            m: 0,
-            height: '100vh',
-            maxHeight: '100vh',
-            borderRadius: 0,
-          },
-        }}
-      >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setAddFacilityDialogOpen(false)} size="small">
-              <CloseIcon />
-            </IconButton>
-            <Typography variant="h6" fontWeight="600">
-              Add Facility
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button onClick={() => setAddFacilityDialogOpen(false)} size="small">
-              Close
-            </Button>
-            <Button
-              onClick={saveFacility}
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: '#00897b',
-                '&:hover': { bgcolor: '#00796b' },
-              }}
-            >
-              Continue
-            </Button>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Facility Name
-              </Typography>
-              <TextField fullWidth placeholder="Hospital" size="small" />
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Facility Code
-              </Typography>
-              <TextField fullWidth placeholder="Code" size="small" />
-            </Box>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 2,
-              }}
-            >
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Facility Level
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">Select level</MenuItem>
-                    <MenuItem value="referral">Referral Hospital</MenuItem>
-                    <MenuItem value="district">District Hospital</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Health Sub-District (HSD)
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">Select HSD</MenuItem>
-                    <MenuItem value="nakawa">Nakawa HSD</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-            <Typography variant="body2" sx={{ fontWeight: 600, mt: 1 }}>
-              Enter Address
-            </Typography>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Country
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select defaultValue="">
-                  <MenuItem value="">Select country</MenuItem>
-                  <MenuItem value="uganda">Uganda</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                District
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select defaultValue="">
-                  <MenuItem value="">Select district</MenuItem>
-                  <MenuItem value="kampala">Kampala</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 2,
-              }}
-            >
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Subcounty
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">Select subcounty</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  County
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">Select county</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 2,
-              }}
-            >
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Parish
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">Select parish</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Village
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">Select village</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-          </Box>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add User Dialog */}
-      <Dialog
+      {/* Add User Dialog - Using SlideDialog Component */}
+      <SlideDialog
         open={addUserDialogOpen}
         onClose={() => setAddUserDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            m: 0,
-            height: '100vh',
-            maxHeight: '100vh',
-            borderRadius: 0,
-          },
+        title="Add Facility Admin"
+        fields={userFields}
+        onSave={saveUser}
+        saveButtonText="Save"
+      />
+
+      {/* Edit User Dialog - Using SlideDialog Component */}
+      <SlideDialog
+        open={editUserDialogOpen}
+        onClose={() => setEditUserDialogOpen(false)}
+        title="Edit User"
+        fields={userFields}
+        onSave={updateUser}
+        saveButtonText="Update"
+      />
+
+      {/* Edit Facility Dialog - Using SlideDialog Component */}
+      <SlideDialog
+        open={editFacilityDialogOpen}
+        onClose={() => setEditFacilityDialogOpen(false)}
+        title="Edit Facility"
+        fields={facilityFields}
+        onSave={updateFacility}
+        saveButtonText="Update"
+      />
+
+      {/* User Actions Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
         }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setAddUserDialogOpen(false)} size="small">
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h6" fontWeight="600">
-              Add Facility Admin
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button onClick={() => setAddUserDialogOpen(false)} size="small">
-              Close
-            </Button>
-            <Button
-              onClick={saveUser}
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: '#00897b',
-                '&:hover': { bgcolor: '#00796b' },
-              }}
-            >
-              Save
-            </Button>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 2,
-            }}
-          >
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                First Name
-              </Typography>
-              <TextField fullWidth placeholder="Enter first name" size="small" />
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Last Name
-              </Typography>
-              <TextField fullWidth placeholder="Enter last name" size="small" />
-            </Box>
-            <Box sx={{ gridColumn: '1 / -1' }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Email
-              </Typography>
-              <TextField fullWidth placeholder="Enter email address" size="small" type="email" />
-            </Box>
-            <Box sx={{ gridColumn: '1 / -1' }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Phone Number
-              </Typography>
-              <TextField fullWidth placeholder="+256 700 000 000" size="small" />
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Gender
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select defaultValue="">
-                  <MenuItem value="">Select gender</MenuItem>
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  <MenuItem value="other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Nationality
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select defaultValue="">
-                  <MenuItem value="">Select country</MenuItem>
-                  <MenuItem value="uganda">Uganda</MenuItem>
-                  <MenuItem value="kenya">Kenya</MenuItem>
-                  <MenuItem value="tanzania">Tanzania</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ gridColumn: '1 / -1' }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Address
-              </Typography>
-              <TextField fullWidth placeholder="Enter address" size="small" multiline rows={2} />
-            </Box>
-          </Box>
-        </DialogContent>
-      </Dialog>
+        <MenuItem onClick={handleEditUser}>
+          <EditIcon sx={{ mr: 1.5, fontSize: 18 }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={handleDeleteUser} sx={{ color: '#d32f2f' }}>
+          <DeleteIcon sx={{ mr: 1.5, fontSize: 18 }} />
+          Delete
+        </MenuItem>
+      </Menu>
     </Box>
   );
 }

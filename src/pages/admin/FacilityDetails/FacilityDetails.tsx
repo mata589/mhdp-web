@@ -1,422 +1,438 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Container,
   Typography,
+  Card,
+  CardContent,
   Button,
-  Paper,
-  Chip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
-  Select,
+  Menu,
   MenuItem,
+  Select,
   FormControl,
   InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
 import {
-  ArrowBack,
-  Delete as DeleteIcon,
-  Archive as ArchiveIcon,
-  Edit as EditIcon,
-  Close as CloseIcon,
+  MoreVert,
+  Add,
+  FilterList
 } from '@mui/icons-material';
+import CustomChip from '../../../components/common/CustomChip/CustomChip';
+import { SlideDialog, type FormField } from '../../../components/forms/SlideDialogform/SlideDialog';
 
-interface UserDetail {
-  label: string;
-  value: string;
-  color?: string;
-}
-
-export default function UserDetailsPage() {
+const FacilitiesManagement = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All status');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState<any>(null);
+  const [addFacilityDialogOpen, setAddFacilityDialogOpen] = useState(false);
 
-  const handleBack = () => {
-    console.log('Navigate back');
-  };
-
-  const handleDelete = () => {
-    setDeleteDialogOpen(true);
-  };
-
-  const handleArchive = () => {
-    setArchiveDialogOpen(true);
-  };
-
-  const handleEdit = () => {
-    console.log('Edit user');
-  };
-
-  const handleAddUser = () => {
-    setAddUserDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    console.log('User deleted');
-    setDeleteDialogOpen(false);
-  };
-
-  const confirmArchive = () => {
-    console.log('User archived');
-    setArchiveDialogOpen(false);
-  };
-
-  const saveUser = () => {
-    console.log('User saved');
-    setAddUserDialogOpen(false);
-  };
-
-  const userDetails: UserDetail[] = [
-    { label: 'User ID', value: 'US-UG-00123' },
-    { label: 'Full Name', value: 'James Gipir' },
-    { label: 'Status', value: 'Inactive', color: '#d32f2f' },
-    { label: 'Phone', value: '+256 782 000 (1)' },
-    { label: 'Gender', value: 'Male' },
-    { label: 'Nationality', value: 'Ugandan' },
-    { label: 'Designation', value: 'Peer Support Worker' },
-    { label: 'Facility', value: 'Butabika Hospital' },
-    { label: 'Address', value: 'Kawempe, Tula' },
-    { label: 'Date Added', value: 'Mon, Jul 14, 2025 | 10:43 AM' },
-    { label: 'Email', value: 'james.gipir@butabika.go.ug' },
-    { label: 'Role', value: 'Call agent' },
-    { label: 'Action by', value: 'Mary Nankya' },
+  // Define fields for the Add Facility dialog
+  const facilityFields: FormField[] = [
+    { 
+      name: 'facilityName', 
+      label: 'Facility Name', 
+      type: 'text', 
+      placeholder: 'Hospital', 
+      gridColumn: '1 / -1',
+      required: true 
+    },
+    { 
+      name: 'facilityCode', 
+      label: 'Facility Code', 
+      type: 'text', 
+      placeholder: 'Code',
+      gridColumn: '1 / -1'
+    },
+    {
+      name: 'facilityLevel',
+      label: 'Facility Level',
+      type: 'select',
+      placeholder: 'Select level',
+      options: [
+        { value: 'referral', label: 'Referral Hospital' },
+        { value: 'hc4', label: 'Health Center IV' },
+        { value: 'hc3', label: 'Health Center III' },
+        { value: 'hc2', label: 'Health Center II' },
+      ],
+      required: true
+    },
+    {
+      name: 'hsd',
+      label: 'Health Sub-District (HSD)',
+      type: 'select',
+      placeholder: 'Select HSD',
+      options: [
+        { value: 'nakawa', label: 'Nakawa' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'rubaga', label: 'Rubaga' },
+        { value: 'central', label: 'Central' },
+      ],
+      required: true
+    },
+    {
+      name: 'country',
+      label: 'Country',
+      type: 'select',
+      placeholder: 'Select country',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'uganda', label: 'Uganda' },
+        { value: 'kenya', label: 'Kenya' },
+        { value: 'tanzania', label: 'Tanzania' },
+        { value: 'rwanda', label: 'Rwanda' },
+      ],
+      required: true
+    },
+    {
+      name: 'district',
+      label: 'District',
+      type: 'select',
+      placeholder: 'Select district',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'wakiso', label: 'Wakiso' },
+        { value: 'mukono', label: 'Mukono' },
+        { value: 'jinja', label: 'Jinja' },
+      ],
+      required: true
+    },
+    {
+      name: 'subcounty',
+      label: 'Subcounty',
+      type: 'select',
+      placeholder: 'Select subcounty',
+      options: [
+        { value: 'central', label: 'Central' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'nakawa', label: 'Nakawa' },
+      ],
+    },
+    {
+      name: 'county',
+      label: 'County',
+      type: 'select',
+      placeholder: 'Select county',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'busiro', label: 'Busiro' },
+        { value: 'kyaddondo', label: 'Kyaddondo' },
+      ],
+    },
+    {
+      name: 'parish',
+      label: 'Parish',
+      type: 'select',
+      placeholder: 'Select parish',
+      options: [
+        { value: 'parish1', label: 'Parish 1' },
+        { value: 'parish2', label: 'Parish 2' },
+        { value: 'parish3', label: 'Parish 3' },
+      ],
+    },
+    {
+      name: 'village',
+      label: 'Village',
+      type: 'select',
+      placeholder: 'Select village',
+      options: [
+        { value: 'village1', label: 'Village 1' },
+        { value: 'village2', label: 'Village 2' },
+        { value: 'village3', label: 'Village 3' },
+      ],
+    },
   ];
 
-  return (
-    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          bgcolor: 'white',
-          borderBottom: '1px solid #e0e0e0',
-          py: 2,
-          px: 3,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton onClick={handleBack} size="small">
-                <ArrowBack />
-              </IconButton>
-              <Typography variant="h6" fontWeight="500">
-                User details
-              </Typography>
-            </Box>
+  const facilities = [
+    {
+      id: 1,
+      name: 'Butabika Hospital',
+      status: 'Available' as const,
+      level: 'Referral Hospital',
+      location: 'Kampala, Uganda',
+      hsd: 'Nakawa',
+      dateCreated: 'Mon, July 13, 2025',
+      time: '10:43 AM',
+      avatar: 'B',
+      avatarColor: '#E8F5E9',
+      textColor: '#2E7D32'
+    },
+    {
+      id: 2,
+      name: 'Mirembe Hospital',
+      status: 'Break' as const,
+      level: 'Health Center IV',
+      location: 'Dodoma, Tanzania',
+      hsd: 'Dodoma',
+      dateCreated: 'Mon',
+      time: '10:4',
+      avatar: 'M',
+      avatarColor: '#FFF3E0',
+      textColor: '#E65100'
+    }
+  ];
 
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="contained"
-                startIcon={<DeleteIcon />}
-                onClick={handleDelete}
-                sx={{
-                  bgcolor: '#d32f2f',
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: '#c62828' },
-                }}
-              >
-                Delete
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<ArchiveIcon />}
-                onClick={handleArchive}
-                sx={{
-                  bgcolor: '#00897b',
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: '#00796b' },
-                }}
-              >
-                Archive
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<EditIcon />}
-                onClick={handleEdit}
-                sx={{
-                  bgcolor: '#00897b',
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: '#00796b' },
-                }}
-              >
-                Edit
-              </Button>
-            </Box>
-          </Box>
-        </Container>
+  const filteredFacilities = facilities.filter((facility) => {
+    const matchesSearch = facility.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'All status' || facility.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, facility: any) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedFacility(facility);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedFacility(null);
+  };
+
+  const handleSaveFacility = (data: Record<string, any>) => {
+    console.log('Facility saved:', data);
+    setAddFacilityDialogOpen(false);
+    // Here you would typically make an API call to save the facility
+  };
+
+  return (
+    <Box sx={{ p: 4, bgcolor: '#f9fafb', minHeight: '100vh', ml: -8 }}>
+      {/* Stats Cards */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        {[
+          {
+            title: 'Total Facilities',
+            value: facilities.length,
+            icon: '/vien.png'
+          },
+          {
+            title: 'Active Facilities',
+            value: facilities.filter((f) => f.status === 'Available').length,
+            icon: '/vien1.png'
+          },
+          {
+            title: 'Inactive Facilities',
+            value: facilities.filter((f) => f.status === 'Break').length,
+            icon: '/vien2.png'
+          }
+        ].map((item, i) => (
+          <Card key={i} sx={{ flex: 1, borderRadius: 2, boxShadow: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <img src={item.icon} alt={item.title} style={{ width: 20, height: 20 }} />
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {item.title}
+                </Typography>
+              </Box>
+              <Typography variant="h4" fontWeight="bold">
+                {item.value}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
       </Box>
 
-      {/* Content */}
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper sx={{ p: 3 ,bgcolor:'#F2FAFA'}}>
-          <Box
+      {/* Search & Filter */}
+      <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 2 }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <TextField
+            placeholder="Search facilities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
             sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(4, 1fr)',
-                
-              },
-              gap: 4,
-              rowGap: 3,
+              width: 300,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 3
+              }
             }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <img
+                    src="/search.png"
+                    alt="search"
+                    style={{ width: 18, height: 18, opacity: 0.6 }}
+                  />
+                </InputAdornment>
+              )
+            }}
+          />
+
+          <FormControl size="small">
+            <InputLabel>Status</InputLabel>
+            <Select
+              label="Status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              sx={{ borderRadius: 2, minWidth: 150 }}
+            >
+              <MenuItem value="All status">All status</MenuItem>
+              <MenuItem value="Available">Available</MenuItem>
+              <MenuItem value="Busy">Busy</MenuItem>
+              <MenuItem value="Break">Break</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="outlined"
+            startIcon={<FilterList />}
+            sx={{ borderRadius: 2, textTransform: 'none' }}
           >
-            {userDetails.map((detail, index) => (
-              <Box key={index}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1, fontSize: '0.75rem', fontWeight: 400 }}
-                >
-                  {detail.label}
-                </Typography>
-                {detail.label === 'Status' ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Box
-                      sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        bgcolor: detail.color || '#2e7d32',
-                      }}
-                    />
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: detail.color || '#2e7d32',
-                        fontWeight: 500,
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {detail.value}
+            Filters
+          </Button>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            sx={{
+              bgcolor: '#00695C',
+              borderRadius: 2,
+              textTransform: 'none',
+              '&:hover': { bgcolor: '#004D40' }
+            }}
+            onClick={() => setAddFacilityDialogOpen(true)}
+          >
+            Add facility
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+              {['Name', 'Status', 'Level', 'Location', 'HSD', 'Date Created', 'Action'].map(
+                (header) => (
+                  <TableCell key={header}>
+                    <Typography variant="caption" fontWeight="bold" color="text.secondary">
+                      {header}
                     </Typography>
-                  </Box>
-                ) : detail.label === 'Full Name' ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: '50%',
-                        bgcolor: '#00897b',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Typography
+                  </TableCell>
+                )
+              )}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredFacilities.length > 0 ? (
+              filteredFacilities.map((facility) => (
+                <TableRow key={facility.id} hover>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box
                         sx={{
-                          color: 'white',
-                          fontSize: '0.65rem',
+                          width: 32,
+                          height: 32,
+                          borderRadius: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: facility.avatarColor,
+                          color: facility.textColor,
                           fontWeight: 600,
+                          fontSize: 14
                         }}
                       >
-                        B
-                      </Typography>
+                        {facility.avatar}
+                      </Box>
+                      <Typography variant="body2">{facility.name}</Typography>
                     </Box>
-                    <Typography variant="body1" fontWeight="500" sx={{ fontSize: '0.875rem' }}>
-                      {detail.value}
+                  </TableCell>
+                  <TableCell>
+                    <CustomChip
+                      label={facility.status}
+                      variant="status"
+                      size="small"
+                      showDot={true}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{facility.level}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{facility.location}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{facility.hsd}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{facility.dateCreated}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {facility.time}
                     </Typography>
-                  </Box>
-                ) : (
-                  <Typography variant="body1" fontWeight="500" sx={{ fontSize: '0.875rem' }}>
-                    {detail.value}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={(e) => handleMenuClick(e, facility)}>
+                      <MoreVert />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="body2" color="text.secondary">
+                    No facilities found
                   </Typography>
-                )}
-              </Box>
-            ))}
-          </Box>
-        </Paper>
-      </Container>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      {/* Delete Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
+      {/* Action Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight="600">
-            Delete facility
-          </Typography>
-          <IconButton onClick={() => setDeleteDialogOpen(false)} size="small">
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            Are you sure you want to delete <strong>Butabika Hospital</strong> from the system? Please
-            proceed with caution. This action is irreversible.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
-            Cancel
-          </Button>
-          <Button onClick={confirmDelete} variant="contained" color="error">
-            Delete facility
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <MenuItem>👁 View details</MenuItem>
+        <MenuItem>✏ Edit</MenuItem>
+        {/* <MenuItem>➕ Add user</MenuItem> */}
+        <Box sx={{ borderTop: '1px solid #e0e0e0', my: 1 }} />
+        {/* <MenuItem>📦 Archive</MenuItem> */}
+        <MenuItem sx={{ color: 'error.main' }}>🗑 Delete</MenuItem>
+      </Menu>
 
-      {/* Archive Dialog */}
-      <Dialog
-        open={archiveDialogOpen}
-        onClose={() => setArchiveDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight="600">
-            Archive facility
-          </Typography>
-          <IconButton onClick={() => setArchiveDialogOpen(false)} size="small">
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            Are you sure you want to archive <strong>Butabika Hospital</strong>? You can restore this
-            facility anytime.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setArchiveDialogOpen(false)} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmArchive}
-            variant="contained"
-            sx={{
-              bgcolor: '#00897b',
-              '&:hover': { bgcolor: '#00796b' },
-            }}
-          >
-            Archive facility
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Add User Dialog */}
-      <Dialog
-        open={addUserDialogOpen}
-        onClose={() => setAddUserDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            m: 0,
-            height: '100vh',
-            maxHeight: '100vh',
-            borderRadius: 0,
-          },
-        }}
-      >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setAddUserDialogOpen(false)} size="small">
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h6" fontWeight="600">
-              Add Facility Admin
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button onClick={() => setAddUserDialogOpen(false)} size="small">
-              Close
-            </Button>
-            <Button
-              onClick={saveUser}
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: '#00897b',
-                '&:hover': { bgcolor: '#00796b' },
-              }}
-            >
-              Save
-            </Button>
-          </Box>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 2,
-            }}
-          >
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                First Name
-              </Typography>
-              <TextField fullWidth placeholder="Enter first name" size="small" />
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Last Name
-              </Typography>
-              <TextField fullWidth placeholder="Enter last name" size="small" />
-            </Box>
-            <Box sx={{ gridColumn: '1 / -1' }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Email
-              </Typography>
-              <TextField fullWidth placeholder="Enter email address" size="small" type="email" />
-            </Box>
-            <Box sx={{ gridColumn: '1 / -1' }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Phone Number
-              </Typography>
-              <TextField fullWidth placeholder="+256 700 000 000" size="small" />
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Gender
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select defaultValue="">
-                  <MenuItem value="">Select gender</MenuItem>
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  <MenuItem value="other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Nationality
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select defaultValue="">
-                  <MenuItem value="">Select country</MenuItem>
-                  <MenuItem value="uganda">Uganda</MenuItem>
-                  <MenuItem value="kenya">Kenya</MenuItem>
-                  <MenuItem value="tanzania">Tanzania</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ gridColumn: '1 / -1' }}>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                Address
-              </Typography>
-              <TextField fullWidth placeholder="Enter address" size="small" multiline rows={2} />
-            </Box>
-          </Box>
-        </DialogContent>
-      </Dialog>
+      {/* Add Facility Dialog - Using SlideDialog Component */}
+      <SlideDialog
+        open={addFacilityDialogOpen}
+        onClose={() => setAddFacilityDialogOpen(false)}
+        title="Add Facility"
+        fields={facilityFields}
+        onSave={handleSaveFacility}
+        saveButtonText="Continue"
+      />
     </Box>
   );
-}
+};
+
+export default FacilitiesManagement;
