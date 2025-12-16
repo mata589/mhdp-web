@@ -1,232 +1,289 @@
-// api/userApi.ts
-import type {
-  UserOverview,
-  RecentCallActivityResponse,
-  UserAvailability,
-  UserStatus,
-  VoicemailsResponse,
-  MissedCallsResponse,
-  CallHistoryResponse,
-  EscalateCallRequest,
-  EscalateCallResponse,
-  EscalationsSummary,
-  EscalationsListResponse,
-  EscalationDetails,
-  AnalyticsOverview,
-  CallVolumeTrends,
-  Leaderboard,
-  ConversationQualityTrends,
-  ConversationQualityInsights,
-} from "../../types/user.types";
+// src/types/user.types.ts
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// ============================================
+// AUTH TYPES
+// ============================================
 
-class UserApi {
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      'accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
-  }
-
-  private async handleResponse<T>(response: Response): Promise<T> {
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'API request failed');
-    }
-    return response.json();
-  }
-
-  // ============================================
-  // OVERVIEW & DASHBOARD
-  // ============================================
-
-  async getOverview(): Promise<UserOverview> {
-    const response = await fetch(`${API_BASE_URL}/agent/overview`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<UserOverview>(response);
-  }
-
-  // ============================================
-  // CALL ACTIVITY
-  // ============================================
-
-  async getRecentCallActivity(limit: number = 10, offset: number = 0): Promise<RecentCallActivityResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/recent_call_activity?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<RecentCallActivityResponse>(response);
-  }
-
-  // ============================================
-  // AVAILABILITY
-  // ============================================
-
-  async updateAvailability(status: UserStatus): Promise<UserAvailability> {
-    const response = await fetch(`${API_BASE_URL}/agent/availability?status=${status}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<UserAvailability>(response);
-  }
-
-  async getAvailability(): Promise<UserAvailability> {
-    const response = await fetch(`${API_BASE_URL}/agent/availability`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<UserAvailability>(response);
-  }
-
-  // ============================================
-  // VOICEMAILS
-  // ============================================
-
-  async getVoicemails(limit: number = 10, offset: number = 0): Promise<VoicemailsResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/voicemails?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<VoicemailsResponse>(response);
-  }
-
-  // ============================================
-  // MISSED CALLS
-  // ============================================
-
-  async getMissedCalls(limit: number = 10, offset: number = 0): Promise<MissedCallsResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/missedcalls?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<MissedCallsResponse>(response);
-  }
-
-  // ============================================
-  // CALL HISTORY
-  // ============================================
-
-  async getCallHistory(limit: number = 10, offset: number = 0): Promise<CallHistoryResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/call-history?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<CallHistoryResponse>(response);
-  }
-
-  // ============================================
-  // ESCALATIONS
-  // ============================================
-
-  async escalateCall(data: EscalateCallRequest): Promise<EscalateCallResponse> {
-    const response = await fetch(`${API_BASE_URL}/agent/escalate-call`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-    return this.handleResponse<EscalateCallResponse>(response);
-  }
-
-  async getEscalationsSummary(): Promise<EscalationsSummary> {
-    const response = await fetch(`${API_BASE_URL}/agent/escalations_summary`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<EscalationsSummary>(response);
-  }
-
-  async getEscalationsList(limit: number = 10, offset: number = 0): Promise<EscalationsListResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/list?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<EscalationsListResponse>(response);
-  }
-
-  async getEscalationDetails(escalationId: string): Promise<EscalationDetails> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/escalation_details/${escalationId}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<EscalationDetails>(response);
-  }
-
-  // ============================================
-  // ANALYTICS
-  // ============================================
-
-  async getAnalyticsOverview(): Promise<AnalyticsOverview> {
-    const response = await fetch(`${API_BASE_URL}/agent/analytics/overview`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<AnalyticsOverview>(response);
-  }
-
-  async getCallVolumeTrends(): Promise<CallVolumeTrends> {
-    const response = await fetch(`${API_BASE_URL}/agent/analytics/call-volume-trends`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<CallVolumeTrends>(response);
-  }
-
-  async getLeaderboard(limit: number = 5): Promise<Leaderboard> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/analytics/leaderboard?limit=${limit}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<Leaderboard>(response);
-  }
-
-  async getConversationQualityTrends(): Promise<ConversationQualityTrends> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/analytics/conversation-quality-trends`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<ConversationQualityTrends>(response);
-  }
-
-  async getConversationQualityInsights(): Promise<ConversationQualityInsights> {
-    const response = await fetch(
-      `${API_BASE_URL}/agent/analytics/conversation-quality-insights`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<ConversationQualityInsights>(response);
-  }
+export interface User {
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  designation_name: string;
+  role_names: string[];
+}
+// Add this to the AUTH TYPES section
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
-export const userApi = new UserApi();
-export default userApi;
+export interface RegisterData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  designation?: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordData {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+// ============================================
+// USER STATUS & AVAILABILITY
+// ============================================
+
+export type UserStatus = 'available' | 'busy' | 'away' | 'offline';
+
+export interface UserAvailability {
+  status: UserStatus;
+  last_updated: string;
+  user_email: string;
+}
+
+// ============================================
+// DASHBOARD & OVERVIEW
+// ============================================
+
+export interface UserOverview {
+  total_calls: number;
+  answered_calls: number;
+  missed_calls: number;
+  voicemails: number;
+  average_call_duration: number;
+  total_call_time: number;
+  escalations: number;
+  user_availability: UserAvailability;
+}
+
+// ============================================
+// CALL ACTIVITY
+// ============================================
+
+export interface CallActivity {
+  id: string;
+  caller_name: string;
+  caller_phone: string;
+  call_type: 'inbound' | 'outbound';
+  status: 'answered' | 'missed' | 'voicemail';
+  duration: number;
+  timestamp: string;
+  notes?: string;
+}
+
+export interface RecentCallActivityResponse {
+  calls: CallActivity[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// ============================================
+// VOICEMAILS
+// ============================================
+
+export interface Voicemail {
+  id: string;
+  caller_name: string;
+  caller_phone: string;
+  duration: number;
+  timestamp: string;
+  transcription?: string;
+  audio_url?: string;
+  is_read: boolean;
+}
+
+export interface VoicemailsResponse {
+  voicemails: Voicemail[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// ============================================
+// MISSED CALLS
+// ============================================
+
+export interface MissedCall {
+  id: string;
+  caller_name: string;
+  caller_phone: string;
+  timestamp: string;
+  attempted_callbacks: number;
+  last_callback_attempt?: string;
+}
+
+export interface MissedCallsResponse {
+  missed_calls: MissedCall[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// ============================================
+// CALL HISTORY
+// ============================================
+
+export interface CallHistoryItem {
+  id: string;
+  caller_name: string;
+  caller_phone: string;
+  call_type: 'inbound' | 'outbound';
+  status: 'completed' | 'missed' | 'voicemail' | 'abandoned';
+  duration: number;
+  timestamp: string;
+  agent_name: string;
+  notes?: string;
+  recording_url?: string;
+}
+
+export interface CallHistoryResponse {
+  calls: CallHistoryItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// ============================================
+// ESCALATIONS
+// ============================================
+
+export interface EscalateCallRequest {
+  call_id: string;
+  reason: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  notes?: string;
+  escalate_to?: string; // supervisor email or role
+}
+
+export interface EscalateCallResponse {
+  escalation_id: string;
+  status: 'pending' | 'assigned' | 'in_progress' | 'resolved';
+  created_at: string;
+  assigned_to?: string;
+  message: string;
+}
+
+export interface EscalationsSummary {
+  total_escalations: number;
+  pending: number;
+  in_progress: number;
+  resolved: number;
+  average_resolution_time: number;
+}
+
+export interface Escalation {
+  id: string;
+  call_id: string;
+  caller_name: string;
+  reason: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'assigned' | 'in_progress' | 'resolved';
+  created_at: string;
+  resolved_at?: string;
+  assigned_to?: string;
+  escalated_by: string;
+}
+
+export interface EscalationsListResponse {
+  escalations: Escalation[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface EscalationDetails extends Escalation {
+  notes: string;
+  resolution_notes?: string;
+  call_details: CallHistoryItem;
+  timeline: EscalationTimelineItem[];
+}
+
+export interface EscalationTimelineItem {
+  timestamp: string;
+  action: string;
+  performed_by: string;
+  notes?: string;
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+
+export interface AnalyticsOverview {
+  period: string;
+  total_calls: number;
+  answered_calls: number;
+  missed_calls: number;
+  average_handle_time: number;
+  first_call_resolution_rate: number;
+  customer_satisfaction_score: number;
+}
+
+export interface CallVolumeData {
+  date: string;
+  inbound: number;
+  outbound: number;
+  total: number;
+}
+
+export interface CallVolumeTrends {
+  period: string;
+  data: CallVolumeData[];
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  agent_name: string;
+  agent_email: string;
+  total_calls: number;
+  average_handle_time: number;
+  customer_satisfaction_score: number;
+}
+
+export interface Leaderboard {
+  period: string;
+  entries: LeaderboardEntry[];
+}
+
+export interface QualityTrendData {
+  date: string;
+  score: number;
+  call_count: number;
+}
+
+export interface ConversationQualityTrends {
+  period: string;
+  data: QualityTrendData[];
+  average_score: number;
+}
+
+export interface QualityInsight {
+  category: string;
+  score: number;
+  improvement_suggestions: string[];
+}
+
+export interface ConversationQualityInsights {
+  overall_score: number;
+  insights: QualityInsight[];
+  top_strengths: string[];
+  areas_for_improvement: string[];
+}

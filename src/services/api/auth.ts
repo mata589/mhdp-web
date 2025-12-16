@@ -1,172 +1,229 @@
 // src/services/api/auth.ts
-import type { RegisterData, User } from '../../types/user.types';
-import { CONFIG, buildApiUrl, shouldUseMockData } from '../../utils/config';
+//import type { RegisterData } from '../../types/user.types';
+
+import type { RegisterData } from "./userApi";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staging-mhdp-backend.marconilab.org';
+
+// Backend user structure
+export interface User {
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  designation_name: string;
+  role_names: string[];
+}
 
 interface LoginResponse {
+  access_token: string;
+  token_type: string;
   user: User;
-  token: string;
-  refreshToken?: string;
 }
 
-interface LoginCredentials {
-  email: string;
-  password: string;
+interface ForgotPasswordResponse {
+  message: string;
 }
 
-// Sample test users - remove in production
+interface ChangePasswordRequest {
+  new_password: string;
+  confirm_password: string;
+}
+
+// Sample test users - fallback when API is unreachable
 const MOCK_USERS: User[] = [
   {
-    id: '1',
     email: 'admin@callcenter.com',
-    name: 'John Admin',
-    role: 'admin',
-    hospital: 'Central General Hospital',
-    isActive: true,
-    lastLogin: new Date(),
+    first_name: 'John',
+    last_name: 'Admin',
+    is_active: true,
+    designation_name: 'Central General Hospital',
+    role_names: ['admin'],
   },
   {
-    id: '2',
     email: 'supervisor@callcenter.com',
-    name: 'Sarah Supervisor',
-    role: 'supervisor',
-    hospital: 'St. Mary Medical Center',
-    isActive: true,
-    lastLogin: new Date(),
+    first_name: 'Sarah',
+    last_name: 'Supervisor',
+    is_active: true,
+    designation_name: 'St. Mary Medical Center',
+    role_names: ['supervisor'],
   },
   {
-    id: '3',
     email: 'agent@callcenter.com',
-    name: 'Mike Agent',
-    role: 'agent',
-    hospital: 'Central General Hospital',
-    isActive: true,
-    lastLogin: new Date(),
-  },
-  {
-    id: '4',
-    email: 'jane.agent@callcenter.com',
-    name: 'Jane Smith',
-    role: 'agent',
-    hospital: 'City Medical Center',
-    isActive: true,
-    lastLogin: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
-  },
-  {
-    id: '5',
-    email: 'supervisor2@callcenter.com',
-    name: 'Robert Wilson',
-    role: 'supervisor',
-    hospital: 'City Medical Center',
-    isActive: true,
-    lastLogin: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    first_name: 'Mike',
+    last_name: 'Agent',
+    is_active: true,
+    designation_name: 'Central General Hospital',
+    role_names: ['agent'],
   },
 ];
 
-// Mock credentials (password is "password123" for all users)
 const MOCK_CREDENTIALS = [
   { email: 'admin@callcenter.com', password: 'password123' },
   { email: 'supervisor@callcenter.com', password: 'password123' },
   { email: 'agent@callcenter.com', password: 'password123' },
-  { email: 'jane.agent@callcenter.com', password: 'password123' },
-  { email: 'supervisor2@callcenter.com', password: 'password123' },
 ];
 
 class AuthService {
-  private tokenKey = 'auth_token';
-  private refreshTokenKey = 'refresh_token';
+  private tokenKey = 'authToken';
   private userKey = 'auth_user';
+
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem(this.tokenKey);
+    return {
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+  }
+
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+      throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+  }
 
   /**
    * Login user with email and password
    */
   async login(email: string, password: string): Promise<User> {
-    // Try API first, fallback to mock data
-    if (!shouldUseMockData()) {
-      try {
-        const response = await fetch(buildApiUrl('/auth/login'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-          signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-        });
+    try {
+      // Create form-encoded data as required by the API
+      const formData = new URLSearchParams();
+      formData.append('grant_type', 'password');
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('scope', '');
+      formData.append('client_id', '');
+      formData.append('client_secret', '');
 
-        if (response.ok) {
-          const data: LoginResponse = await response.json();
-          this.setTokens(data.token, data.refreshToken);
-          this.setUser(data.user);
-          return data.user;
-        }
-      } catch (error) {
-        console.warn('API not reachable, falling back to mock data:', error);
-      }
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+
+      const data = await this.handleResponse<LoginResponse>(response);
+      
+      // Store token and user
+      this.setToken(data.access_token);
+      this.setUser(data.user);
+      
+      return data.user;
+    } catch (error) {
+      console.warn('API login failed, falling back to mock data:', error);
+      return this.mockLogin(email, password);
     }
-
-    // Mock authentication logic
-    return this.mockLogin(email, password);
   }
 
   /**
-   * Mock login for development/testing
+   * Check if current token is valid
    */
-  private async mockLogin(email: string, password: string): Promise<User> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+  async checkToken(): Promise<boolean> {
+    const token = this.getToken();
+    if (!token) return false;
 
-    // Find user in mock credentials
-    const credential = MOCK_CREDENTIALS.find(cred => cred.email === email && cred.password === password);
-    
-    if (!credential) {
-      throw new Error('Invalid email or password');
+    // If it's a mock token, check mock validity
+    if (this.isMockToken(token)) {
+      return this.isAuthenticated();
     }
 
-    // Find user data
-    const user = MOCK_USERS.find(u => u.email === email);
-    
-    if (!user) {
-      throw new Error('User not found');
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/check-token`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return result === true || typeof result === 'string';
+      }
+      return false;
+    } catch (error) {
+      console.warn('Token check failed:', error);
+      // Fallback to local token validation
+      return this.isAuthenticated();
     }
+  }
 
-    if (!user.isActive) {
-      throw new Error('Account is deactivated');
+  /**
+   * Request password reset
+   */
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/forgot_password`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      return this.handleResponse<ForgotPasswordResponse>(response);
+    } catch (error) {
+      console.warn('Forgot password API failed:', error);
+      // Mock response
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { message: 'Password reset email sent (mock)' };
     }
+  }
 
-    // Generate mock tokens
-    const mockToken = this.generateMockToken(user);
-    const mockRefreshToken = this.generateMockRefreshToken(user);
+  /**
+   * Change password with token (from email link)
+   */
+  async changePassword(token: string, newPassword: string, confirmPassword: string): Promise<string> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/change_password?token=${token}`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      });
 
-    // Store tokens and user data
-    this.setTokens(mockToken, mockRefreshToken);
-    this.setUser(user);
+      return this.handleResponse<string>(response);
+    } catch (error) {
+      console.warn('Change password API failed:', error);
+      throw new Error('Failed to change password');
+    }
+  }
 
-    return user;
+  /**
+   * Reset password (authenticated user)
+   */
+  async resetPassword(newPassword: string, confirmPassword: string): Promise<string> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reset_password`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      });
+
+      return this.handleResponse<string>(response);
+    } catch (error) {
+      console.warn('Reset password API failed:', error);
+      throw new Error('Failed to reset password');
+    }
   }
 
   /**
    * Logout user and clear stored data
    */
   logout(): void {
-    if (!shouldUseMockData()) {
-      try {
-        // Optional: Call logout endpoint to invalidate server-side session
-        fetch(buildApiUrl('/auth/logout'), {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.getToken()}`,
-            'Content-Type': 'application/json',
-          },
-          signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-        }).catch(() => {
-          // Ignore errors on logout endpoint call
-        });
-      } catch (error) {
-        console.warn('Logout endpoint error:', error);
-      }
-    }
-
-    // Always clear local storage
-    this.clearTokens();
+    this.clearToken();
     this.clearUser();
   }
 
@@ -191,13 +248,6 @@ class AuthService {
   }
 
   /**
-   * Get stored refresh token
-   */
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.refreshTokenKey);
-  }
-
-  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
@@ -209,8 +259,8 @@ class AuthService {
     }
 
     // For mock tokens, just check if they exist and user is active
-    if (shouldUseMockData() || this.isMockToken(token)) {
-      return user.isActive;
+    if (this.isMockToken(token)) {
+      return user.is_active;
     }
 
     // For real tokens, check expiration
@@ -218,63 +268,124 @@ class AuthService {
   }
 
   /**
-   * Refresh authentication token
+   * Register a new user
    */
-  async refreshToken(): Promise<string> {
-    const refreshToken = this.getRefreshToken();
-    
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
+  async register(data: RegisterData): Promise<User> {
+    const { email, password, firstName, lastName, role } = data;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          first_name: firstName,
+          last_name: lastName,
+          role,
+        }),
+      });
+
+      const result = await this.handleResponse<LoginResponse>(response);
+      this.setToken(result.access_token);
+      this.setUser(result.user);
+      return result.user;
+    } catch (error) {
+      console.warn('Registration API failed, falling back to mock:', error);
+      return this.mockRegister(data);
     }
-
-    // Try API first
-    if (!shouldUseMockData() && !this.isMockToken(refreshToken)) {
-      try {
-        const response = await fetch(buildApiUrl('/auth/refresh'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-          signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          this.setTokens(data.token, data.refreshToken);
-          return data.token;
-        }
-      } catch (error) {
-        console.warn('API refresh failed, using mock refresh:', error);
-      }
-    }
-
-    // Mock refresh
-    return this.mockRefreshToken();
   }
 
   /**
-   * Mock token refresh
+   * Verify user OTP
    */
-  private async mockRefreshToken(): Promise<string> {
-    const user = this.getCurrentUser();
-    
-    if (!user) {
-      throw new Error('No user found for token refresh');
+  async verifyOTP(email: string, otp: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await response.json();
+      return data.success === true;
+    } catch (error) {
+      console.warn('OTP verification API failed:', error);
+      // Mock verification: Accept only "123456" as valid OTP
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return otp === '123456';
     }
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const newToken = this.generateMockToken(user);
-    const newRefreshToken = this.generateMockRefreshToken(user);
-    
-    this.setTokens(newToken, newRefreshToken);
-    return newToken;
   }
 
-  // ... (rest of the methods remain the same as in the previous version)
-  // I'll include the key methods but truncate for brevity
+  // ==================== MOCK METHODS ====================
+
+  /**
+   * Mock login for development/testing
+   */
+  private async mockLogin(email: string, password: string): Promise<User> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const credential = MOCK_CREDENTIALS.find(
+      cred => cred.email === email && cred.password === password
+    );
+    
+    if (!credential) {
+      throw new Error('Invalid email or password');
+    }
+
+    const user = MOCK_USERS.find(u => u.email === email);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.is_active) {
+      throw new Error('Account is deactivated');
+    }
+
+    const mockToken = this.generateMockToken(user);
+    this.setToken(mockToken);
+    this.setUser(user);
+
+    return user;
+  }
+
+  /**
+   * Mock register
+   */
+  private async mockRegister(data: RegisterData): Promise<User> {
+    const { email, password, firstName, lastName, role } = data;
+
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    if (MOCK_USERS.some(user => user.email === email)) {
+      throw new Error('User already exists');
+    }
+
+    const newUser: User = {
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      is_active: true,
+      designation_name: 'Mock Hospital',
+      role_names: [role],
+    };
+
+    MOCK_USERS.push(newUser);
+    MOCK_CREDENTIALS.push({ email, password });
+
+    const token = this.generateMockToken(newUser);
+    this.setToken(token);
+    this.setUser(newUser);
+
+    return newUser;
+  }
 
   /**
    * Get all mock users (for testing/development)
@@ -290,17 +401,14 @@ class AuthService {
     return MOCK_CREDENTIALS.map(cred => ({ ...cred }));
   }
 
-  // Private helper methods
-  private setTokens(token: string, refreshToken?: string): void {
+  // ==================== PRIVATE HELPERS ====================
+
+  private setToken(token: string): void {
     localStorage.setItem(this.tokenKey, token);
-    if (refreshToken) {
-      localStorage.setItem(this.refreshTokenKey, refreshToken);
-    }
   }
 
-  private clearTokens(): void {
+  private clearToken(): void {
     localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
   }
 
   private setUser(user: User): void {
@@ -323,137 +431,19 @@ class AuthService {
   }
 
   private isMockToken(token: string): boolean {
-    return token.startsWith('mock-token-') || token.startsWith('mock-refresh-');
+    return token.startsWith('mock-token-');
   }
 
   private generateMockToken(user: User): string {
     const payload = {
-      userId: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role_names[0],
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
     };
     
     return `mock-token-${btoa(JSON.stringify(payload))}`;
   }
-
-  private generateMockRefreshToken(user: User): string {
-    const payload = {
-      userId: user.id,
-      type: 'refresh',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
-    };
-    
-    return `mock-refresh-${btoa(JSON.stringify(payload))}`;
-  }
-
-  /**
- * Register a new user
- */
-/**
- * Register a new user
- */
-async register(data: RegisterData): Promise<User> {
-  const { email, password, firstName, lastName, role } = data;
-  const name = `${firstName} ${lastName}`;
-  const hospital = 'Unknown Hospital'; // Default or modify as needed
-
-  if (!shouldUseMockData()) {
-    try {
-      const response = await fetch(buildApiUrl('/auth/register'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, firstName, lastName, role }),
-        signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-      });
-
-      if (response.ok) {
-        const result: LoginResponse = await response.json();
-        this.setTokens(result.token, result.refreshToken);
-        this.setUser(result.user);
-        return result.user;
-      } else {
-        throw new Error('Registration failed');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw new Error('Registration failed');
-    }
-  }
-
-  // Fallback to mock register
-  return this.mockRegister(data);
-}
-
-
-private async mockRegister(data: RegisterData): Promise<User> {
-  const { email, password, firstName, lastName, role } = data;
-  const name = `${firstName} ${lastName}`;
-  const hospital = 'Mock Hospital';
-
-  await new Promise(resolve => setTimeout(resolve, 800));
-
-  if (MOCK_USERS.some(user => user.email === email)) {
-    throw new Error('User already exists');
-  }
-
-  const newUser: User = {
-    id: (MOCK_USERS.length + 1).toString(),
-    email,
-    name,
-    role,
-    hospital,
-    isActive: true,
-    lastLogin: new Date(),
-  };
-
-  MOCK_USERS.push(newUser);
-  MOCK_CREDENTIALS.push({ email, password });
-
-  const token = this.generateMockToken(newUser);
-  const refreshToken = this.generateMockRefreshToken(newUser);
-  this.setTokens(token, refreshToken);
-  this.setUser(newUser);
-
-  return newUser;
-}
-
-/**
- * Verify user OTP
- */
-async verifyOTP(email: string, otp: string): Promise<boolean> {
-  if (!shouldUseMockData()) {
-    try {
-      const response = await fetch(buildApiUrl('/auth/verify-otp'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, otp }),
-        signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.success === true;
-      } else {
-        throw new Error('OTP verification failed');
-      }
-    } catch (error) {
-      console.error('OTP verification error:', error);
-      return false;
-    }
-  }
-
-  // Mock verification: Accept only "123456" as valid OTP
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return otp === '123456';
-}
-
 }
 
 // Create and export singleton instance

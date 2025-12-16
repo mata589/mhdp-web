@@ -1,7 +1,8 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import type { AuthState, User } from '../types/user.types';
+
 import { authService } from '../services/api/auth';
+import type { AuthState, User } from '../services/api/userApi';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User>; // Updated to return User
