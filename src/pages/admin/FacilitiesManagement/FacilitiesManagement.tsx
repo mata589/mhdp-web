@@ -20,26 +20,140 @@ import {
   Paper,
   IconButton,
   InputAdornment,
-  Drawer
 } from '@mui/material';
 import {
-  MoreHorizontal as MoreVert,
-  Plus as Add,
-  ChevronLeft,
-  ChevronRight,
-  Filter
-} from 'lucide-react';
+  MoreVert,
+  Add,
+  FilterList
+} from '@mui/icons-material';
 import CustomChip from '../../../components/common/CustomChip/CustomChip';
+import { SlideDialog, type FormField } from '../../../components/forms/SlideDialogform/SlideDialog';
 
 const FacilitiesManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All status');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFacility, setSelectedFacility] = useState<any>(null);
-
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const handleDrawerOpen = () => setDrawerOpen(true);
-  const handleDrawerClose = () => setDrawerOpen(false);
+
+  // Define fields for the Add Facility dialog
+  const facilityFields: FormField[] = [
+    { 
+      name: 'facilityName', 
+      label: 'Facility Name', 
+      type: 'text', 
+      placeholder: 'Hospital', 
+      gridColumn: '1 / -1',
+      required: true 
+    },
+    { 
+      name: 'facilityCode', 
+      label: 'Facility Code', 
+      type: 'text', 
+      placeholder: 'Code',
+      gridColumn: '1 / -1'
+    },
+    {
+      name: 'facilityLevel',
+      label: 'Facility Level',
+      type: 'select',
+      placeholder: 'Select level',
+      options: [
+        { value: 'referral', label: 'Referral Hospital' },
+        { value: 'hc4', label: 'Health Center IV' },
+        { value: 'hc3', label: 'Health Center III' },
+        { value: 'hc2', label: 'Health Center II' },
+      ],
+      required: true
+    },
+    {
+      name: 'hsd',
+      label: 'Health Sub-District (HSD)',
+      type: 'select',
+      placeholder: 'Select HSD',
+      options: [
+        { value: 'nakawa', label: 'Nakawa' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'rubaga', label: 'Rubaga' },
+        { value: 'central', label: 'Central' },
+      ],
+      required: true
+    },
+    {
+      name: 'country',
+      label: 'Country',
+      type: 'select',
+      placeholder: 'Select country',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'uganda', label: 'Uganda' },
+        { value: 'kenya', label: 'Kenya' },
+        { value: 'tanzania', label: 'Tanzania' },
+        { value: 'rwanda', label: 'Rwanda' },
+      ],
+      required: true
+    },
+    {
+      name: 'district',
+      label: 'District',
+      type: 'select',
+      placeholder: 'Select district',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'wakiso', label: 'Wakiso' },
+        { value: 'mukono', label: 'Mukono' },
+        { value: 'jinja', label: 'Jinja' },
+      ],
+      required: true
+    },
+    {
+      name: 'subcounty',
+      label: 'Subcounty',
+      type: 'select',
+      placeholder: 'Select subcounty',
+      options: [
+        { value: 'central', label: 'Central' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'nakawa', label: 'Nakawa' },
+      ],
+    },
+    {
+      name: 'county',
+      label: 'County',
+      type: 'select',
+      placeholder: 'Select county',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'busiro', label: 'Busiro' },
+        { value: 'kyaddondo', label: 'Kyaddondo' },
+      ],
+    },
+    {
+      name: 'parish',
+      label: 'Parish',
+      type: 'select',
+      placeholder: 'Select parish',
+      options: [
+        { value: 'parish1', label: 'Parish 1' },
+        { value: 'parish2', label: 'Parish 2' },
+        { value: 'parish3', label: 'Parish 3' },
+      ],
+    },
+    {
+      name: 'village',
+      label: 'Village',
+      type: 'select',
+      placeholder: 'Select village',
+      options: [
+        { value: 'village1', label: 'Village 1' },
+        { value: 'village2', label: 'Village 2' },
+        { value: 'village3', label: 'Village 3' },
+      ],
+    },
+  ];
 
   const facilities = [
     {
@@ -85,6 +199,12 @@ const FacilitiesManagement = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedFacility(null);
+  };
+
+  const handleSaveFacility = (data: Record<string, any>) => {
+    console.log('Facility saved:', data);
+    setDrawerOpen(false);
+    // Here you would typically make an API call to save the facility
   };
 
   return (
@@ -179,7 +299,7 @@ const FacilitiesManagement = () => {
 
           <Button
             variant="outlined"
-            startIcon={<Filter size={16} />}
+            startIcon={<FilterList />}
             sx={{ borderRadius: 2, textTransform: 'none' }}
           >
             Filters
@@ -189,14 +309,14 @@ const FacilitiesManagement = () => {
 
           <Button
             variant="contained"
-            startIcon={<Add size={16} />}
+            startIcon={<Add />}
             sx={{
               bgcolor: '#00695C',
               borderRadius: 2,
               textTransform: 'none',
               '&:hover': { bgcolor: '#004D40' }
             }}
-            onClick={handleDrawerOpen}
+            onClick={() => setDrawerOpen(true)}
           >
             Add facility
           </Button>
@@ -269,7 +389,7 @@ const FacilitiesManagement = () => {
                   </TableCell>
                   <TableCell>
                     <IconButton onClick={(e) => handleMenuClick(e, facility)}>
-                      <MoreVert size={20} />
+                      <MoreVert />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -302,52 +422,15 @@ const FacilitiesManagement = () => {
         <MenuItem sx={{ color: 'error.main' }}>🗑 Delete</MenuItem>
       </Menu>
 
-      {/* Add Facility Drawer */}
-      <Drawer
-        anchor="right"
+      {/* Add Facility Dialog - Using SlideDialog Component */}
+      <SlideDialog
         open={drawerOpen}
-        onClose={handleDrawerClose}
-        PaperProps={{
-          sx: {
-            width: 400,
-            p: 3,
-            borderTopLeftRadius: 2,
-            borderBottomLeftRadius: 2,
-            zIndex: 2000,
-            position: 'fixed',
-            top: 0,
-            height: '100vh'
-          }
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" mb={2}>
-          Add Facility
-        </Typography>
-        <TextField label="Facility Name" fullWidth margin="normal" />
-        <TextField label="Facility Code" fullWidth margin="normal" />
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Facility Level</InputLabel>
-          <Select label="Facility Level">
-            <MenuItem value="Level 1">Level 1</MenuItem>
-            <MenuItem value="Level 2">Level 2</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl fullWidth margin="normal">
-          <InputLabel>District</InputLabel>
-          <Select label="District">
-            <MenuItem value="Kampala">Kampala</MenuItem>
-            <MenuItem value="Jinja">Jinja</MenuItem>
-          </Select>
-        </FormControl>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button variant="outlined" onClick={handleDrawerClose}>
-            Cancel
-          </Button>
-          <Button variant="contained" sx={{ bgcolor: '#00695C' }}>
-            Save
-          </Button>
-        </Box>
-      </Drawer>
+        onClose={() => setDrawerOpen(false)}
+        title="Add Facility"
+        fields={facilityFields}
+        onSave={handleSaveFacility}
+        saveButtonText="Continue"
+      />
     </Box>
   );
 };

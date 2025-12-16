@@ -91,7 +91,7 @@ const AgentRoutes: React.FC = () => {
       <Route path="/training" element={<div>Training Materials Page</div>} />
       <Route path="/emergency" element={<div>Emergency Guide Page</div>} />
       <Route path="/help" element={<div>Help and Support Page</div>} />
-      <Route path="/settings" element={<Settings />} /> {/* Changed this line */}
+      <Route path="/settings" element={<Settings />} />
       <Route path="/call-review/:callId" element={<CallReviewScreen />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
@@ -101,7 +101,6 @@ const AgentRoutes: React.FC = () => {
 const SupervisorRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Use index route for /supervisor instead of path="/supervisor" */}
       <Route index element={<SupervisorDashboard />} />
       <Route path="live-monitoring" element={<LiveMonitoring />} />
       <Route path="escalations" element={<EscalatedCallReview />} />
@@ -117,11 +116,9 @@ const SupervisorRoutes: React.FC = () => {
       <Route path="StaffDetailsPage" element={<StaffDetailsPage/>} />
       <Route path="CallHistoryTab" element={<CallHistoryTab/>} />
      
-     
-
       <Route path="training" element={<div>Training Materials Page</div>} />
       <Route path="help" element={<div>Help and Support Page</div>} />
-      <Route path="settings" element={<Settings />} /> {/* Changed this line */}
+      <Route path="settings" element={<Settings />} />
       <Route path="call-review/:callId" element={<CallReviewScreen />} />
       <Route path="*" element={<Navigate to="/supervisor" replace />} />
     </Routes>
@@ -146,13 +143,16 @@ const AdminRoutes: React.FC = () => {
     </Routes>
   );
 };
+
 const FacilityAdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/ViewFacilityAdmin" element={<ViewFacilityAdmin/>} />
-      <Route path="/facility-admin/users" element={<div>Manage Facility Users</div>} />
-      <Route path="/facility-admin/reports" element={<div>Reports Page</div>} />
-      <Route path="/facility-admin/settings" element={<Settings />} /> {/* Changed this line */}
+      <Route index element={<ViewFacilityAdmin/>} />
+      <Route path="dashboard" element={<ViewFacilityAdmin/>} />
+      <Route path="users" element={<div>Manage Facility Users</div>} />
+      <Route path="reports" element={<div>Reports Page</div>} />
+      <Route path="analytics" element={<div>Facility Analytics</div>} />
+      <Route path="settings" element={<Settings />} />
       <Route path="*" element={<Navigate to="/facility-admin/dashboard" replace />} />
     </Routes>
   );
@@ -231,7 +231,7 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
-                                <Route
+                <Route
                   path="/CallHistory"
                   element={
                     <ProtectedRoute roles={['supervisor']}>
@@ -248,6 +248,18 @@ const App: React.FC = () => {
                       <AdminLayout>
                         <AdminRoutes />
                       </AdminLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Facility Admin routes with Facility Admin Layout */}
+                <Route
+                  path="/facility-admin/*"
+                  element={
+                    <ProtectedRoute roles={['facility_admin']}>
+                      <FacilityAdminLayout>
+                        <FacilityAdminRoutes />
+                      </FacilityAdminLayout>
                     </ProtectedRoute>
                   }
                 />
@@ -298,6 +310,8 @@ const RoleBasedDashboardRedirect: React.FC = () => {
       return <Navigate to="/supervisor" replace />;
     case 'admin':
       return <Navigate to="/admin/" replace />;
+    case 'facility_admin':
+      return <Navigate to="/facility-admin/dashboard" replace />;
     default:
       return <Navigate to="/login" replace />;
   }

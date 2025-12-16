@@ -37,6 +37,7 @@ import {
   ChevronLeft,
 } from '@mui/icons-material';
 import CustomChip from '../../../components/common/CustomChip/CustomChip';
+import { SlideDialog, type FormField } from '../../../components/forms/SlideDialogform/SlideDialog';
 
 interface Facility {
   id: number;
@@ -54,6 +55,126 @@ export default function FacilitiesManagement() {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [addFacilityDialogOpen, setAddFacilityDialogOpen] = useState(false);
+
+  // Define fields for the Add Facility dialog
+  const facilityFields: FormField[] = [
+    { 
+      name: 'facilityName', 
+      label: 'Facility Name', 
+      type: 'text', 
+      placeholder: 'Hospital', 
+      gridColumn: '1 / -1',
+      required: true 
+    },
+    { 
+      name: 'facilityCode', 
+      label: 'Facility Code', 
+      type: 'text', 
+      placeholder: 'Code',
+      gridColumn: '1 / -1'
+    },
+    {
+      name: 'facilityLevel',
+      label: 'Facility Level',
+      type: 'select',
+      placeholder: 'Select level',
+      options: [
+        { value: 'referral', label: 'Referral Hospital' },
+        { value: 'hc4', label: 'Health Center IV' },
+        { value: 'hc3', label: 'Health Center III' },
+        { value: 'hc2', label: 'Health Center II' },
+      ],
+      required: true
+    },
+    {
+      name: 'hsd',
+      label: 'Health Sub-District (HSD)',
+      type: 'select',
+      placeholder: 'Select HSD',
+      options: [
+        { value: 'nakawa', label: 'Nakawa' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'rubaga', label: 'Rubaga' },
+        { value: 'central', label: 'Central' },
+      ],
+      required: true
+    },
+    {
+      name: 'country',
+      label: 'Country',
+      type: 'select',
+      placeholder: 'Select country',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'uganda', label: 'Uganda' },
+        { value: 'kenya', label: 'Kenya' },
+        { value: 'tanzania', label: 'Tanzania' },
+        { value: 'rwanda', label: 'Rwanda' },
+      ],
+      required: true
+    },
+    {
+      name: 'district',
+      label: 'District',
+      type: 'select',
+      placeholder: 'Select district',
+      gridColumn: '1 / -1',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'wakiso', label: 'Wakiso' },
+        { value: 'mukono', label: 'Mukono' },
+        { value: 'jinja', label: 'Jinja' },
+      ],
+      required: true
+    },
+    {
+      name: 'subcounty',
+      label: 'Subcounty',
+      type: 'select',
+      placeholder: 'Select subcounty',
+      options: [
+        { value: 'central', label: 'Central' },
+        { value: 'kawempe', label: 'Kawempe' },
+        { value: 'makindye', label: 'Makindye' },
+        { value: 'nakawa', label: 'Nakawa' },
+      ],
+    },
+    {
+      name: 'county',
+      label: 'County',
+      type: 'select',
+      placeholder: 'Select county',
+      options: [
+        { value: 'kampala', label: 'Kampala' },
+        { value: 'busiro', label: 'Busiro' },
+        { value: 'kyaddondo', label: 'Kyaddondo' },
+      ],
+    },
+    {
+      name: 'parish',
+      label: 'Parish',
+      type: 'select',
+      placeholder: 'Select parish',
+      options: [
+        { value: 'parish1', label: 'Parish 1' },
+        { value: 'parish2', label: 'Parish 2' },
+        { value: 'parish3', label: 'Parish 3' },
+      ],
+    },
+    {
+      name: 'village',
+      label: 'Village',
+      type: 'select',
+      placeholder: 'Select village',
+      options: [
+        { value: 'village1', label: 'Village 1' },
+        { value: 'village2', label: 'Village 2' },
+        { value: 'village3', label: 'Village 3' },
+      ],
+    },
+  ];
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, facility: Facility) => {
     setAnchorEl(event.currentTarget);
@@ -90,6 +211,12 @@ export default function FacilitiesManagement() {
   const handleDelete = () => {
     // Handle delete logic
     handleMenuClose();
+  };
+
+  const handleSaveFacility = (data: Record<string, any>) => {
+    console.log('Facility saved:', data);
+    setAddFacilityDialogOpen(false);
+    // Here you would typically make an API call to save the facility
   };
 
   const facilities: Facility[] = [
@@ -249,6 +376,7 @@ export default function FacilitiesManagement() {
         <Button
           variant="contained"
           startIcon={<Add />}
+          onClick={() => setAddFacilityDialogOpen(true)}
           sx={{ 
             ml: 'auto', 
             textTransform: 'none',
@@ -487,6 +615,16 @@ export default function FacilitiesManagement() {
           Delete
         </MenuItem>
       </Menu>
+
+      {/* Add Facility Dialog - Using SlideDialog Component */}
+      <SlideDialog
+        open={addFacilityDialogOpen}
+        onClose={() => setAddFacilityDialogOpen(false)}
+        title="Add Facility"
+        fields={facilityFields}
+        onSave={handleSaveFacility}
+        saveButtonText="Continue"
+      />
     </Box>
   );
 }

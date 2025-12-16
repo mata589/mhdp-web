@@ -47,6 +47,9 @@ export const AdminSidebar: React.FC = () => {
     navigate('/login');
   };
 
+  // Check if settings route is active
+  const isSettingsActive = location.pathname === '/admin/settings';
+
   return (
     <Drawer
       variant="permanent"
@@ -156,9 +159,11 @@ export const AdminSidebar: React.FC = () => {
             px: 2,
             py: 1.25,
             mb: 1,
-            color: '#6B7280',
+            bgcolor: isSettingsActive ? '#0D9488' : 'transparent',
+            color: isSettingsActive ? '#FFFFFF' : '#6B7280',
             '&:hover': {
-              bgcolor: '#F3F4F6',
+              bgcolor: isSettingsActive ? '#0F766E' : '#F3F4F6',
+              color: isSettingsActive ? '#FFFFFF' : '#1F2937',
             },
           }}
         >
@@ -169,7 +174,7 @@ export const AdminSidebar: React.FC = () => {
             primary="Settings"
             primaryTypographyProps={{
               fontSize: '0.875rem',
-              fontWeight: 500,
+              fontWeight: isSettingsActive ? 600 : 500,
               color: 'inherit',
             }}
           />

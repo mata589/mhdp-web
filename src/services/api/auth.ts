@@ -60,6 +60,24 @@ const MOCK_USERS: User[] = [
     isActive: true,
     lastLogin: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
   },
+  {
+    id: '6',
+    email: 'facility.admin@callcenter.com',
+    name: 'Emily Facility Admin',
+    role: 'facility_admin',
+    hospital: 'Central General Hospital',
+    isActive: true,
+    lastLogin: new Date(),
+  },
+  {
+    id: '7',
+    email: 'facility2.admin@callcenter.com',
+    name: 'David Anderson',
+    role: 'facility_admin',
+    hospital: 'St. Mary Medical Center',
+    isActive: true,
+    lastLogin: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+  },
 ];
 
 // Mock credentials (password is "password123" for all users)
@@ -69,6 +87,8 @@ const MOCK_CREDENTIALS = [
   { email: 'agent@callcenter.com', password: 'password123' },
   { email: 'jane.agent@callcenter.com', password: 'password123' },
   { email: 'supervisor2@callcenter.com', password: 'password123' },
+  { email: 'facility.admin@callcenter.com', password: 'password123' },
+  { email: 'facility2.admin@callcenter.com', password: 'password123' },
 ];
 
 class AuthService {
@@ -273,9 +293,6 @@ class AuthService {
     return newToken;
   }
 
-  // ... (rest of the methods remain the same as in the previous version)
-  // I'll include the key methods but truncate for brevity
-
   /**
    * Get all mock users (for testing/development)
    */
@@ -350,110 +367,105 @@ class AuthService {
   }
 
   /**
- * Register a new user
- */
-/**
- * Register a new user
- */
-async register(data: RegisterData): Promise<User> {
-  const { email, password, firstName, lastName, role } = data;
-  const name = `${firstName} ${lastName}`;
-  const hospital = 'Unknown Hospital'; // Default or modify as needed
+   * Register a new user
+   */
+  async register(data: RegisterData): Promise<User> {
+    const { email, password, firstName, lastName, role } = data;
+    const name = `${firstName} ${lastName}`;
+    const hospital = 'Unknown Hospital'; // Default or modify as needed
 
-  if (!shouldUseMockData()) {
-    try {
-      const response = await fetch(buildApiUrl('/auth/register'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, firstName, lastName, role }),
-        signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-      });
+    if (!shouldUseMockData()) {
+      try {
+        const response = await fetch(buildApiUrl('/auth/register'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password, firstName, lastName, role }),
+          signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
+        });
 
-      if (response.ok) {
-        const result: LoginResponse = await response.json();
-        this.setTokens(result.token, result.refreshToken);
-        this.setUser(result.user);
-        return result.user;
-      } else {
+        if (response.ok) {
+          const result: LoginResponse = await response.json();
+          this.setTokens(result.token, result.refreshToken);
+          this.setUser(result.user);
+          return result.user;
+        } else {
+          throw new Error('Registration failed');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
         throw new Error('Registration failed');
       }
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw new Error('Registration failed');
     }
+
+    // Fallback to mock register
+    return this.mockRegister(data);
   }
 
-  // Fallback to mock register
-  return this.mockRegister(data);
-}
+  private async mockRegister(data: RegisterData): Promise<User> {
+    const { email, password, firstName, lastName, role } = data;
+    const name = `${firstName} ${lastName}`;
+    const hospital = 'Mock Hospital';
 
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-private async mockRegister(data: RegisterData): Promise<User> {
-  const { email, password, firstName, lastName, role } = data;
-  const name = `${firstName} ${lastName}`;
-  const hospital = 'Mock Hospital';
+    if (MOCK_USERS.some(user => user.email === email)) {
+      throw new Error('User already exists');
+    }
 
-  await new Promise(resolve => setTimeout(resolve, 800));
+    const newUser: User = {
+      id: (MOCK_USERS.length + 1).toString(),
+      email,
+      name,
+      role,
+      hospital,
+      isActive: true,
+      lastLogin: new Date(),
+    };
 
-  if (MOCK_USERS.some(user => user.email === email)) {
-    throw new Error('User already exists');
+    MOCK_USERS.push(newUser);
+    MOCK_CREDENTIALS.push({ email, password });
+
+    const token = this.generateMockToken(newUser);
+    const refreshToken = this.generateMockRefreshToken(newUser);
+    this.setTokens(token, refreshToken);
+    this.setUser(newUser);
+
+    return newUser;
   }
 
-  const newUser: User = {
-    id: (MOCK_USERS.length + 1).toString(),
-    email,
-    name,
-    role,
-    hospital,
-    isActive: true,
-    lastLogin: new Date(),
-  };
+  /**
+   * Verify user OTP
+   */
+  async verifyOTP(email: string, otp: string): Promise<boolean> {
+    if (!shouldUseMockData()) {
+      try {
+        const response = await fetch(buildApiUrl('/auth/verify-otp'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, otp }),
+          signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
+        });
 
-  MOCK_USERS.push(newUser);
-  MOCK_CREDENTIALS.push({ email, password });
-
-  const token = this.generateMockToken(newUser);
-  const refreshToken = this.generateMockRefreshToken(newUser);
-  this.setTokens(token, refreshToken);
-  this.setUser(newUser);
-
-  return newUser;
-}
-
-/**
- * Verify user OTP
- */
-async verifyOTP(email: string, otp: string): Promise<boolean> {
-  if (!shouldUseMockData()) {
-    try {
-      const response = await fetch(buildApiUrl('/auth/verify-otp'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, otp }),
-        signal: AbortSignal.timeout(CONFIG.API_TIMEOUT),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.success === true;
-      } else {
-        throw new Error('OTP verification failed');
+        if (response.ok) {
+          const data = await response.json();
+          return data.success === true;
+        } else {
+          throw new Error('OTP verification failed');
+        }
+      } catch (error) {
+        console.error('OTP verification error:', error);
+        return false;
       }
-    } catch (error) {
-      console.error('OTP verification error:', error);
-      return false;
     }
+
+    // Mock verification: Accept only "123456" as valid OTP
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return otp === '123456';
   }
-
-  // Mock verification: Accept only "123456" as valid OTP
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return otp === '123456';
-}
-
 }
 
 // Create and export singleton instance

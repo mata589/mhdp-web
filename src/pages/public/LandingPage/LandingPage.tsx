@@ -13,6 +13,8 @@ import patientsSketchImage from '../../../assets/images/patientsSketchImage.png'
 import lablogos from '../../../assets/images/lablogos.png';
 import providersSketchImage from '../../../assets/images/providersSketchImage.png';
 import supervisorsSketchImage from '../../../assets/images/supervisorsSketchImage.png';
+import { useNavigate } from "react-router-dom";
+
 import {
     Box,
     Typography,
@@ -44,6 +46,7 @@ import {
 
 const LandingPage = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
+const navigate = useNavigate();
 
     const partnerLogos = [
         { name: 'Makerere University', logo: '🎓' },
@@ -135,9 +138,15 @@ const LandingPage = () => {
                         <Button variant="outlined" color="primary" size="medium" sx={{ px: 3, py: 1.2, fontSize: '1rem' }}>
                             Create account
                         </Button>
-                        <Button variant="contained" color="primary" size="medium" sx={{ px: 3, py: 1.2, fontSize: '1rem' }}>
-                            Login
-                        </Button>
+                         <Button
+        variant="contained"
+        color="primary"
+        size="medium"
+        sx={{ px: 3, py: 1.2, fontSize: '1rem' }}
+        onClick={() => navigate("/login")}
+      >
+        Login
+      </Button>
                     </Box>
 
                     <IconButton sx={{ display: { xs: 'flex', md: 'none' }, ml: 2 }}>
