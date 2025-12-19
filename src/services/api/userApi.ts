@@ -5,12 +5,14 @@
 // ============================================
 
 export interface User {
+  role?: string;
   email: string;
   first_name: string;
   last_name: string;
   is_active: boolean;
   designation_name: string;
   role_names: string[];
+  
 }
 // Add this to the AUTH TYPES section
 export interface AuthState {

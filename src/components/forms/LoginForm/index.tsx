@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, CircularProgress, Link, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/AuthContext';
-import type { User } from '../../../types/user.types';
+import type { User } from '../../../services/api/userApi';
+//import type { User } from '../../../types/user.types';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -20,7 +21,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Role-based dashboard routing
+  // Role-based dashboard routing - updated to match App.tsx routes
   const getDashboardRoute = (userRole: string): string => {
     switch (userRole) {
       case 'admin':
@@ -28,9 +29,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
       case 'supervisor':
         return '/supervisor';
       case 'agent':
-        return '/dashboard';
+        return '/agent/dashboard';
+      case 'facility_admin':
+        return '/facility-admin/dashboard';
       default:
-        return '/dashboard'; // fallback to agent dashboard
+        return '/dashboard-redirect'; // Use the redirect helper
     }
   };
 
@@ -47,13 +50,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
     try {
       const user: User = await login(email, password);
       
+      console.log('[LoginForm] Login successful, user:', user);
+      console.log('[LoginForm] User role:', user.role);
+      
       // Navigate to role-appropriate dashboard
-      const dashboardRoute = getDashboardRoute(user.role);
+      const dashboardRoute = getDashboardRoute(user.role!);
       navigate(dashboardRoute, { replace: true });
       
       onSuccess?.();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      console.error('[LoginForm] Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed. Please check your credentials.';
       onError?.(errorMessage);
     } finally {
       setIsLoading(false);
@@ -84,6 +91,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
         margin="normal"
         required
         disabled={isLoading}
+        autoComplete="email"
       />
       
       <TextField
@@ -95,6 +103,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
         margin="normal"
         required
         disabled={isLoading}
+        autoComplete="current-password"
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -156,6 +165,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
           py: 1.5,
           fontSize: '1rem',
           fontWeight: 600,
+          textTransform: 'none',
         }}
       >
         {isLoading ? (
@@ -167,3 +177,5 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError, onForg
     </Box>
   );
 };
+
+export default LoginForm;

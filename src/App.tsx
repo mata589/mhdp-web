@@ -22,34 +22,30 @@ import { AdminLayout } from './components/layouts/AdminLayout/AdminLayout';
 import { ProtectedRoute } from './components/common/ProtectedRoute/ProtectedRoute';
 
 // Pages
-// import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
-import { LoginPage } from './pages/auth/LoginPage';
+
 import { LiveCallInterface } from './pages/agent/LiveCallInterface/LiveCallInterface';
 import { CallSummaryScreen } from './pages/agent/CallSummaryScreen/CallSummaryScreen';
 import { SupervisorDashboard } from './pages/supervisor/SupervisorDashboard/SupervisorDashboard';
-import  Demographics  from './pages/supervisor/Demographics/Demographics';
-
-import  StaffPerformance  from './pages/supervisor/StaffPerformance/StaffPerformance';
-import  SupervisorAnalytics   from './pages/supervisor/Analytics/Analytics';
-import  TopicAnalysis  from './pages/supervisor/TopicAnalysis/TopicAnalysis';
+import Demographics from './pages/supervisor/Demographics/Demographics';
+import StaffPerformance from './pages/supervisor/StaffPerformance/StaffPerformance';
+import SupervisorAnalytics from './pages/supervisor/Analytics/Analytics';
+import TopicAnalysis from './pages/supervisor/TopicAnalysis/TopicAnalysis';
 import QualityMetrics from './pages/supervisor/QualityMetrics/QualityMetrics';
-//import QualityMetricsPopup from './pages/supervisor/SuperviserPopup/QualityMetricsPopup';
-import  CallAgentLeaderboard from './pages/supervisor/SuperviserPopup/CallAgentLeaderboard';
+import CallAgentLeaderboard from './pages/supervisor/SuperviserPopup/CallAgentLeaderboard';
 import AreasForImprovementDrawer from './pages/supervisor/SuperviserPopup/AreasForImprovementDrawer';
 import CallHistoryTab from './pages/supervisor/CallHistoryTab/CallHistoryTab';
 import EscalatedCallReview from './pages/supervisor/EscalatedCallReview/EscalatedCallReview';
 import StaffDetailsPage from './pages/supervisor/StaffDetailsPage/StaffDetailsPage';
 import { CallHistory as SupervisorCallHistory } from './pages/supervisor/CallHistory/CallHistory';
 import { CallDetails as SupervisorCallDetails } from './pages/supervisor/CallDetails/CallDetails';
-import AdminDashboard  from './pages/admin/AdminDashboard/AdminDashboard';
-import FacilityUsersPage  from './pages/admin/FacilityUsersPage/FacilityUsersPage';
-import DashboardOverviewPage  from './pages/admin/DashboardOverviewPage/DashboardOverviewPage';
+import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
+import FacilityUsersPage from './pages/admin/FacilityUsersPage/FacilityUsersPage';
+import DashboardOverviewPage from './pages/admin/DashboardOverviewPage/DashboardOverviewPage';
 import { UserManagement } from './pages/admin/UserManagement/UserManagement';
 import FacilitiesManagement from './pages/admin/FacilitiesManagement/FacilitiesManagement';
 import FacilitiesManagement2 from './pages/admin/FacilitiesManagement2/FacilitiesManagement2';
 import FacilityUserManagement from './pages/admin/FacilityUserManagement/FacilityUserManagement';
 import FacilityDetails from './pages/admin/FacilityDetails/FacilityDetails';
-// import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import { LandingPage } from './pages/public/LandingPage';
 import { CallHistory } from './pages/agent/CallHistory/CallHistory';
 import { Analytics } from './pages/agent/Analytics/Analytics';
@@ -62,8 +58,8 @@ import { AgentDashboard } from './pages/agent/AgentDashboard/AgentDashboard';
 import { CallDetailsPage } from './components/common/CallDetailsPage';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import Settings from './components/Settings/settings';
+import { LoginPage } from './pages/auth/LoginPage';
 
-// import AgentDashboard from './pages/agent/AgentDashboard/AgentDashboard';
 // Create a query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,7 +89,7 @@ const AgentRoutes: React.FC = () => {
       <Route path="/help" element={<div>Help and Support Page</div>} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/call-review/:callId" element={<CallReviewScreen />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/agent/dashboard" replace />} />
     </Routes>
   );
 };
@@ -107,15 +103,13 @@ const SupervisorRoutes: React.FC = () => {
       <Route path="escalated-reviews" element={<EscalatedCallReview />} />
       <Route path="call-history" element={<SupervisorCallHistory />} />
       <Route path="call-detail" element={<SupervisorCallDetails />} />
-    
-      <Route path="staff-performance" element={<StaffPerformance/>} />
-      <Route path="analytics" element={<SupervisorAnalytics/>} />
-      <Route path="Demographics" element={<Demographics/>} />
-      <Route path="TopicAnalysis" element={<TopicAnalysis/>} />
-      <Route path="QualityMetrics" element={<QualityMetrics/>} />
-      <Route path="StaffDetailsPage" element={<StaffDetailsPage/>} />
-      <Route path="CallHistoryTab" element={<CallHistoryTab/>} />
-     
+      <Route path="staff-performance" element={<StaffPerformance />} />
+      <Route path="analytics" element={<SupervisorAnalytics />} />
+      <Route path="Demographics" element={<Demographics />} />
+      <Route path="TopicAnalysis" element={<TopicAnalysis />} />
+      <Route path="QualityMetrics" element={<QualityMetrics />} />
+      <Route path="StaffDetailsPage" element={<StaffDetailsPage />} />
+      <Route path="CallHistoryTab" element={<CallHistoryTab />} />
       <Route path="training" element={<div>Training Materials Page</div>} />
       <Route path="help" element={<div>Help and Support Page</div>} />
       <Route path="settings" element={<Settings />} />
@@ -128,18 +122,18 @@ const SupervisorRoutes: React.FC = () => {
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/admin/" element={<AdminDashboard />} />
-      <Route path="/admin/FacilitiesManagement" element={<FacilitiesManagement />} />
-      <Route path="/admin/FacilitiesManagement2" element={<FacilitiesManagement2/>} />
-      <Route path="/admin/FacilityDetails" element={<FacilityDetails />} />
-      <Route path="/admin/FacilityUsersPage" element={<FacilityUsersPage/>} />
-      <Route path="/admin/FacilityUserManagement" element={<FacilityUserManagement/>} />
-      <Route path="/admin/DashboardOverviewPage" element={<DashboardOverviewPage/>} />
-      <Route path="/admin/system" element={<div>System Health Page</div>} />
-      <Route path="/admin/analytics" element={<div>Analytics Page</div>} />
-      <Route path="/admin/security" element={<div>Security Page</div>} />
-      <Route path="/admin/settings" element={<Settings />} />
-      <Route path="*" element={<Navigate to="/admin/admin" replace />} />
+      <Route index element={<AdminDashboard />} />
+      <Route path="FacilitiesManagement" element={<FacilitiesManagement />} />
+      <Route path="FacilitiesManagement2" element={<FacilitiesManagement2 />} />
+      <Route path="FacilityDetails" element={<FacilityDetails />} />
+      <Route path="FacilityUsersPage" element={<FacilityUsersPage />} />
+      <Route path="FacilityUserManagement" element={<FacilityUserManagement />} />
+      <Route path="DashboardOverviewPage" element={<DashboardOverviewPage />} />
+      <Route path="system" element={<div>System Health Page</div>} />
+      <Route path="analytics" element={<div>Analytics Page</div>} />
+      <Route path="security" element={<div>Security Page</div>} />
+      <Route path="settings" element={<Settings />} />
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 };
@@ -147,8 +141,8 @@ const AdminRoutes: React.FC = () => {
 const FacilityAdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route index element={<ViewFacilityAdmin/>} />
-      <Route path="dashboard" element={<ViewFacilityAdmin/>} />
+      <Route index element={<ViewFacilityAdmin />} />
+      <Route path="dashboard" element={<ViewFacilityAdmin />} />
       <Route path="users" element={<div>Manage Facility Users</div>} />
       <Route path="reports" element={<div>Reports Page</div>} />
       <Route path="analytics" element={<div>Facility Analytics</div>} />
@@ -309,7 +303,7 @@ const RoleBasedDashboardRedirect: React.FC = () => {
     case 'supervisor':
       return <Navigate to="/supervisor" replace />;
     case 'admin':
-      return <Navigate to="/admin/" replace />;
+      return <Navigate to="/admin" replace />;
     case 'facility_admin':
       return <Navigate to="/facility-admin/dashboard" replace />;
     default:

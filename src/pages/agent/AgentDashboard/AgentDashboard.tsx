@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GridLegacy as Grid } from "@mui/material";
-
 import {
   Typography,
   Box,
   Button,
   Avatar,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   Call,
@@ -31,6 +32,13 @@ import { ActionCard } from "../../../components/cards/ActionCard";
 import { MetricCard } from "../../../components/cards/MetricCard";
 import CallActivityTable from "../../../components/table/CallActivityTable";
 
+import type {
+  AgentOverview,
+  CallActivity,
+  AvailabilityStatus,
+} from "../../../types/agent.types";
+import agentApi from "../../../services/api/agentApi";
+
 export const AgentDashboard: React.FC = () => {
   const navigate = useNavigate();
 
@@ -38,68 +46,77 @@ export const AgentDashboard: React.FC = () => {
   const [showIncomingCall, setShowIncomingCall] = useState(false);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [playingCallId, setPlayingCallId] = useState<string | null>(null);
+  
+  // API data states
+  const [overview, setOverview] = useState<AgentOverview | null>(null);
+  const [recentCalls, setRecentCalls] = useState<CallActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [agentName, setAgentName] = useState<string>("Agent");
 
-  // Mock data for recent call activity
-  const recentCalls = [
-    {
-      id: "#2031",
-      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
-      caller: "English",
-      primaryTopic: "Anxiety Management",
-      riskLevel: "Medium" as RiskLevel,
-      outcome: "Advice Given" as CallOutcome,
-      qualityScore: "78%",
-      duration: "8:15",
-      recordingUrl: "https://example.com/recording-2031.mp3",
-    },
-    {
-      id: "#2089",
-      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
-      caller: "French",
-      primaryTopic: "Depression",
-      riskLevel: "High" as RiskLevel,
-      outcome: "Escalated" as CallOutcome,
-      qualityScore: "78%",
-      duration: "12:34",
-      recordingUrl: "https://example.com/recording-2089.mp3",
-    },
-    {
-      id: "#2031",
-      dateTime: "Tue, July 13, 2025 10:43 AM - 10:51 AM",
-      caller: "English",
-      primaryTopic: "Psychosis",
-      riskLevel: "Medium" as RiskLevel,
-      outcome: "Advice Given" as CallOutcome,
-      qualityScore: "80%",
-      duration: "15:22",
-      recordingUrl: "https://example.com/recording-2031-2.mp3",
-    },
-    {
-      id: "#2070",
-      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
-      caller: "English",
-      primaryTopic: "Psychosis",
-      riskLevel: "Low" as RiskLevel,
-      outcome: "Referred" as CallOutcome,
-      qualityScore: "78%",
-      duration: "6:45",
-      recordingUrl: "https://example.com/recording-2070.mp3",
-    },
-    {
-      id: "#2031",
-      dateTime: "Mon, July 13, 2025 10:43 AM - 10:51 AM",
-      caller: "Spanish",
-      primaryTopic: "Depression",
-      riskLevel: "Medium" as RiskLevel,
-      outcome: "Advice Given" as CallOutcome,
-      qualityScore: "78%",
-      duration: "10:18",
-      recordingUrl: "https://example.com/recording-2031-3.mp3",
-    },
-  ];
+  // Fetch agent availability and set status
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const availability = await agentApi.getAvailability();
+        setAgentName(`${availability.first_name} ${availability.last_name}`);
+        
+        // Map API status to AgentStatus
+        const statusMap: Record<AvailabilityStatus, AgentStatus> = {
+          available: "Available",
+          busy: "Busy",
+          away: "Break",
+        };
+        setStatus(statusMap[availability.status]);
+      } catch (err) {
+        console.error("Error fetching availability:", err);
+      }
+    };
 
-  const handleStatusChange = (newStatus: AgentStatus) => {
-    setStatus(newStatus);
+    fetchAvailability();
+  }, []);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch overview and recent calls in parallel
+        const [overviewData, callsData] = await Promise.all([
+          agentApi.getOverview(),
+          agentApi.getRecentCallActivity(5, 0),
+        ]);
+
+        setOverview(overviewData);
+        setRecentCalls(callsData.calls);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const handleStatusChange = async (newStatus: AgentStatus) => {
+    try {
+      // Map AgentStatus to API AvailabilityStatus
+      const statusMap: Record<AgentStatus, AvailabilityStatus> = {
+        Available: "available",
+        Busy: "busy",
+        Break: "away",
+      };
+
+      await agentApi.updateAvailability(statusMap[newStatus]);
+      setStatus(newStatus);
+    } catch (err) {
+      console.error("Error updating status:", err);
+      setError("Failed to update status. Please try again.");
+    }
   };
 
   const handleViewCall = (callId: string) => {
@@ -124,18 +141,15 @@ export const AgentDashboard: React.FC = () => {
 
   const handleAnswer = () => {
     setShowIncomingCall(false);
-    // Navigate to live call interface
     navigate("/agent/live-call");
   };
 
   const handleDecline = () => {
     setShowIncomingCall(false);
-    // Handle decline logic here
   };
 
   const handleVoicemail = () => {
     setShowIncomingCall(false);
-    // Handle voicemail logic here
   };
 
   // If a call is selected, show the call details page
@@ -149,7 +163,95 @@ export const AgentDashboard: React.FC = () => {
   }
 
   // Find the call being played
-  const playingCall = recentCalls.find((call) => call.id === playingCallId);
+  const playingCall = recentCalls.find((call) => call.call_id === playingCallId);
+
+  // Helper function to format duration from seconds
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to format date time
+  const formatDateTime = (startTime: string, endTime: string): string => {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    };
+    
+    const startStr = start.toLocaleString('en-US', options);
+    const endStr = end.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    
+    return `${startStr} - ${endStr}`;
+  };
+
+  // Helper function to map API outcomes to CustomChip outcomes
+  const mapOutcome = (outcome: string): CallOutcome => {
+    const outcomeMap: Record<string, CallOutcome> = {
+      'resolved': 'Advice Given',
+      'escalated': 'Escalated',
+      'referred': 'Referred',
+      'not_escalated': 'Advice Given',
+      'not_answered': 'Referred',
+      'unresolved': 'Referred',
+    };
+    return outcomeMap[outcome] || 'Referred';
+  };
+
+  // Helper function to map API risk levels to CustomChip risk levels
+  const mapRiskLevel = (level: string): RiskLevel => {
+    const levelMap: Record<string, RiskLevel> = {
+      'low': 'Low',
+      'medium': 'Medium',
+      'high': 'High',
+      'critical': 'Critical',
+    };
+    return levelMap[level] || 'Low';
+  };
+
+  // Transform API calls to table format
+  const transformedCalls = recentCalls.map((call) => ({
+    id: call.call_id,
+    dateTime: formatDateTime(call.call_start_time, call.call_end_time),
+    caller: call.language || "Unknown",
+    primaryTopic: call.primary_topic || "N/A",
+    riskLevel: mapRiskLevel(call.risk_level),
+    outcome: mapOutcome(call.outcome),
+    qualityScore: call.quality_score ? `${call.quality_score}%` : "N/A",
+    duration: formatDuration(call.duration_seconds),
+    recordingUrl: call.audio_url,
+    onPlay: () => handlePlayCall(call.call_id),
+    onView: () => handleViewCall(call.call_id),
+  }));
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#fafafa",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -160,12 +262,19 @@ export const AgentDashboard: React.FC = () => {
         position: "relative",
       }}
     >
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
       {/* Call Recording Player Popup */}
       {playingCallId && playingCall && (
         <CallRecordingPlayer
           callId={playingCallId}
-          duration={`0:00 / ${playingCall.duration}`}
-          recordingUrl={playingCall.recordingUrl}
+          duration={`0:00 / ${formatDuration(playingCall.duration_seconds)}`}
+          recordingUrl={playingCall.audio_url}
           isPopup={true}
           open={true}
           onClose={handleClosePlayer}
@@ -429,7 +538,7 @@ export const AgentDashboard: React.FC = () => {
                 fontSize: { xs: "1.5rem", md: "2rem" },
               }}
             >
-              Hey, James
+              Hey, {agentName.split(' ')[0] || "Agent"}
             </Typography>
             <CustomChip label={status} variant="status" />
           </Box>
@@ -493,6 +602,7 @@ export const AgentDashboard: React.FC = () => {
             iconBgColor="#ffa500"
             title="View call history"
             subtitle="Review past calls and insights"
+            onClick={() => navigate("/agent/call-history")}
           />
         </Grid>
 
@@ -502,7 +612,7 @@ export const AgentDashboard: React.FC = () => {
             iconBgColor="#f44336"
             title="Check Voice Mail"
             subtitle="Listen to voice mail messages"
-            onClick={() => navigate("/agent/call-history")}
+            onClick={() => navigate("/agent/voicemails")}
           />
         </Grid>
 
@@ -517,54 +627,61 @@ export const AgentDashboard: React.FC = () => {
       </Grid>
 
       {/* Metrics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            icon={<Call />}
-            iconBgColor="#008080"
-            label="Total Calls"
-            value={32}
-            trend={{ value: "+5% vs last month", isPositive: true }}
-          />
-        </Grid>
+      {overview && (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              icon={<Call />}
+              iconBgColor="#008080"
+              label="Total Calls"
+              value={overview.total_calls}
+              trend={overview.total_calls_change.trend !== 'no_change' ? {
+                value: overview.total_calls_change.percent,
+                isPositive: overview.total_calls_change.trend === "up",
+              } : undefined}
+            />
+          </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            icon={<Assessment />}
-            iconBgColor="#ffa500"
-            label="Calls Today"
-            value={12}
-            trend={{ value: "-1% vs yesterday", isPositive: false }}
-          />
-        </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              icon={<Assessment />}
+              iconBgColor="#ffa500"
+              label="Calls Today"
+              value={overview.calls_today}
+              trend={overview.calls_today_change.trend !== 'no_change' ? {
+                value: overview.calls_today_change.percent,
+                isPositive: overview.calls_today_change.trend === "up",
+              } : undefined}
+            />
+          </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            icon={<Escalator />}
-            iconBgColor="#f44336"
-            label="Escalated Calls"
-            value={2}
-            trend={{ value: "-1% vs yesterday", isPositive: false }}
-          />
-        </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              icon={<Escalator />}
+              iconBgColor="#f44336"
+              label="Escalated Calls"
+              value={overview.escalated_calls}
+              trend={overview.escalated_calls_change.trend !== 'no_change' ? {
+                value: overview.escalated_calls_change.percent,
+                isPositive: overview.escalated_calls_change.trend === "down",
+              } : undefined}
+            />
+          </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            icon={<TrendingUp />}
-            iconBgColor="#607d8b"
-            label="Quality Score"
-            value="82%"
-          />
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              icon={<TrendingUp />}
+              iconBgColor="#607d8b"
+              label="Quality Score"
+              value={overview.quality_score}
+            />
+          </Grid>
         </Grid>
-      </Grid>
+      )}
 
       {/* Recent Call Activity */}
       <CallActivityTable
-        calls={recentCalls.map((call) => ({
-          ...call,
-          onPlay: () => handlePlayCall(call.id),
-          onView: () => handleViewCall(call.id),
-        }))}
+        calls={transformedCalls}
         showFilters={true}
         showPagination={false}
         onViewAll={() => navigate("/agent/call-history")}
