@@ -42,8 +42,8 @@ import {
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../../../contexts/AuthContext"
 
-const DRAWER_WIDTH = 320
-const COLLAPSED_WIDTH = 80
+const DRAWER_WIDTH = 280
+const COLLAPSED_WIDTH = 70
 
 const agentNavItems = [
   { path: "/agent/dashboard", label: "Dashboard", icon: DashboardIcon },
@@ -181,11 +181,9 @@ export const AgentLayout: React.FC<ResponsiveAgentLayoutProps> = ({ children }) 
         })}
       </List>
 
-      <Divider sx={{ mx: isMobile || !desktopSidebarCollapsed ? 2 : 1.5, my: 2, borderColor: "#e5e7eb" }} />
-
       {/* Bottom Navigation */}
       <Box sx={{ mt: "auto", p: isMobile || !desktopSidebarCollapsed ? 2 : 1.5 }}>
-        <Divider sx={{ mb: 2, borderColor: "#e5e7eb", mx: isMobile || !desktopSidebarCollapsed ? -2 : -1.5 }} />
+        <Divider sx={{ mb: 2, borderColor: "#e5e7eb" }} />
 
         <ListItemButton
           onClick={() => handleNavigation("/agent/settings")}
@@ -291,6 +289,11 @@ export const AgentLayout: React.FC<ResponsiveAgentLayoutProps> = ({ children }) 
             borderRight: "1px solid #e5e7eb",
             overflowY: "auto",
             overflowX: "hidden",
+            "&::-webkit-scrollbar": {
+              display: "none",
+            },
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
           }}
         >
           <SidebarContent />
