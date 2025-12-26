@@ -1,5 +1,5 @@
 // src/pages/agent/CallHistory/CallHistory.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -17,6 +17,8 @@ import {
   Select,
   MenuItem,
   FormControl,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -27,85 +29,8 @@ import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGrou
 import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
 import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
 
-const mockCallHistory = [
-  {
-    id: '#2090',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2090\nEnglish',
-    primaryTopic: 'Anxiety',
-    riskLevel: 'medium',
-    outcome: 'Resolved',
-    qualityScore: 78,
-    duration: '10:15',
-    recordingUrl: 'https://example.com/recording-2090.mp3'
-  },
-  {
-    id: '#2031-critical',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2031\nEnglish',
-    primaryTopic: 'Depression',
-    riskLevel: 'critical',
-    outcome: 'Escalated',
-    qualityScore: 81,
-    duration: '8:12',
-    recordingUrl: 'https://example.com/recording-2031-critical.mp3'
-  },
-  {
-    id: '#2034',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2034\nLuganda',
-    primaryTopic: 'Psychosis',
-    riskLevel: 'low',
-    outcome: 'Resolved',
-    qualityScore: 78,
-    duration: '15:30',
-    recordingUrl: 'https://example.com/recording-2034.mp3'
-  },
-  {
-    id: '#2031-high',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2031\nEnglish',
-    primaryTopic: 'Anxiety',
-    riskLevel: 'high',
-    outcome: 'Transferred',
-    qualityScore: 78,
-    duration: '7:45',
-    recordingUrl: 'https://example.com/recording-2031-high.mp3'
-  },
-  {
-    id: '#2063',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2063\nSwahili',
-    primaryTopic: 'Anxiety',
-    riskLevel: 'low',
-    outcome: 'Resolved',
-    qualityScore: 78,
-    duration: '12:20',
-    recordingUrl: 'https://example.com/recording-2063.mp3'
-  },
-  {
-    id: '#2031-low',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2031\nEnglish',
-    primaryTopic: 'Depression',
-    riskLevel: 'low',
-    outcome: 'Transferred',
-    qualityScore: 78,
-    duration: '9:55',
-    recordingUrl: 'https://example.com/recording-2031-low.mp3'
-  },
-  {
-    id: '#2012',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2012\nEnglish',
-    primaryTopic: 'Psychosis',
-    riskLevel: 'medium',
-    outcome: 'Resolved',
-    qualityScore: 78,
-    duration: '11:40',
-    recordingUrl: 'https://example.com/recording-2012.mp3'
-  },
-];
+import type { CallHistoryItem, RiskLevel, CallOutcome } from '../../../types/agent.types';
+import agentApi from '../../../services/api/agentApi';
 
 const getRiskLevelColor = (riskLevel: string) => {
   switch (riskLevel) {
@@ -113,8 +38,6 @@ const getRiskLevelColor = (riskLevel: string) => {
       return { dotColor: '#16a34a', textColor: '#16a34a', label: 'Low' };
     case 'medium':
       return { dotColor: '#d97706', textColor: '#d97706', label: 'Medium' };
-    case 'critical':
-      return { dotColor: '#dc2626', textColor: '#dc2626', label: 'Critical' };
     case 'high':
       return { dotColor: '#dc2626', textColor: '#dc2626', label: 'High' };
     default:
@@ -137,7 +60,6 @@ const getRiskChipProps = (riskLevel: string) => {
       border = '1px solid #fcd34d';
       break;
     case 'high':
-    case 'critical':
       bgcolor = '#fef2f2';
       color = '#dc2626';
       border = '1px solid #fecaca';
@@ -174,7 +96,7 @@ const getRiskChipProps = (riskLevel: string) => {
 
 const getOutcomeChipProps = (outcome: string) => {
   switch (outcome) {
-    case 'Resolved':
+    case 'resolved':
       return {
         sx: {
           bgcolor: '#f0fdf4',
@@ -183,7 +105,7 @@ const getOutcomeChipProps = (outcome: string) => {
           '& .MuiChip-label': { fontWeight: 500 }
         }
       };
-    case 'Escalated':
+    case 'escalated':
       return {
         sx: {
           bgcolor: '#fef2f2',
@@ -192,7 +114,7 @@ const getOutcomeChipProps = (outcome: string) => {
           '& .MuiChip-label': { fontWeight: 500 }
         }
       };
-    case 'Transferred':
+    case 'unresolved':
       return {
         sx: {
           bgcolor: '#eff6ff',
@@ -213,15 +135,80 @@ const getOutcomeChipProps = (outcome: string) => {
   }
 };
 
+const formatDateTime = (startTime: string, endTime: string) => {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  
+  const dateOptions: Intl.DateTimeFormatOptions = { 
+    weekday: 'short', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: true 
+  };
+  
+  const datePart = start.toLocaleDateString('en-US', dateOptions);
+  const startTimePart = start.toLocaleTimeString('en-US', timeOptions);
+  const endTimePart = end.toLocaleTimeString('en-US', timeOptions);
+  
+  return `${datePart}\n${startTimePart} - ${endTimePart}`;
+};
+
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 export const CallHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('04/08/2025 - 04/09/2025');
-  const [statusFilter, setStatusFilter] = useState('All status');
-  const [riskFilter, setRiskFilter] = useState('All risk levels');
+  const [dateFilter, setDateFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'resolved' | 'unresolved' | 'escalated' | 'transferred'>('all');
+  const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [playingCallId, setPlayingCallId] = useState<string | null>(null);
+  const [calls, setCalls] = useState<CallHistoryItem[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const itemsPerPage = 10;
+
+  // Fetch call history data
+  useEffect(() => {
+    const fetchCallHistory = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const offset = (currentPage - 1) * itemsPerPage;
+        const response = await agentApi.getCallHistory(
+          itemsPerPage,
+          offset,
+          searchTerm || undefined,
+          undefined, // startDate
+          undefined, // endDate
+          riskFilter !== 'all' ? riskFilter : undefined,
+          statusFilter !== 'all' ? statusFilter as 'resolved' | 'unresolved' | 'escalated' | 'transferred' : undefined
+        );
+        
+        setCalls(response.results);
+        setTotalResults(response.total_results);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch call history');
+        console.error('Error fetching call history:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCallHistory();
+  }, [currentPage, searchTerm, riskFilter, statusFilter]);
 
   // If a call is selected, show the call details page
   if (selectedCallId) {
@@ -233,21 +220,10 @@ export const CallHistory: React.FC = () => {
     );
   }
 
-  const filteredCalls = mockCallHistory.filter(call => {
-    const matchesSearch = call.callerID.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      call.primaryTopic.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All status' || call.outcome === statusFilter;
-    const matchesRisk = riskFilter === 'All risk levels' || getRiskLevelColor(call.riskLevel).label === riskFilter;
-    // Date filter logic can be added here by parsing call.dateTime.split('\n')[0]
-    // For now, assuming the default range shows all (as dates may not match exactly)
-    return matchesSearch && matchesStatus && matchesRisk;
-  });
-
-  const totalPages = Math.ceil(filteredCalls.length / itemsPerPage);
+  const totalPages = Math.ceil(totalResults / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredCalls.length);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalResults);
   const startItem = startIndex + 1;
-  const displayedCalls = filteredCalls.slice(startIndex, endIndex);
 
   const handleViewCall = (callId: string) => {
     setSelectedCallId(callId);
@@ -261,8 +237,12 @@ export const CallHistory: React.FC = () => {
     setPlayingCallId(null);
   };
 
+  const handleSearch = () => {
+    setCurrentPage(1); // Reset to first page on new search
+  };
+
   // Find the call being played
-  const playingCall = mockCallHistory.find(call => call.id === playingCallId);
+  const playingCall = calls.find(call => call.call_id === playingCallId);
 
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
@@ -270,19 +250,21 @@ export const CallHistory: React.FC = () => {
       {playingCallId && playingCall && (
         <CallRecordingPlayer
           callId={playingCallId}
-          duration={`0:00 / ${playingCall.duration}`}
-          recordingUrl={playingCall.recordingUrl}
+          duration={`0:00 / ${formatDuration(playingCall.duration_seconds)}`}
+          recordingUrl={playingCall.audio_url}
           isPopup={true}
           open={true}
           onClose={handleClosePlayer}
         />
       )}
+      
       {/* Header */}
       <Box sx={{ mb: { xs: 2, sm: 3 } }}>
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
           Call history
         </Typography>
       </Box>
+      
       {/* Search and Filters */}
       <Box sx={{
         mb: 3,
@@ -292,9 +274,10 @@ export const CallHistory: React.FC = () => {
         alignItems: { xs: 'stretch', sm: 'center' }
       }}>
         <TextField
-          placeholder="Search by caller ID, agent or topic..."
+          placeholder="Search by caller ID or topic..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           sx={{
             flex: { xs: '1 1 100%', sm: '1 1 auto' },
             '& .MuiOutlinedInput-root': {
@@ -311,33 +294,17 @@ export const CallHistory: React.FC = () => {
             ),
           }}
         />
-        <FormControl sx={{ 
-          minWidth: { xs: '100%', sm: 180 },
-          flex: { xs: '1 1 100%', sm: '0 0 auto' }
-        }}>
-          <Select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            displayEmpty
-            sx={{
-              bgcolor: 'white',
-              height: 40,
-              fontSize: '14px',
-              '& .MuiSelect-select': {
-                py: 1,
-              },
-            }}
-          >
-            <MenuItem value="04/08/2025 - 04/09/2025">04/08/2025 - 04/09/2025</MenuItem>
-          </Select>
-        </FormControl>
+        
         <FormControl sx={{ 
           minWidth: { xs: '100%', sm: 120 },
           flex: { xs: '1 1 100%', sm: '0 0 auto' }
         }}>
           <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value as 'all' | 'resolved' | 'unresolved' | 'escalated' | 'transferred');
+              setCurrentPage(1);
+            }}
             displayEmpty
             sx={{
               bgcolor: 'white',
@@ -348,19 +315,23 @@ export const CallHistory: React.FC = () => {
               },
             }}
           >
-            <MenuItem value="All status">All status</MenuItem>
-            <MenuItem value="Resolved">Resolved</MenuItem>
-            <MenuItem value="Escalated">Escalated</MenuItem>
-            <MenuItem value="Transferred">Transferred</MenuItem>
+            <MenuItem value="all">All status</MenuItem>
+            <MenuItem value="resolved">Resolved</MenuItem>
+            <MenuItem value="escalated">Escalated</MenuItem>
+            <MenuItem value="unresolved">Unresolved</MenuItem>
           </Select>
         </FormControl>
+        
         <FormControl sx={{ 
           minWidth: { xs: '100%', sm: 140 },
           flex: { xs: '1 1 100%', sm: '0 0 auto' }
         }}>
           <Select
             value={riskFilter}
-            onChange={(e) => setRiskFilter(e.target.value)}
+            onChange={(e) => {
+              setRiskFilter(e.target.value as RiskLevel | 'all');
+              setCurrentPage(1);
+            }}
             displayEmpty
             sx={{
               bgcolor: 'white',
@@ -371,13 +342,13 @@ export const CallHistory: React.FC = () => {
               },
             }}
           >
-            <MenuItem value="All risk levels">All risk levels</MenuItem>
-            <MenuItem value="Low">Low</MenuItem>
-            <MenuItem value="Medium">Medium</MenuItem>
-            <MenuItem value="High">High</MenuItem>
-            <MenuItem value="Critical">Critical</MenuItem>
+            <MenuItem value="all">All risk levels</MenuItem>
+            <MenuItem value="low">Low</MenuItem>
+            <MenuItem value="medium">Medium</MenuItem>
+            <MenuItem value="high">High</MenuItem>
           </Select>
         </FormControl>
+        
         <Button
           startIcon={<FilterListIcon />}
           sx={{
@@ -397,193 +368,224 @@ export const CallHistory: React.FC = () => {
           More Filters
         </Button>
       </Box>
-      {/* Call History Table */}
-      <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-        <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 120
-                }}>
-                  Date & Time
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 100
-                }}>
-                  Caller ID
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 100
-                }}>
-                  Primary Topic
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 100
-                }}>
-                  Risk level
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 100
-                }}>
-                  Outcome
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 100
-                }}>
-                  Quality Score
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 80
-                }}>
-                  Action
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {displayedCalls.map((call) => {
-                const riskStyle = getRiskLevelColor(call.riskLevel);
-                const outcomeProps = getOutcomeChipProps(call.outcome);
-                return (
-                  <TableRow
-                    key={call.id}
-                    sx={{
-                      '&:hover': { bgcolor: '#f9fafb' },
-                      borderBottom: '1px solid #f3f4f6',
-                    }}
-                  >
-                    <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#111827',
-                          whiteSpace: 'pre-line',
-                          lineHeight: 1.4
-                        }}
-                      >
-                        {call.dateTime}
-                      </Typography>
+      
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Call History Table */}
+          <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 120
+                    }}>
+                      Date & Time
                     </TableCell>
-                    <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#111827',
-                          whiteSpace: 'pre-line',
-                          lineHeight: 1.4
-                        }}
-                      >
-                        {call.callerID}
-                      </Typography>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Caller ID
                     </TableCell>
-                    <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                      <Typography variant="body2" sx={{ color: '#111827' }}>
-                        {call.primaryTopic}
-                      </Typography>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Primary Topic
                     </TableCell>
-                    <TableCell sx={{ py: 2 }}>
-                      <Chip
-                        label={riskStyle.label}
-                        size="small"
-                        variant="outlined"
-                        {...getRiskChipProps(call.riskLevel)}
-                      />
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Risk level
                     </TableCell>
-                    <TableCell sx={{ py: 2 }}>
-                      <Chip
-                        label={call.outcome}
-                        size="small"
-                        variant="outlined"
-                        {...outcomeProps}
-                      />
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Outcome
                     </TableCell>
-                    <TableCell sx={{ py: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Star sx={{ fontSize: 14, color: '#fbbf24' }} />
-                        <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '14px' }, color: '#111827' }}>
-                          {call.qualityScore}%
-                        </Typography>
-                      </Box>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Quality Score
                     </TableCell>
-                    <TableCell sx={{ py: 2 }}>
-                      <ActionButtonsGroup
-                        onPlay={() => handlePlayCall(call.id)}
-                        onView={() => handleViewCall(call.id)}
-                      />
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 80
+                    }}>
+                      Action
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-      {/* Pagination */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
-          Page {startItem}-{endIndex} of {filteredCalls.length} results
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            sx={{
-              color: '#6b7280',
-              fontSize: '14px',
-              textTransform: 'none',
-              minWidth: 'auto',
-              '&:disabled': {
-                color: '#d1d5db',
-              },
-            }}
-          >
-            ‹ Previous
-          </Button>
-          <Button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            sx={{
-              color: '#6b7280',
-              fontSize: '14px',
-              textTransform: 'none',
-              minWidth: 'auto',
-              '&:disabled': {
-                color: '#d1d5db',
-              },
-            }}
-          >
-            Next ›
-          </Button>
-        </Box>
-      </Box>
+                </TableHead>
+                <TableBody>
+                  {calls.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No call history found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    calls.map((call) => {
+                      const riskStyle = getRiskLevelColor(call.risk_level);
+                      const outcomeProps = getOutcomeChipProps(call.outcome);
+                      return (
+                        <TableRow
+                          key={call.call_id}
+                          sx={{
+                            '&:hover': { bgcolor: '#f9fafb' },
+                            borderBottom: '1px solid #f3f4f6',
+                          }}
+                        >
+                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: '#111827',
+                                whiteSpace: 'pre-line',
+                                lineHeight: 1.4
+                              }}
+                            >
+                              {formatDateTime(call.call_start_time, call.call_end_time)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: '#111827',
+                                whiteSpace: 'pre-line',
+                                lineHeight: 1.4
+                              }}
+                            >
+                              {call.caller_id}
+                              {call.language && `\n${call.language}`}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                            <Typography variant="body2" sx={{ color: '#111827' }}>
+                              {call.primary_topic || 'N/A'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Chip
+                              label={riskStyle.label}
+                              size="small"
+                              variant="outlined"
+                              {...getRiskChipProps(call.risk_level)}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Chip
+                              label={call.outcome.charAt(0).toUpperCase() + call.outcome.slice(1)}
+                              size="small"
+                              variant="outlined"
+                              {...outcomeProps}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Star sx={{ fontSize: 14, color: '#fbbf24' }} />
+                              <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '14px' }, color: '#111827' }}>
+                                {call.quality_score !== null ? `${call.quality_score}%` : 'N/A'}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <ActionButtonsGroup
+                              onPlay={() => handlePlayCall(call.call_id)}
+                              onView={() => handleViewCall(call.call_id)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+          
+          {/* Pagination */}
+          {totalResults > 0 && (
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
+                Page {startItem}-{endIndex} of {totalResults} results
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  sx={{
+                    color: '#6b7280',
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    '&:disabled': {
+                      color: '#d1d5db',
+                    },
+                  }}
+                >
+                  ‹ Previous
+                </Button>
+                <Button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  sx={{
+                    color: '#6b7280',
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    '&:disabled': {
+                      color: '#d1d5db',
+                    },
+                  }}
+                >
+                  Next ›
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </>
+      )}
     </Box>
   );
 };

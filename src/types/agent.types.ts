@@ -4,7 +4,7 @@
 // COMMON TYPES
 // ============================================
 
-export type RiskLevel = 'low' | 'medium' | 'high';
+
 export type CallStatus = 'answered' | 'not_answered' | 'voicemail' | 'missed';
 export type CallOutcome = 'resolved' | 'unresolved' | 'escalated' | 'not_escalated' | 'not_answered';
 export type AvailabilityStatus = 'available' | 'busy' | 'away';
@@ -14,7 +14,17 @@ export type EscalationType = 'manual' | 'automatic';
 export type CallerGender = 'male' | 'female' | 'unknown';
 export type CallerType = 'new' | 'returning' | 'unknown';
 export type Sentiment = 'positive' | 'negative' | 'neutral';
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
+export type VoicemailStatus =
+  | 'resolved'
+  | 'unresolved'
+  | 'not_escalated'
+  | 'escalated';
+
+export type MissedCallStatus =
+  | 'missed'
+  | 'returned';
 export interface ChangeMetric {
   percent: string;
   trend: 'up' | 'down' | 'no_change';
@@ -103,11 +113,12 @@ export interface VoicemailsResponse {
 export interface MissedCall {
   call_id: string;
   caller_id: string;
+  call_count: number;
   risk_level: RiskLevel;
-  call_start_time: string;
-  call_end_time: string;
-  duration_seconds: number;
   status: 'missed' | 'returned';
+  last_call_start_time: string;
+  last_call_end_time: string;
+  created_at: string;
   audio_url: string;
 }
 

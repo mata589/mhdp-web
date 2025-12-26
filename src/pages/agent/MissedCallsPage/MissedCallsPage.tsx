@@ -1,185 +1,223 @@
 // src/pages/agent/MissedCallsPage/MissedCallsPage.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Paper,
   Typography,
-  Button,
-  Card,
-  Chip,
-  TextField,
-  InputAdornment,
-  Select,
-  MenuItem,
-  FormControl,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Menu,
-  Grid,
-  useTheme,
-  useMediaQuery,
+  Chip,
+  Button,
+  TextField,
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  FilterList as FilterIcon,
+  FilterList as FilterListIcon,
   Visibility as ViewIcon,
   Phone as CallBackIcon,
-  KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-interface MissedCall {
-  id: string;
-  callerId: string;
-  date: string;
-  time: string;
-  timeRange: string;
-  callCount: number;
-  riskLevel: 'Low' | 'Medium' | 'High' | 'Critical';
-  status: 'Missed' | 'Returned';
-  callerType: 'Patient' | 'Family' | 'Professional';
-}
+import type { MissedCall, RiskLevel, MissedCallStatus } from '../../../types/agent.types';
+import agentApi from '../../../services/api/agentApi';
 
-// Mock data - replace with actual API call (updated dates to November 2025)
-const mockMissedCalls: MissedCall[] = [
-  {
-    id: '2090',
-    callerId: '#2090',
-    date: 'Fri, Nov 21, 2025',
-    time: '10:43 AM',
-    timeRange: '10:43 AM - 10:51 AM',
-    callCount: 3,
-    riskLevel: 'Medium',
-    status: 'Returned',
-    callerType: 'Patient',
-  },
-  {
-    id: '2246',
-    callerId: '#2246',
-    date: 'Fri, Nov 21, 2025',
-    time: '10:43 AM',
-    timeRange: '10:43 AM - 10:51 AM',
-    callCount: 8,
-    riskLevel: 'Critical',
-    status: 'Missed',
-    callerType: 'Family',
-  },
-  {
-    id: '6043',
-    callerId: '#6043',
-    date: 'Fri, Nov 21, 2025',
-    time: '10:43 AM',
-    timeRange: '10:43 AM - 10:51 AM',
-    callCount: 1,
-    riskLevel: 'Low',
-    status: 'Missed',
-    callerType: 'Professional',
-  },
-  {
-    id: '2056',
-    callerId: '#2056',
-    date: 'Thu, Nov 20, 2025',
-    time: '2:30 PM',
-    timeRange: '2:30 PM - 2:45 PM',
-    callCount: 4,
-    riskLevel: 'High',
-    status: 'Missed',
-    callerType: 'Patient',
-  },
-  {
-    id: '1031',
-    callerId: '#1031',
-    date: 'Thu, Nov 20, 2025',
-    time: '2:30 PM',
-    timeRange: '2:30 PM - 2:45 PM',
-    callCount: 1,
-    riskLevel: 'Low',
-    status: 'Returned',
-    callerType: 'Family',
-  },
-  {
-    id: '2031',
-    callerId: '#2031',
-    date: 'Wed, Nov 19, 2025',
-    time: '9:15 AM',
-    timeRange: '9:15 AM - 9:30 AM',
-    callCount: 1,
-    riskLevel: 'Low',
-    status: 'Returned',
-    callerType: 'Professional',
-  },
-  {
-    id: '1390',
-    callerId: '#1390',
-    date: 'Wed, Nov 19, 2025',
-    time: '9:15 AM',
-    timeRange: '9:15 AM - 9:30 AM',
-    callCount: 2,
-    riskLevel: 'Medium',
-    status: 'Returned',
-    callerType: 'Patient',
-  },
-  // Add more mock data to simulate 60 items
-  ...Array.from({ length: 53 }, (_, i) => ({
-    id: `mock-${i + 1}`,
-    callerId: `#mock-${i + 1}`,
-    date: ['Fri, Nov 21, 2025', 'Thu, Nov 20, 2025', 'Wed, Nov 19, 2025'][i % 3],
-    time: '10:43 AM',
-    timeRange: '10:43 AM - 10:51 AM',
-    callCount: Math.floor(Math.random() * 10) + 1,
-    riskLevel: (['Low', 'Medium', 'High', 'Critical'] as const)[i % 4],
-    status: (['Missed', 'Returned'] as const)[i % 2],
-    callerType: (['Patient', 'Family', 'Professional'] as const)[i % 3],
-  })),
-];
+const getRiskLevelColor = (riskLevel: RiskLevel) => {
+  switch (riskLevel) {
+    case 'low':
+      return { dotColor: '#16a34a', textColor: '#16a34a', label: 'Low' };
+    case 'medium':
+      return { dotColor: '#d97706', textColor: '#d97706', label: 'Medium' };
+    case 'high':
+      return { dotColor: '#dc2626', textColor: '#dc2626', label: 'High' };
+    case 'critical':
+      return { dotColor: '#dc2626', textColor: '#dc2626', label: 'Critical' };
+    default:
+      return { dotColor: '#6b7280', textColor: '#6b7280', label: 'Unknown' };
+  }
+};
+
+const getRiskChipProps = (riskLevel: RiskLevel) => {
+  const riskStyle = getRiskLevelColor(riskLevel);
+  let bgcolor, color, border;
+  switch (riskLevel) {
+    case 'low':
+      bgcolor = '#f0fdf4';
+      color = '#16a34a';
+      border = '1px solid #bbf7d0';
+      break;
+    case 'medium':
+      bgcolor = '#fef3c7';
+      color = '#d97706';
+      border = '1px solid #fcd34d';
+      break;
+    case 'high':
+    case 'critical':
+      bgcolor = '#fef2f2';
+      color = '#dc2626';
+      border = '1px solid #fecaca';
+      break;
+    default:
+      bgcolor = '#f9fafb';
+      color = '#6b7280';
+      border = '1px solid #e5e7eb';
+  }
+  return {
+    sx: {
+      bgcolor,
+      color,
+      border,
+      height: 24,
+      '& .MuiChip-label': {
+        fontWeight: 500,
+        fontSize: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        '&::before': {
+          content: '""',
+          width: 6,
+          height: 6,
+          bgcolor: riskStyle.dotColor,
+          borderRadius: '50%',
+          mr: 0.5,
+        }
+      }
+    }
+  };
+};
+
+const getStatusChipProps = (status: string) => {
+  switch (status) {
+    case 'returned':
+      return {
+        sx: {
+          bgcolor: '#f0fdf4',
+          color: '#16a34a',
+          border: '1px solid #bbf7d0',
+          '& .MuiChip-label': { fontWeight: 500 }
+        }
+      };
+    case 'missed':
+      return {
+        sx: {
+          bgcolor: '#fef2f2',
+          color: '#dc2626',
+          border: '1px solid #fecaca',
+          '& .MuiChip-label': { fontWeight: 500 }
+        }
+      };
+    default:
+      return {
+        sx: {
+          bgcolor: '#f9fafb',
+          color: '#6b7280',
+          border: '1px solid #e5e7eb',
+          '& .MuiChip-label': { fontWeight: 500 }
+        }
+      };
+  }
+};
+
+const formatDateTime = (startTime: string, endTime: string) => {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  
+  const dateOptions: Intl.DateTimeFormatOptions = { 
+    weekday: 'short', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: true 
+  };
+  
+  const datePart = start.toLocaleDateString('en-US', dateOptions);
+  const startTimePart = start.toLocaleTimeString('en-US', timeOptions);
+  const endTimePart = end.toLocaleTimeString('en-US', timeOptions);
+  
+  return `${datePart}\n${startTimePart} - ${endTimePart}`;
+};
+
+const calculateDuration = (startTime: string, endTime: string) => {
+  const start = new Date(startTime).getTime();
+  const end = new Date(endTime).getTime();
+  const durationMs = end - start;
+  const seconds = Math.floor(durationMs / 1000);
+  return seconds;
+};
+
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const formatStatusLabel = (status: string) => {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
 
 export const MissedCallsPage: React.FC = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateRange, setDateRange] = useState('11/15/2025 - 11/22/2025');
-  const [statusFilter, setStatusFilter] = useState('All status');
-  const [riskLevelFilter, setRiskLevelFilter] = useState('All risk levels');
-  const [callCountFilter, setCallCountFilter] = useState('All call counts');
-  const [callerTypeFilter, setCallerTypeFilter] = useState('All caller types');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<MissedCallStatus | 'all'>('all');
+  const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filtersMenuAnchor, setFiltersMenuAnchor] = useState<null | HTMLElement>(null);
-  const itemsPerPage = isMobile ? 5 : 10;
+  const [missedCalls, setMissedCalls] = useState<MissedCall[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const itemsPerPage = 10;
 
-  // Filter logic
-  const filteredMissedCalls = useMemo(() => {
-    return mockMissedCalls.filter((call) => {
-      // Search filter (by caller ID or call count as proxy for topic)
-      const matchesSearch = call.callerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        call.callCount.toString().includes(searchQuery);
-      // Status filter
-      const matchesStatus = statusFilter === 'All status' || call.status === statusFilter;
-      // Risk level filter
-      const matchesRisk = riskLevelFilter === 'All risk levels' || call.riskLevel === riskLevelFilter;
-      // Call count filter
-      let matchesCallCount = true;
-      if (callCountFilter !== 'All call counts') {
-        if (callCountFilter === 'low') matchesCallCount = call.callCount < 3;
-        else if (callCountFilter === 'medium') matchesCallCount = call.callCount >= 3 && call.callCount <= 6;
-        else if (callCountFilter === 'high') matchesCallCount = call.callCount > 6;
+  // Fetch missed calls data
+  useEffect(() => {
+    const fetchMissedCalls = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const offset = (currentPage - 1) * itemsPerPage;
+        const response = await agentApi.getMissedCalls(
+          itemsPerPage,
+          offset,
+          searchTerm || undefined,
+          undefined, // startDate
+          undefined, // endDate
+          statusFilter !== 'all' ? statusFilter : undefined,
+          riskFilter !== 'all' && riskFilter !== 'critical' ? riskFilter : undefined
+        );
+        
+        setMissedCalls(response.results);
+        setTotalResults(response.total_results);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch missed calls');
+        console.error('Error fetching missed calls:', err);
+      } finally {
+        setLoading(false);
       }
-      // Caller type filter
-      const matchesCallerType = callerTypeFilter === 'All caller types' || call.callerType === callerTypeFilter;
-      // Date range filter (simplified - assume all match for demo)
-      const matchesDate = true;
-      return matchesSearch && matchesStatus && matchesRisk && matchesCallCount && matchesCallerType && matchesDate;
-    });
-  }, [searchQuery, statusFilter, riskLevelFilter, callCountFilter, callerTypeFilter, dateRange]);
+    };
 
-  const totalItems = filteredMissedCalls.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+    fetchMissedCalls();
+  }, [currentPage, searchTerm, riskFilter, statusFilter]);
+
+  const totalPages = Math.ceil(totalResults / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedMissedCalls = filteredMissedCalls.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalResults);
+  const startItem = startIndex + 1;
 
   const handleView = (callId: string) => {
     navigate(`/agent/call-review/${callId}`);
@@ -187,672 +225,349 @@ export const MissedCallsPage: React.FC = () => {
 
   const handleCallBack = (callId: string) => {
     console.log('Calling back:', callId);
+    // Implement call back functionality here
   };
 
-  const getRiskLevelColor = (level: MissedCall['riskLevel']) => {
-    switch (level) {
-      case 'Critical':
-        return { bgcolor: '#fee2e2', color: '#dc2626' };
-      case 'High':
-        return { bgcolor: '#fed7d7', color: '#ea580c' };
-      case 'Medium':
-        return { bgcolor: '#fef3c7', color: '#d97706' };
-      case 'Low':
-        return { bgcolor: '#d1fae5', color: '#059669' };
-      default:
-        return { bgcolor: '#f3f4f6', color: '#6b7280' };
-    }
+  const handleSearch = () => {
+    setCurrentPage(1); // Reset to first page on new search
   };
 
-  const getStatusColor = (status: MissedCall['status']) => {
-    switch (status) {
-      case 'Returned':
-        return { bgcolor: '#dcfce7', color: '#059669' };
-      case 'Missed':
-        return { bgcolor: '#fee2e2', color: '#dc2626' };
-      default:
-        return { bgcolor: '#f3f4f6', color: '#6b7280' };
-    }
-  };
-
-  const handleFiltersMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setFiltersMenuAnchor(event.currentTarget);
-  };
-
-  const handleFiltersMenuClose = () => {
-    setFiltersMenuAnchor(null);
-  };
-
-  const handleApplyFilters = () => {
-    handleFiltersMenuClose();
-  };
-
-  if (isMobile) {
-    // Mobile: Card-based layout
-    return (
-      <Box sx={{ p: { xs: 1, sm: 3 }, maxWidth: '1400px', mx: 'auto' }}>
-        {/* Filters Bar - Stacked on mobile */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              placeholder="Search by caller ID or topic..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              placeholder="Select date range"
-              size="small"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ArrowDownIcon sx={{ color: '#9ca3af' }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <FormControl fullWidth size="small" sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: '14px',
-              }
-            }}>
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as string)}
-                displayEmpty
-                sx={{ fontSize: '14px' }}
-              >
-                <MenuItem value="All status">All status</MenuItem>
-                <MenuItem value="Missed">Missed</MenuItem>
-                <MenuItem value="Returned">Returned</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6}>
-            <FormControl fullWidth size="small" sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: '14px',
-              }
-            }}>
-              <Select
-                value={riskLevelFilter}
-                onChange={(e) => setRiskLevelFilter(e.target.value as string)}
-                displayEmpty
-                sx={{ fontSize: '14px' }}
-              >
-                <MenuItem value="All risk levels">All risk levels</MenuItem>
-                <MenuItem value="Low">Low</MenuItem>
-                <MenuItem value="Medium">Medium</MenuItem>
-                <MenuItem value="High">High</MenuItem>
-                <MenuItem value="Critical">Critical</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<FilterIcon />}
-              onClick={handleFiltersMenuOpen}
-              sx={{
-                borderColor: '#d1d5db',
-                color: '#6b7280',
-                borderRadius: '8px',
-                fontSize: '14px',
-                '&:hover': {
-                  borderColor: '#9ca3af',
-                  bgcolor: '#f9fafb'
-                }
-              }}
-            >
-              More Filters
-            </Button>
-          </Grid>
-        </Grid>
-
-        {/* Missed Calls as Cards */}
-        <Card sx={{ boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-          {paginatedMissedCalls.map((call) => (
-            <Box
-              key={call.id}
-              sx={{
-                p: 2,
-                borderBottom: '1px solid #f3f4f6',
-                '&:last-child': { borderBottom: 'none' },
-                '&:hover': { bgcolor: '#f9fafb' }
-              }}
-            >
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} md={2}>
-                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-                    {call.date}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {call.timeRange}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Typography variant="body2" fontWeight={500}>
-                    {call.callerId}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={1}>
-                  <Typography variant="body2" fontWeight={500}>
-                    {call.callCount}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Chip
-                    label={call.riskLevel}
-                    size="small"
-                    sx={{
-                      ...getRiskLevelColor(call.riskLevel),
-                      fontWeight: 500,
-                      fontSize: '12px',
-                      height: 24,
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Chip
-                    label={call.status}
-                    size="small"
-                    sx={{
-                      ...getStatusColor(call.status),
-                      fontWeight: 500,
-                      fontSize: '12px',
-                      height: 24,
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'center', md: 'flex-end' } }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<ViewIcon />}
-                      onClick={() => handleView(call.id)}
-                      sx={{
-                        borderColor: '#0d9488',
-                        color: '#0d9488',
-                        '&:hover': {
-                          bgcolor: '#f0fdfa',
-                          borderColor: '#0d9488'
-                        },
-                        minWidth: '70px',
-                        fontSize: '12px',
-                      }}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<CallBackIcon />}
-                      onClick={() => handleCallBack(call.id)}
-                      sx={{
-                        bgcolor: '#0d9488',
-                        '&:hover': { bgcolor: '#0f766e' },
-                        minWidth: '100px',
-                        fontSize: '12px',
-                      }}
-                    >
-                      Call back
-                    </Button>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          ))}
-        </Card>
-
-        {/* Pagination */}
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          p: 2,
-          borderTop: '1px solid #f3f4f6',
+  return (
+    <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Header */}
+      <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+        <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
+          Missed Calls
+        </Typography>
+      </Box>
+      
+      {/* Search and Filters */}
+      <Box sx={{
+        mb: 3,
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 2,
+        alignItems: { xs: 'stretch', sm: 'center' }
+      }}>
+        <TextField
+          placeholder="Search by caller ID..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          sx={{
+            flex: { xs: '1 1 100%', sm: '1 1 auto' },
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'white',
+              height: 40,
+              fontSize: '14px',
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 18, color: '#9ca3af' }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <FormControl sx={{ 
+          minWidth: { xs: '100%', sm: 120 },
+          flex: { xs: '1 1 100%', sm: '0 0 auto' }
         }}>
-          <Typography variant="body2" color="text.secondary">
-            Page {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
-              sx={{
-                borderColor: '#e5e7eb',
-                color: '#6b7280',
-                '&:disabled': {
-                  borderColor: '#f3f4f6',
-                  color: '#d1d5db'
-                }
-              }}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
-              sx={{
-                borderColor: '#e5e7eb',
-                color: '#374151',
-                '&:hover': {
-                  borderColor: '#0d9488',
-                  color: '#0d9488'
-                }
-              }}
-            >
-              Next
-            </Button>
-          </Box>
-        </Box>
-
-        {/* Filters Menu */}
-        <Menu
-          anchorEl={filtersMenuAnchor}
-          open={Boolean(filtersMenuAnchor)}
-          onClose={handleFiltersMenuClose}
-          PaperProps={{
-            sx: { minWidth: 200, p: 2 }
+          <Select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value as MissedCallStatus | 'all');
+              setCurrentPage(1);
+            }}
+            displayEmpty
+            sx={{
+              bgcolor: 'white',
+              height: 40,
+              fontSize: '14px',
+              '& .MuiSelect-select': {
+                py: 1,
+              },
+            }}
+          >
+            <MenuItem value="all">All status</MenuItem>
+            <MenuItem value="missed">Missed</MenuItem>
+            <MenuItem value="returned">Returned</MenuItem>
+          </Select>
+        </FormControl>
+        
+        <FormControl sx={{ 
+          minWidth: { xs: '100%', sm: 140 },
+          flex: { xs: '1 1 100%', sm: '0 0 auto' }
+        }}>
+          <Select
+            value={riskFilter}
+            onChange={(e) => {
+              setRiskFilter(e.target.value as RiskLevel | 'all');
+              setCurrentPage(1);
+            }}
+            displayEmpty
+            sx={{
+              bgcolor: 'white',
+              height: 40,
+              fontSize: '14px',
+              '& .MuiSelect-select': {
+                py: 1,
+              },
+            }}
+          >
+            <MenuItem value="all">All risk levels</MenuItem>
+            <MenuItem value="low">Low</MenuItem>
+            <MenuItem value="medium">Medium</MenuItem>
+            <MenuItem value="high">High</MenuItem>
+          </Select>
+        </FormControl>
+        
+        <Button
+          startIcon={<FilterListIcon />}
+          sx={{
+            bgcolor: 'white',
+            color: '#6b7280',
+            border: '1px solid #d1d5db',
+            height: 40,
+            fontSize: '14px',
+            textTransform: 'none',
+            flex: { xs: '1 1 100%', sm: '0 0 auto' },
+            minWidth: { xs: '100%', sm: 'auto' },
+            '&:hover': {
+              bgcolor: '#f9fafb',
+            },
           }}
         >
-          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Additional Filters
-          </Typography>
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-            <Select 
-              value={callCountFilter}
-              onChange={(e) => setCallCountFilter(e.target.value as string)}
-              displayEmpty
-            >
-              <MenuItem value="All call counts">All call counts</MenuItem>
-              <MenuItem value="low">Less than 3</MenuItem>
-              <MenuItem value="medium">3-6</MenuItem>
-              <MenuItem value="high">More than 6</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-            <Select 
-              value={callerTypeFilter}
-              onChange={(e) => setCallerTypeFilter(e.target.value as string)}
-              displayEmpty
-            >
-              <MenuItem value="All caller types">All caller types</MenuItem>
-              <MenuItem value="Patient">Patient</MenuItem>
-              <MenuItem value="Family">Family</MenuItem>
-              <MenuItem value="Professional">Professional</MenuItem>
-            </Select>
-          </FormControl>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={handleApplyFilters}
-            sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' } }}
-          >
-            Apply Filters
-          </Button>
-        </Menu>
+          More Filters
+        </Button>
       </Box>
-    );
-  }
-
-  // Desktop: Table layout
-  return (
-    <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
-      {/* Filters Bar */}
-      <Grid container spacing={2} sx={{ mb: 3, alignItems: 'center' }}>
-        <Grid item xs={12} md={3}>
-          <TextField
-            fullWidth
-            placeholder="Search by caller ID or topic..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: '14px',
-              }
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={2}>
-          <TextField
-            fullWidth
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            placeholder="Select date range"
-            size="small"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <ArrowDownIcon sx={{ color: '#9ca3af' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                fontSize: '14px',
-              }
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} md={2}>
-          <FormControl fullWidth size="small" sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
-              fontSize: '14px',
-            }
-          }}>
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as string)}
-              displayEmpty
-              sx={{ fontSize: '14px' }}
-            >
-              <MenuItem value="All status">All status</MenuItem>
-              <MenuItem value="Missed">Missed</MenuItem>
-              <MenuItem value="Returned">Returned</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} md={2}>
-          <FormControl fullWidth size="small" sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
-              fontSize: '14px',
-            }
-          }}>
-            <Select
-              value={riskLevelFilter}
-              onChange={(e) => setRiskLevelFilter(e.target.value as string)}
-              displayEmpty
-              sx={{ fontSize: '14px' }}
-            >
-              <MenuItem value="All risk levels">All risk levels</MenuItem>
-              <MenuItem value="Low">Low</MenuItem>
-              <MenuItem value="Medium">Medium</MenuItem>
-              <MenuItem value="High">High</MenuItem>
-              <MenuItem value="Critical">Critical</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<FilterIcon />}
-            onClick={handleFiltersMenuOpen}
-            sx={{
-              borderColor: '#d1d5db',
-              color: '#6b7280',
-              borderRadius: '8px',
-              fontSize: '14px',
-              '&:hover': {
-                borderColor: '#9ca3af',
-                bgcolor: '#f9fafb'
-              }
-            }}
-          >
-            More Filters
-          </Button>
-        </Grid>
-      </Grid>
-      {/* Table */}
-      <Card sx={{ boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', overflowX: 'auto' }}>
-        <TableContainer sx={{ minWidth: 650 }}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2, whiteSpace: 'nowrap' }}>
-                  Date & Time
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2, whiteSpace: 'nowrap' }}>
-                  Caller ID
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2, whiteSpace: 'nowrap' }}>
-                  Call count
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2, whiteSpace: 'nowrap' }}>
-                  Risk level
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2, whiteSpace: 'nowrap' }}>
-                  Status
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#374151', py: 2, whiteSpace: 'nowrap' }}>
-                  Action
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedMissedCalls.map((call) => (
-                <TableRow
-                  key={call.id}
+      
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Loading State */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Missed Calls Table */}
+          <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 120
+                    }}>
+                      Date & Time
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Caller ID
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 80
+                    }}>
+                      Duration
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Risk level
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Status
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 150
+                    }}>
+                      Action
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {missedCalls.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No missed calls found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    missedCalls.map((call) => {
+                      const riskStyle = getRiskLevelColor(call.risk_level);
+                      const statusProps = getStatusChipProps(call.status);
+                      const duration = calculateDuration(call.last_call_start_time, call.last_call_end_time);
+                      
+                      return (
+                        <TableRow
+                          key={call.call_id}
+                          sx={{
+                            '&:hover': { bgcolor: '#f9fafb' },
+                            borderBottom: '1px solid #f3f4f6',
+                          }}
+                        >
+                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: '#111827',
+                                whiteSpace: 'pre-line',
+                                lineHeight: 1.4
+                              }}
+                            >
+                              {formatDateTime(call.last_call_start_time, call.last_call_end_time)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                            <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500 }}>
+                              {call.caller_id}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                            <Typography variant="body2" sx={{ color: '#111827' }}>
+                              {formatDuration(duration)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Chip
+                              label={riskStyle.label}
+                              size="small"
+                              variant="outlined"
+                              {...getRiskChipProps(call.risk_level)}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Chip
+                              label={formatStatusLabel(call.status)}
+                              size="small"
+                              variant="outlined"
+                              {...statusProps}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ py: 2 }}>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<ViewIcon />}
+                                onClick={() => handleView(call.call_id)}
+                                sx={{
+                                  borderColor: '#0d9488',
+                                  color: '#0d9488',
+                                  '&:hover': {
+                                    bgcolor: '#f0fdfa',
+                                    borderColor: '#0d9488'
+                                  },
+                                  fontSize: '12px',
+                                  textTransform: 'none',
+                                }}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<CallBackIcon />}
+                                onClick={() => handleCallBack(call.call_id)}
+                                sx={{
+                                  bgcolor: '#0d9488',
+                                  '&:hover': { bgcolor: '#0f766e' },
+                                  fontSize: '12px',
+                                  textTransform: 'none',
+                                }}
+                              >
+                                Call back
+                              </Button>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+          
+          {/* Pagination */}
+          {totalResults > 0 && (
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
+                Page {startItem}-{endIndex} of {totalResults} results
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   sx={{
-                    '&:hover': { bgcolor: '#f9fafb' },
-                    '&:not(:last-child)': { borderBottom: '1px solid #f3f4f6' },
+                    color: '#6b7280',
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    '&:disabled': {
+                      color: '#d1d5db',
+                    },
                   }}
                 >
-                  <TableCell sx={{ py: 2 }}>
-                    <Box>
-                      <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-                        {call.date}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {call.timeRange}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ py: 2 }}>
-                    <Typography variant="body2" fontWeight={500}>
-                      {call.callerId}
-                    </Typography>
-                  </TableCell>
-                  <TableCell sx={{ py: 2 }}>
-                    <Typography variant="body2" fontWeight={500}>
-                      {call.callCount}
-                    </Typography>
-                  </TableCell>
-                  <TableCell sx={{ py: 2 }}>
-                    <Chip
-                      label={call.riskLevel}
-                      size="small"
-                      sx={{
-                        ...getRiskLevelColor(call.riskLevel),
-                        fontWeight: 500,
-                        fontSize: '12px',
-                        height: 24,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ py: 2 }}>
-                    <Chip
-                      label={call.status}
-                      size="small"
-                      sx={{
-                        ...getStatusColor(call.status),
-                        fontWeight: 500,
-                        fontSize: '12px',
-                        height: 24,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ py: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<ViewIcon />}
-                        onClick={() => handleView(call.id)}
-                        sx={{
-                          borderColor: '#0d9488',
-                          color: '#0d9488',
-                          '&:hover': {
-                            bgcolor: '#f0fdfa',
-                            borderColor: '#0d9488'
-                          },
-                          minWidth: '70px',
-                          fontSize: '12px',
-                        }}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<CallBackIcon />}
-                        onClick={() => handleCallBack(call.id)}
-                        sx={{
-                          bgcolor: '#0d9488',
-                          '&:hover': { bgcolor: '#0f766e' },
-                          minWidth: '100px',
-                          fontSize: '12px',
-                        }}
-                      >
-                        Call back
-                      </Button>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {/* Pagination */}
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          p: 3,
-          borderTop: '1px solid #f3f4f6',
-        }}>
-          <Typography variant="body2" color="text.secondary">
-            Page {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
-              sx={{
-                borderColor: '#e5e7eb',
-                color: '#6b7280',
-                '&:disabled': {
-                  borderColor: '#f3f4f6',
-                  color: '#d1d5db'
-                }
-              }}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
-              sx={{
-                borderColor: '#e5e7eb',
-                color: '#374151',
-                '&:hover': {
-                  borderColor: '#0d9488',
-                  color: '#0d9488'
-                }
-              }}
-            >
-              Next
-            </Button>
-          </Box>
-        </Box>
-      </Card>
-      {/* Filters Menu */}
-      <Menu
-        anchorEl={filtersMenuAnchor}
-        open={Boolean(filtersMenuAnchor)}
-        onClose={handleFiltersMenuClose}
-        PaperProps={{
-          sx: { minWidth: 200, p: 2 }
-        }}
-      >
-        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-          Additional Filters
-        </Typography>
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-          <Select 
-            value={callCountFilter}
-            onChange={(e) => setCallCountFilter(e.target.value as string)}
-            displayEmpty
-          >
-            <MenuItem value="All call counts">All call counts</MenuItem>
-            <MenuItem value="low">Less than 3</MenuItem>
-            <MenuItem value="medium">3-6</MenuItem>
-            <MenuItem value="high">More than 6</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-          <Select 
-            value={callerTypeFilter}
-            onChange={(e) => setCallerTypeFilter(e.target.value as string)}
-            displayEmpty
-          >
-            <MenuItem value="All caller types">All caller types</MenuItem>
-            <MenuItem value="Patient">Patient</MenuItem>
-            <MenuItem value="Family">Family</MenuItem>
-            <MenuItem value="Professional">Professional</MenuItem>
-          </Select>
-        </FormControl>
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={handleApplyFilters}
-          sx={{ bgcolor: '#0d9488', '&:hover': { bgcolor: '#0f766e' } }}
-        >
-          Apply Filters
-        </Button>
-      </Menu>
+                  ‹ Previous
+                </Button>
+                <Button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  sx={{
+                    color: '#6b7280',
+                    fontSize: '14px',
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    '&:disabled': {
+                      color: '#d1d5db',
+                    },
+                  }}
+                >
+                  Next ›
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </>
+      )}
     </Box>
   );
 };

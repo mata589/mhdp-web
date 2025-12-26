@@ -19,6 +19,8 @@ import type {
     AgentLeaderboard,
     AgentConversationQualityTrends,
     AgentConversationQualityInsights,
+    VoicemailStatus,
+    RiskLevel,
   } from "../../types/agent.types";
 
 //import type { AgentOverview } from "../../types/agent.types";
@@ -105,38 +107,74 @@ import type {
     async getVoicemails(
       limit: number = 10,
       offset: number = 0,
-      statusFilter?: 'resolved' | 'unresolved',
-      riskLevel?: 'low' | 'medium' | 'high'
+      search?: string,
+      startDate?: string,
+      endDate?: string,
+      statusFilter?: VoicemailStatus,
+      riskLevel?: RiskLevel
     ): Promise<VoicemailsResponse> {
-      let url = `${API_BASE_URL}/agent/voicemails?limit=${limit}&offset=${offset}`;
-      if (statusFilter) url += `&status_filter=${statusFilter}`;
-      if (riskLevel) url += `&risk_level=${riskLevel}`;
-      
+    
+      const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+      });
+    
+      if (search) params.append('search', search);
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      if (statusFilter) params.append('status_filter', statusFilter);
+      if (riskLevel) params.append('risk_level', riskLevel);
+    
+      const url = `${API_BASE_URL}/agent/voicemails?${params.toString()}`;
+    
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
       });
+    
       return this.handleResponse<VoicemailsResponse>(response);
     }
+    
   
     async getMissedCalls(
       limit: number = 10,
       offset: number = 0,
       search?: string,
+      startDate?: string, // ISO string e.g. 2025-12-25T19:52:00
+      endDate?: string,   // ISO string e.g. 2025-12-25T19:52:00
       statusFilter?: 'missed' | 'returned',
       riskLevel?: 'low' | 'medium' | 'high'
     ): Promise<MissedCallsResponse> {
       let url = `${API_BASE_URL}/agent/missedcalls?limit=${limit}&offset=${offset}`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (statusFilter) url += `&status_filter=${statusFilter}`;
-      if (riskLevel) url += `&risk_level=${riskLevel}`;
-      
+    
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+    
+      if (startDate) {
+        url += `&start_date=${encodeURIComponent(startDate)}`;
+      }
+    
+      if (endDate) {
+        url += `&end_date=${encodeURIComponent(endDate)}`;
+      }
+    
+      if (statusFilter) {
+        url += `&status_filter=${statusFilter}`;
+      }
+    
+      if (riskLevel) {
+        url += `&risk_level=${riskLevel}`;
+      }
+    
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
       });
+    
       return this.handleResponse<MissedCallsResponse>(response);
     }
+    
   
     // ============================================
     // CALL HISTORY & DETAILS
@@ -146,20 +184,33 @@ import type {
       limit: number = 10,
       offset: number = 0,
       search?: string,
-      riskLevel?: 'low' | 'medium' | 'high',
-      outcome?: 'resolved' | 'unresolved' | 'escalated'
+      startDate?: string,
+      endDate?: string,
+      riskLevel?: 'low' | 'medium' | 'high' | 'critical',
+      outcome?: 'unresolved' | 'resolved' | 'escalated' | 'transferred'
     ): Promise<CallHistoryResponse> {
-      let url = `${API_BASE_URL}/agent/call-history?limit=${limit}&offset=${offset}`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (riskLevel) url += `&risk_level=${riskLevel}`;
-      if (outcome) url += `&outcome=${outcome}`;
-      
+    
+      const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+      });
+    
+      if (search) params.append('search', search);
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      if (riskLevel) params.append('risk_level', riskLevel);
+      if (outcome) params.append('outcome', outcome);
+    
+      const url = `${API_BASE_URL}/agent/call-history?${params.toString()}`;
+    
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
       });
+    
       return this.handleResponse<CallHistoryResponse>(response);
     }
+    
   
     async getCallDetails(callId: string): Promise<CallDetailsResponse> {
       const response = await fetch(`${API_BASE_URL}/agent/call-details/${callId}`, {

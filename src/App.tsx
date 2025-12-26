@@ -59,6 +59,7 @@ import { CallDetailsPage } from './components/common/CallDetailsPage';
 import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScreen';
 import Settings from './components/Settings/settings';
 import { LoginPage } from './pages/auth/LoginPage';
+import Escalations from './pages/agent/Escalations/Escalations';
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -76,6 +77,7 @@ const AgentRoutes: React.FC = () => {
     <Routes>
       <Route path="/dashboard" element={<AgentDashboard />} />
       <Route path="/active-calls" element={<LiveCallInterface />} />
+      <Route path="/escalations" element={<Escalations />} />
       <Route path="/live-call" element={<LiveCallInterface />} />
       <Route path="/call-details/:callId" element={<CallDetailsPage />} />
       <Route path="/call-summary/:callId" element={<CallSummaryScreen />} />
