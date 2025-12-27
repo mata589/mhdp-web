@@ -92,7 +92,7 @@ import type {
       return this.handleResponse<AgentAvailabilityResponse>(response);
     }
   
-    async updateAvailability(status: 'available' | 'busy' | 'away'): Promise<AgentAvailabilityResponse> {
+    async updateAvailability(status: 'available' | 'on_call' | 'on_break' | 'offline'): Promise<AgentAvailabilityResponse> {
       const response = await fetch(`${API_BASE_URL}/agent/availability?status=${status}`, {
         method: 'PUT',
         headers: this.getAuthHeaders(),

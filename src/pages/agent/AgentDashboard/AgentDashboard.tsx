@@ -64,8 +64,9 @@ export const AgentDashboard: React.FC = () => {
         // Map API status to AgentStatus
         const statusMap: Record<AvailabilityStatus, AgentStatus> = {
           available: "Available",
-          busy: "Busy",
-          away: "Break",
+          on_call: "On Call",
+          on_break: "On Break",
+          offline: "Offline",
         };
         setStatus(statusMap[availability.status]);
       } catch (err) {
@@ -107,8 +108,9 @@ export const AgentDashboard: React.FC = () => {
       // Map AgentStatus to API AvailabilityStatus
       const statusMap: Record<AgentStatus, AvailabilityStatus> = {
         Available: "available",
-        Busy: "busy",
-        Break: "away",
+        "On Call": "on_call",
+        "On Break": "on_break",
+        Offline: "offline",
       };
 
       await agentApi.updateAvailability(statusMap[newStatus]);
@@ -544,53 +546,53 @@ export const AgentDashboard: React.FC = () => {
           </Box>
 
           <Box
-            sx={{
-              display: "flex",
-              border: "2px solid #e0e0e0",
-              borderRadius: "25px",
-              overflow: "hidden",
-              backgroundColor: "white",
-              width: { xs: "100%", sm: "auto" },
-              justifyContent: { xs: "center", sm: "flex-start" },
-            }}
-          >
-            {(["Available", "Busy", "Break"] as const).map(
-              (statusOption, index) => (
-                <Button
-                  key={statusOption}
-                  onClick={() => handleStatusChange(statusOption)}
-                  sx={{
-                    px: 3,
-                    py: 1,
-                    backgroundColor:
-                      status === statusOption ? "white" : "transparent",
-                    color: status === statusOption ? "#000" : "#666",
-                    fontWeight: status === statusOption ? 600 : 400,
-                    borderRadius: 0,
-                    border: "none",
-                    borderRight: index < 2 ? "1px solid #e0e0e0" : "none",
-                    textTransform: "none",
-                    minWidth: { xs: "33.33%", sm: 80 },
-                    "&:hover": {
-                      backgroundColor:
-                        status === statusOption ? "white" : "#f5f5f5",
-                    },
-                    "&::before":
-                      status === statusOption
-                        ? {
-                            content: '"✓"',
-                            marginRight: "8px",
-                            fontSize: "14px",
-                            fontWeight: 600,
-                          }
-                        : {},
-                  }}
-                >
-                  {statusOption}
-                </Button>
-              )
-            )}
-          </Box>
+  sx={{
+    display: "flex",
+    border: "2px solid #e0e0e0",
+    borderRadius: "25px",
+    overflow: "hidden",
+    backgroundColor: "white",
+    width: { xs: "100%", sm: "auto" },
+    justifyContent: { xs: "center", sm: "flex-start" },
+  }}
+>
+  {(["Available", "On Call", "On Break", "Offline"] as const).map(
+    (statusOption, index) => (
+      <Button
+        key={statusOption}
+        onClick={() => handleStatusChange(statusOption)}
+        sx={{
+          px: 3,
+          py: 1,
+          backgroundColor:
+            status === statusOption ? "white" : "transparent",
+          color: status === statusOption ? "#000" : "#666",
+          fontWeight: status === statusOption ? 600 : 400,
+          borderRadius: 0,
+          border: "none",
+          borderRight: index < 3 ? "1px solid #e0e0e0" : "none",
+          textTransform: "none",
+          minWidth: { xs: "25%", sm: 80 },
+          "&:hover": {
+            backgroundColor:
+              status === statusOption ? "white" : "#f5f5f5",
+          },
+          "&::before":
+            status === statusOption
+              ? {
+                  content: '"✓"',
+                  marginRight: "8px",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }
+              : {},
+        }}
+      >
+        {statusOption}
+      </Button>
+    )
+  )}
+</Box>
         </Box>
       </Box>
 

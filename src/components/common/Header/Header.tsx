@@ -153,7 +153,7 @@ export const Header: React.FC = () => {
                   sx={{
                     width: { xs: '100%', md: 450 },
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
+                      borderRadius: 0,
                       bgcolor: '#f9fafb',
                       border: '1px solid #e5e7eb',
                       height: '48px',
@@ -254,7 +254,8 @@ export const Header: React.FC = () => {
                 fontWeight: 600,
               }}
             >
-              {user?.name?.charAt(0) || 'U'}
+             {`${user?.first_name?.charAt(0) || 'U'}${user?.last_name?.charAt(0) || ''}`}
+
             </Avatar>
           </Box>
         </Toolbar>

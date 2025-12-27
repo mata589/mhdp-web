@@ -93,7 +93,7 @@ export const AgentLayout: React.FC<ResponsiveAgentLayoutProps> = ({ children }) 
           alignItems: "center",
           gap: 2,
           borderBottom: "1px solid #e5e7eb",
-          minHeight: "100px",
+          minHeight: { xs: 64, md: 102 },
           justifyContent: desktopSidebarCollapsed && !isMobile ? "center" : "space-between",
         }}
       >
@@ -329,18 +329,19 @@ export const AgentLayout: React.FC<ResponsiveAgentLayoutProps> = ({ children }) 
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          minWidth: 0, // Prevents flex item from overflowing
+          minWidth: 0,
         }}
       >
         {/* Header */}
         <AppBar
-          position="static" // Changed from fixed to static
+          position="static"
           sx={{
             bgcolor: "white",
             color: "text.primary",
             boxShadow: "none",
             borderBottom: "1px solid #e5e7eb",
             height: { xs: 64, md: 102 },
+            borderRadius: 0,
           }}
         >
           <Toolbar
@@ -517,7 +518,8 @@ export const AgentLayout: React.FC<ResponsiveAgentLayoutProps> = ({ children }) 
                   color: "white",
                 }}
               >
-                {user?.name?.charAt(0) || "U"}
+               {`${user?.first_name?.charAt(0) || 'U'}${user?.last_name?.charAt(0) || ''}`}
+
               </Avatar>
 
               {/* Desktop Sidebar Collapse Button */}

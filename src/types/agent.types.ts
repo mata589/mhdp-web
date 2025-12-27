@@ -7,7 +7,7 @@
 
 export type CallStatus = 'answered' | 'not_answered' | 'voicemail' | 'missed';
 export type CallOutcome = 'resolved' | 'unresolved' | 'escalated' | 'not_escalated' | 'not_answered';
-export type AvailabilityStatus = 'available' | 'busy' | 'away';
+export type AvailabilityStatus = 'available' | 'on_call' | 'on_break' | 'offline';
 export type PriorityLevel = 'low' | 'medium' | 'high';
 export type ResolutionStatus = 'pending' | 'in_progress' | 'resolved';
 export type EscalationType = 'manual' | 'automatic';

@@ -4,7 +4,7 @@ import { Chip } from '@mui/material';
 
 export type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 export type CallOutcome = 'Advice Given' | 'Escalated' | 'Referred';
-export type AgentStatus = 'Available' | 'Busy' | 'Break';
+export type AgentStatus = 'Available' | 'On Call' | 'On Break' | 'Offline';
 export type CallerType = 'Patient';
 export type Sentiment = 'Positive' | 'Neutral';
 
