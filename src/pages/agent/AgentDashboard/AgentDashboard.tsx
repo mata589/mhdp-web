@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GridLegacy as Grid } from "@mui/material";
+import totalCallsIcon from '../../../assets/images/total_calls.png';
+import todayCallsIcon from '../../../assets/images/today_calls.png';
+import escalatedCallsIcon from '../../../assets/images/escalated_calls.png';
+import qualityScoreIcon from '../../../assets/images/qualityscore_calls.png';
+
 import {
   Typography,
   Box,
@@ -630,57 +635,56 @@ export const AgentDashboard: React.FC = () => {
 
       {/* Metrics Cards */}
       {overview && (
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<Call />}
-              iconBgColor="#008080"
-              label="Total Calls"
-              value={overview.total_calls}
-              trend={overview.total_calls_change.trend !== 'no_change' ? {
-                value: overview.total_calls_change.percent,
-                isPositive: overview.total_calls_change.trend === "up",
-              } : undefined}
-            />
-          </Grid>
+  <Grid container spacing={3} sx={{ mb: 4 }}>
+    <Grid item xs={12} sm={6} md={3}>
+      <MetricCard
+        iconSrc={totalCallsIcon}
+        iconBgColor="#008080"
+        label="Total Calls"
+        value={overview.total_calls}
+        trend={overview.total_calls_change.trend !== 'no_change' ? {
+          value: overview.total_calls_change.percent,
+          isPositive: overview.total_calls_change.trend === "up",
+        } : undefined}
+      />
+    </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<Assessment />}
-              iconBgColor="#ffa500"
-              label="Calls Today"
-              value={overview.calls_today}
-              trend={overview.calls_today_change.trend !== 'no_change' ? {
-                value: overview.calls_today_change.percent,
-                isPositive: overview.calls_today_change.trend === "up",
-              } : undefined}
-            />
-          </Grid>
+    <Grid item xs={12} sm={6} md={3}>
+      <MetricCard
+        iconSrc={todayCallsIcon}
+        iconBgColor="#ffa500"
+        label="Calls Today"
+        value={overview.calls_today}
+        trend={overview.calls_today_change.trend !== 'no_change' ? {
+          value: overview.calls_today_change.percent,
+          isPositive: overview.calls_today_change.trend === "up",
+        } : undefined}
+      />
+    </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<Escalator />}
-              iconBgColor="#f44336"
-              label="Escalated Calls"
-              value={overview.escalated_calls}
-              trend={overview.escalated_calls_change.trend !== 'no_change' ? {
-                value: overview.escalated_calls_change.percent,
-                isPositive: overview.escalated_calls_change.trend === "down",
-              } : undefined}
-            />
-          </Grid>
+    <Grid item xs={12} sm={6} md={3}>
+      <MetricCard
+        iconSrc={escalatedCallsIcon}
+        iconBgColor="#f44336"
+        label="Escalated Calls"
+        value={overview.escalated_calls}
+        trend={overview.escalated_calls_change.trend !== 'no_change' ? {
+          value: overview.escalated_calls_change.percent,
+          isPositive: overview.escalated_calls_change.trend === "down",
+        } : undefined}
+      />
+    </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<TrendingUp />}
-              iconBgColor="#607d8b"
-              label="Quality Score"
-              value={overview.quality_score}
-            />
-          </Grid>
-        </Grid>
-      )}
-
+    <Grid item xs={12} sm={6} md={3}>
+      <MetricCard
+        iconSrc={qualityScoreIcon}
+        iconBgColor="#607d8b"
+        label="Quality Score"
+        value={overview.quality_score}
+      />
+    </Grid>
+  </Grid>
+)}
       {/* Recent Call Activity */}
       <CallActivityTable
         calls={transformedCalls}

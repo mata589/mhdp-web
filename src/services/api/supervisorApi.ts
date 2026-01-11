@@ -34,23 +34,44 @@ import type {
   NetworkAudioQualityTrends,
 } from "../../types/supervisor.types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://staging-mhdp-backend.marconilab.org";
 
 class SupervisorApi {
+  // ============================================
+  // HELPERS
+  // ============================================
+
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     return {
-      'Content-Type': 'application/json',
-      'accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
+      "Content-Type": "application/json",
+      accept: "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
+  private logRequest(method: string, url: string, params?: unknown) {
+    console.debug("[Supervisor API → REQUEST]", {
+      method,
+      url,
+      params,
+    });
+  }
+
   private async handleResponse<T>(response: Response): Promise<T> {
+    console.debug("[Supervisor API → RESPONSE]", {
+      url: response.url,
+      status: response.status,
+    });
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'API request failed');
+      const error = await response.json().catch(() => ({}));
+      console.error("[Supervisor API → ERROR]", error);
+      throw new Error(error.detail || "API request failed");
     }
+
     return response.json();
   }
 
@@ -59,93 +80,146 @@ class SupervisorApi {
   // ============================================
 
   async getOverview(): Promise<SupervisorOverview> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/overview`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/overview`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<SupervisorOverview>(response);
+
+    return this.handleResponse(response);
   }
 
   async getCallVolumeTrends(): Promise<CallVolumeTrends> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/call-volume-trends`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/call-volume-trends`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<CallVolumeTrends>(response);
+
+    return this.handleResponse(response);
   }
 
   async getAgentStatusMonitor(): Promise<AgentStatusMonitor> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/agent-status-monitor`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/agent-status-monitor`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<AgentStatusMonitor>(response);
+
+    return this.handleResponse(response);
   }
 
   // ============================================
   // ESCALATIONS
   // ============================================
 
-  async getEscalationsOverview(page: number = 1, limit: number = 10): Promise<EscalationsOverview> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/escalations-overview?page=${page}&limit=${limit}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<EscalationsOverview>(response);
+  async getEscalationsOverview(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<EscalationsOverview> {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/escalations-overview?${params}`;
+    this.logRequest("GET", url, { page, limit });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
   }
 
-  async updateEscalation(data: UpdateEscalationRequest): Promise<UpdateEscalationResponse> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/supervisor/update-escalation`, {
-      method: 'PUT',
+  async updateEscalation(
+    data: UpdateEscalationRequest
+  ): Promise<UpdateEscalationResponse> {
+    const url = `${API_BASE_URL}/supervisor/update-escalation`;
+    this.logRequest("PUT", url, data);
+
+    const response = await fetch(url, {
+      method: "PUT",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
     });
-    return this.handleResponse<UpdateEscalationResponse>(response);
+
+    return this.handleResponse(response);
   }
 
   async getEscalationsSummary(): Promise<EscalationsSummary> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/escalations_summary`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/escalations_summary`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<EscalationsSummary>(response);
+
+    return this.handleResponse(response);
   }
 
-  async listEscalatedCalls(limit: number = 10, offset: number = 0): Promise<EscalatedCallsResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/list_escalated_calls?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<EscalatedCallsResponse>(response);
+  async listEscalatedCalls(
+    limit: number = 10,
+    offset: number = 0
+  ): Promise<EscalatedCallsResponse> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/list_escalated_calls?${params}`;
+    this.logRequest("GET", url, { limit, offset });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
   }
 
   // ============================================
   // STAFF MANAGEMENT
   // ============================================
 
-  async getStaffPerformance(page: number = 1, limit: number = 10): Promise<StaffPerformance> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/staff-performance?page=${page}&limit=${limit}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<StaffPerformance>(response);
+  async getStaffPerformance(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<StaffPerformance> {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/staff-performance?${params}`;
+    this.logRequest("GET", url, { page, limit });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
   }
 
   async getStaffAvailabilitySummary(): Promise<StaffAvailabilitySummary> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/staff-availability-summary`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/staff-availability-summary`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<StaffAvailabilitySummary>(response);
+
+    return this.handleResponse(response);
   }
 
   // ============================================
@@ -153,210 +227,155 @@ class SupervisorApi {
   // ============================================
 
   async getLiveMonitoring(): Promise<LiveMonitoring> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/live-monitoring`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/live-monitoring`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<LiveMonitoring>(response);
+
+    return this.handleResponse(response);
   }
 
   // ============================================
   // VOICEMAILS & MISSED CALLS
   // ============================================
 
-  async getVoicemails(limit: number = 10, offset: number = 0): Promise<VoicemailsResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/voicemails?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<VoicemailsResponse>(response);
+  async getVoicemails(
+    limit: number = 10,
+    offset: number = 0
+  ): Promise<VoicemailsResponse> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/voicemails?${params}`;
+    this.logRequest("GET", url, { limit, offset });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
   }
 
-  async getMissedCalls(limit: number = 10, offset: number = 0): Promise<MissedCallsResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/missedcalls?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<MissedCallsResponse>(response);
+  async getMissedCalls(
+    limit: number = 10,
+    offset: number = 0
+  ): Promise<MissedCallsResponse> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/missedcalls?${params}`;
+    this.logRequest("GET", url, { limit, offset });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
   }
 
   // ============================================
   // CALL HISTORY
   // ============================================
 
-  async getCallHistory(limit: number = 10, offset: number = 0): Promise<CallHistoryResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/call-history?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<CallHistoryResponse>(response);
+  async getCallHistory(
+    limit: number = 10,
+    offset: number = 0
+  ): Promise<CallHistoryResponse> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/call-history?${params}`;
+    this.logRequest("GET", url, { limit, offset });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
   }
 
   // ============================================
-  // ANALYTICS
+  // ANALYTICS (pattern identical to Agent API)
   // ============================================
 
   async getAnalyticsOverview(): Promise<AnalyticsOverview> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/overview`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/analytics/overview`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<AnalyticsOverview>(response);
+
+    return this.handleResponse(response);
   }
 
-  async getAnalyticsCallVolumeTrends(startDate?: string, endDate?: string): Promise<DetailedCallVolumeTrends> {
-    let url = `${API_BASE_URL}/supervisor/analytics/call-volume-trends`;
-    if (startDate && endDate) {
-      url += `?start_date=${startDate}&end_date=${endDate}`;
-    }
+  async getAnalyticsCallVolumeTrends(
+    startDate?: string,
+    endDate?: string
+  ): Promise<DetailedCallVolumeTrends> {
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+
+    const url = `${API_BASE_URL}/supervisor/analytics/call-volume-trends?${params}`;
+    this.logRequest("GET", url, { startDate, endDate });
+
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<DetailedCallVolumeTrends>(response);
+
+    return this.handleResponse(response);
   }
 
   async getCriticalAlertDistribution(): Promise<CriticalAlertDistribution> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/critical-alert-distribution`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/analytics/critical-alert-distribution`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<CriticalAlertDistribution>(response);
+
+    return this.handleResponse(response);
   }
 
   async getLeaderboard(limit: number = 5): Promise<Leaderboard> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/analytics/leaderboard?limit=${limit}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<Leaderboard>(response);
-  }
+    const params = new URLSearchParams({ limit: String(limit) });
+    const url = `${API_BASE_URL}/supervisor/analytics/leaderboard?${params}`;
+    this.logRequest("GET", url, { limit });
 
-  async getCallerSentimentTrends(): Promise<CallerSentimentTrends> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/caller-sentiment-trends`, {
-      method: 'GET',
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<CallerSentimentTrends>(response);
-  }
 
-  async getGenderBreakdown(): Promise<GenderBreakdown> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/gender-breakdown`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<GenderBreakdown>(response);
-  }
-
-  async getLanguageUsage(): Promise<LanguageUsage> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/language-usage`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<LanguageUsage>(response);
-  }
-
-  async getCallerTypeBreakdown(): Promise<CallerTypeBreakdown> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/caller-type-breakdown`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<CallerTypeBreakdown>(response);
-  }
-
-  async getTrajectoryOfCare(): Promise<TrajectoryOfCare> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/trajectory-of-care`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<TrajectoryOfCare>(response);
-  }
-
-  async getTopicBreakdown(): Promise<TopicBreakdown> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/topic-breakdown`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<TopicBreakdown>(response);
-  }
-
-  async getCallOutcomes(): Promise<CallOutcomes> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/call-outcomes`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<CallOutcomes>(response);
-  }
-
-  async getTopicTrends(): Promise<TopicTrends> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/topic-trends`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<TopicTrends>(response);
-  }
-
-  async getQualityOverview(): Promise<QualityOverview> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/quality-overview`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<QualityOverview>(response);
-  }
-
-  async getConversationQualityTrends(): Promise<ConversationQualityTrends> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/conversation-quality-trends`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<ConversationQualityTrends>(response);
-  }
-
-  async getDialogueAnalysis(): Promise<DialogueAnalysis> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/dialogue-analysis`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<DialogueAnalysis>(response);
-  }
-
-  async getAgentConversationQuality(): Promise<AgentConversationQuality> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/agent-conversation-quality`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<AgentConversationQuality>(response);
-  }
-
-  async getAreasForImprovement(page: number = 1, pageSize: number = 10): Promise<AreasForImprovement> {
-    const response = await fetch(
-      `${API_BASE_URL}/supervisor/analytics/areas-for-improvement?page=${page}&page_size=${pageSize}`,
-      {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      }
-    );
-    return this.handleResponse<AreasForImprovement>(response);
+    return this.handleResponse(response);
   }
 
   async getNetworkAudioQualityTrends(): Promise<NetworkAudioQualityTrends> {
-    const response = await fetch(`${API_BASE_URL}/supervisor/analytics/network-audio-quality-trends`, {
-      method: 'GET',
+    const url = `${API_BASE_URL}/supervisor/analytics/network-audio-quality-trends`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    return this.handleResponse<NetworkAudioQualityTrends>(response);
+
+    return this.handleResponse(response);
   }
 }
 

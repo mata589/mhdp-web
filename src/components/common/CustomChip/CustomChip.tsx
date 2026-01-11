@@ -83,17 +83,23 @@ const CustomChip: React.FC<CustomChipProps> = ({
       color: '#15803d',
       dotColor: '#22c55e',
     },
-    'Busy': {
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      borderColor: '#ef4444',
-      color: '#dc2626',
-      dotColor: '#ef4444',
+    'On Call': {
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      borderColor: '#3b82f6',
+      color: '#1e40af',
+      dotColor: '#3b82f6',
     },
-    'Break': {
+    'On Break': {
       backgroundColor: 'rgba(245, 158, 11, 0.1)',
       borderColor: '#f59e0b',
       color: '#d97706',
       dotColor: '#f59e0b',
+    },
+    'Offline': {
+      backgroundColor: 'rgba(107, 114, 128, 0.1)',
+      borderColor: '#6b7280',
+      color: '#374151',
+      dotColor: '#6b7280',
     },
     // Caller Type Styles
     'Patient': {

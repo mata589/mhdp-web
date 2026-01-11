@@ -224,18 +224,7 @@ import type {
     // CALL RECORDINGS
     // ============================================
   
-    async playCallRecording(callId: string): Promise<Blob> {
-      const response = await fetch(`${API_BASE_URL}/agent/play_call_recording/${callId}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch call recording');
-      }
-      return response.blob();
-    }
-  
+ 
     async downloadCallRecording(callId: string): Promise<Blob> {
       const response = await fetch(`${API_BASE_URL}/agent/download_call_recording/${callId}`, {
         method: 'GET',

@@ -6,7 +6,8 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import type { SxProps, Theme } from '@mui/material/styles';
 
 interface MetricCardProps {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
+  iconSrc?: string;
   iconBgColor: string;
   label: string;
   value: string | number;
@@ -19,6 +20,7 @@ interface MetricCardProps {
 
 export const MetricCard: React.FC<MetricCardProps> = ({
   icon,
+  iconSrc,
   iconBgColor,
   label,
   value,
@@ -49,10 +51,15 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             backgroundColor: iconBgColor,
             width: 32,
             height: 32,
+            borderRadius: '6px',
             '& .MuiSvgIcon-root': { fontSize: 18 },
           }}
         >
-          {React.cloneElement(icon as React.ReactElement)}
+          {iconSrc ? (
+            <img src={iconSrc} alt="" style={{ width: '18px', height: '18px' }} />
+          ) : (
+            icon && React.cloneElement(icon as React.ReactElement)
+          )}
         </Avatar>
 
         <Typography

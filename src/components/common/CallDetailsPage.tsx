@@ -7,21 +7,20 @@ import {
   Typography,
   Chip,
   Button,
-  LinearProgress,
   IconButton,
   CircularProgress,
   Alert,
+  LinearProgress,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
-  PlayArrow as PlayArrowIcon,
-  Pause as PauseIcon,
-  Download as DownloadIcon,
 } from "@mui/icons-material";
 import CustomChip from "./CustomChip/CustomChip";
 import AIAnalysisCard from "./AnalysisCard";
+
 import type { CallDetailsResponse } from "../../types/agent.types";
 import agentApi from "../../services/api/agentApi";
+import { CallRecordingPlayer } from "./CallRecordingPlayer";
 
 interface CallDetailsPageProps {
   callId?: string;
@@ -41,8 +40,6 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   const [callDetails, setCallDetails] = useState<CallDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const fetchCallDetails = async () => {
@@ -66,56 +63,6 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
 
     fetchCallDetails();
   }, [callId]);
-
-  useEffect(() => {
-    // Cleanup audio element on unmount
-    return () => {
-      if (audioElement) {
-        audioElement.pause();
-        audioElement.src = "";
-      }
-    };
-  }, [audioElement]);
-
-  const handlePlayPause = () => {
-    if (!callDetails?.audio_url) return;
-
-    if (!audioElement) {
-      const audio = new Audio(callDetails.audio_url);
-      audio.addEventListener("ended", () => setIsPlaying(false));
-      audio.addEventListener("error", () => {
-        setError("Failed to load audio");
-        setIsPlaying(false);
-      });
-      setAudioElement(audio);
-      audio.play();
-      setIsPlaying(true);
-    } else {
-      if (isPlaying) {
-        audioElement.pause();
-        setIsPlaying(false);
-      } else {
-        audioElement.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const handleDownloadRecording = async () => {
-    try {
-      const blob = await agentApi.downloadCallRecording(callId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `call-recording-${callId}.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      setError("Failed to download recording");
-    }
-  };
 
   const handleBack = () => {
     if (onBack) {
@@ -494,65 +441,17 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
             </Paper>
           )}
 
-          {/* Call Recording */}
+          {/* Call Recording - Using CallRecordingPlayer component */}
           {callDetails.audio_url && (
-            <Paper
-              sx={{
-                p: { xs: 2, sm: 3 },
-                mb: 3,
-                borderRadius: 2,
-                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 600,
-                  color: "#111827",
-                  mb: 2,
-                  fontSize: { xs: "15px", sm: "16px" },
-                }}
-              >
-                Call Recording
-              </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-                <IconButton
-                  onClick={handlePlayPause}
-                  sx={{
-                    bgcolor: "#0891b2",
-                    color: "white",
-                    width: 32,
-                    height: 32,
-                    "&:hover": { bgcolor: "#0e7490" },
-                  }}
-                >
-                  {isPlaying ? <PauseIcon sx={{ fontSize: 18 }} /> : <PlayArrowIcon sx={{ fontSize: 18 }} />}
-                </IconButton>
-                <Box sx={{ flex: 1, minWidth: { xs: 200, sm: "auto" } }}>
-                  <LinearProgress
-                    variant="indeterminate"
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: "#0891b2",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#6b7280", fontSize: { xs: "13px", sm: "14px" }, mr: 1 }}
-                >
-                  {formatDuration(callDetails.call_duration_seconds)}
-                </Typography>
-                <IconButton sx={{ color: "#6b7280" }} onClick={handleDownloadRecording}>
-                  <DownloadIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              </Box>
-            </Paper>
+            <Box sx={{ mb: 3 }}>
+              <CallRecordingPlayer
+                callId={callId}
+                duration={formatDuration(callDetails.call_duration_seconds)}
+                recordingUrl={callDetails.audio_url}
+                isPopup={false}
+                open={true}
+              />
+            </Box>
           )}
 
           {/* Transcription */}
@@ -743,8 +642,8 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
             </Paper>
           )}
 
-          {/* Conversation Quality Metrics */}
-          {callDetails.conversation_quality && typeof callDetails.conversation_quality === 'object' && (
+           {/* Conversation Quality Metrics */}
+           {callDetails.conversation_quality && typeof callDetails.conversation_quality === 'object' && (
             <Paper
               sx={{
                 p: { xs: 2, sm: 3 },
