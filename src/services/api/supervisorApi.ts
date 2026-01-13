@@ -32,7 +32,13 @@ import type {
   AgentConversationQuality,
   AreasForImprovement,
   NetworkAudioQualityTrends,
+  ConversationQualityTrendsData,
+  ConversationQualityInsights,
+  StaffPerformanceOverview,
+  StaffDetailsBasic,
 } from "../../types/supervisor.types";
+//import type { EscalationDetails } from "../../types/user.types";
+import type { EscalationDetails } from "../../types/supervisor.types";   // ← same folder, or correct relative path
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
@@ -121,15 +127,37 @@ class SupervisorApi {
 
   async getEscalationsOverview(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    filters?: {
+      resolution_status?: string;
+      priority_level?: string;
+      start_date?: string;
+      end_date?: string;
+    }
   ): Promise<EscalationsOverview> {
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit),
     });
 
-    const url = `${API_BASE_URL}/supervisor/escalations-overview?${params}`;
-    this.logRequest("GET", url, { page, limit });
+    if (filters?.resolution_status) {
+      params.append("resolution_status", filters.resolution_status);
+    }
+
+    if (filters?.priority_level) {
+      params.append("priority_level", filters.priority_level);
+    }
+
+    if (filters?.start_date) {
+      params.append("start_date", filters.start_date);
+    }
+
+    if (filters?.end_date) {
+      params.append("end_date", filters.end_date);
+    }
+
+    const url = `${API_BASE_URL}/supervisor/escalations-overview?${params.toString()}`;
+    this.logRequest("GET", url, { page, limit, ...filters });
 
     const response = await fetch(url, {
       method: "GET",
@@ -226,8 +254,23 @@ class SupervisorApi {
   // LIVE MONITORING
   // ============================================
 
-  async getLiveMonitoring(): Promise<LiveMonitoring> {
-    const url = `${API_BASE_URL}/supervisor/live-monitoring`;
+  async getLiveMonitoring(filters?: {
+    agent_name?: string;
+    risk_level?: string;
+    status_filter?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<LiveMonitoring> {
+    const params = new URLSearchParams();
+
+    if (filters?.agent_name) params.append("agent_name", filters.agent_name);
+    if (filters?.risk_level) params.append("risk_level", filters.risk_level);
+    if (filters?.status_filter)
+      params.append("status_filter", filters.status_filter);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
+
+    const url = `${API_BASE_URL}/supervisor/live-monitoring?${params.toString()}`;
     this.logRequest("GET", url);
 
     const response = await fetch(url, {
@@ -307,7 +350,7 @@ class SupervisorApi {
   }
 
   // ============================================
-  // ANALYTICS (pattern identical to Agent API)
+  // ANALYTICS - OVERVIEW & TRENDS
   // ============================================
 
   async getAnalyticsOverview(): Promise<AnalyticsOverview> {
@@ -366,6 +409,289 @@ class SupervisorApi {
     return this.handleResponse(response);
   }
 
+  async getCallerSentimentTrends(
+    startDate?: string,
+    endDate?: string
+  ): Promise<CallerSentimentTrends> {
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+
+    const url = `${API_BASE_URL}/supervisor/analytics/caller-sentiment-trends?${params}`;
+    this.logRequest("GET", url, { startDate, endDate });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // ============================================
+  // ANALYTICS - DEMOGRAPHICS
+  // ============================================
+
+  async getGenderBreakdown(): Promise<GenderBreakdown> {
+    const url = `${API_BASE_URL}/supervisor/analytics/gender-breakdown`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getLanguageUsage(): Promise<LanguageUsage> {
+    const url = `${API_BASE_URL}/supervisor/analytics/language-usage`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getCallerTypeBreakdown(): Promise<CallerTypeBreakdown> {
+    const url = `${API_BASE_URL}/supervisor/analytics/caller-type-breakdown`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getTrajectoryOfCare(): Promise<TrajectoryOfCare> {
+    const url = `${API_BASE_URL}/supervisor/analytics/trajectory-of-care`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // ============================================
+  // ANALYTICS - TOPICS
+  // ============================================
+
+  async getTopicBreakdown(): Promise<TopicBreakdown> {
+    const url = `${API_BASE_URL}/supervisor/analytics/topic-breakdown`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getCallOutcomes(): Promise<CallOutcomes> {
+    const url = `${API_BASE_URL}/supervisor/analytics/call-outcomes`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getTopicTrends(year?: number): Promise<TopicTrends> {
+    const params = new URLSearchParams();
+    if (year) params.append("year", String(year));
+
+    const url = `${API_BASE_URL}/supervisor/analytics/topic-trends?${params}`;
+    this.logRequest("GET", url, { year });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // ============================================
+  // ANALYTICS - QUALITY
+  // ============================================
+
+  async getQualityOverview(): Promise<QualityOverview> {
+    const url = `${API_BASE_URL}/supervisor/analytics/quality-overview`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getConversationQualityTrends(
+    startDate?: string,
+    endDate?: string
+  ): Promise<ConversationQualityTrends> {
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+
+    const url = `${API_BASE_URL}/supervisor/analytics/conversation-quality-trends?${params}`;
+    this.logRequest("GET", url, { startDate, endDate });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getDialogueAnalysis(): Promise<DialogueAnalysis> {
+    const url = `${API_BASE_URL}/supervisor/analytics/dialogue-analysis`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getAgentConversationQuality(
+    startDate?: string,
+    endDate?: string
+  ): Promise<AgentConversationQuality> {
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+
+    const url = `${API_BASE_URL}/supervisor/analytics/agent-conversation-quality?${params}`;
+    this.logRequest("GET", url, { startDate, endDate });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getAreasForImprovement(
+    page: number = 1,
+    pageSize: number = 10
+  ): Promise<AreasForImprovement> {
+    const params = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    });
+
+    const url = `${API_BASE_URL}/supervisor/analytics/areas-for-improvement?${params}`;
+    this.logRequest("GET", url, { page, pageSize });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+  // Add these methods to your SupervisorApi class in supervisorApi.ts
+
+  // ============================================
+  // STAFF DETAILS
+  // ============================================
+
+  async getStaffDetailsBasic(userId: string): Promise<StaffDetailsBasic> {
+    const url = `${API_BASE_URL}/supervisor/staff-details/${userId}`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getStaffPerformanceOverview(
+    userId: string
+  ): Promise<StaffPerformanceOverview> {
+    const url = `${API_BASE_URL}/supervisor/staff-details/performance-overview/${userId}`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async getStaffConversationQualityInsights(
+    userId: string
+  ): Promise<ConversationQualityInsights> {
+    const url = `${API_BASE_URL}/supervisor/staff-details/conversation-quality-insights/${userId}`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+  async getStaffCallHistory(
+  userId: string,
+  limit: number = 10,
+  offset: number = 0
+): Promise<CallHistoryResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/supervisor/staff-details/call-history/${userId}?limit=${limit}&offset=${offset}`,
+    {
+      headers: this.getAuthHeaders(),
+    }
+  );
+  return this.handleResponse<CallHistoryResponse>(response);
+}
+
+  async getStaffConversationQualityTrends(
+    userId: string
+  ): Promise<ConversationQualityTrendsData> {
+    const url = `${API_BASE_URL}/supervisor/staff-details/conversation-quality-trends/${userId}`;
+    this.logRequest("GET", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+  async getEscalationDetails(escalationId: string): Promise<EscalationDetails> {
+  const url = `${API_BASE_URL}/supervisor/escalation_details/${escalationId}`;
+  this.logRequest("GET", url);
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: this.getAuthHeaders(),
+  });
+
+  return this.handleResponse(response);
+}
+
   async getNetworkAudioQualityTrends(): Promise<NetworkAudioQualityTrends> {
     const url = `${API_BASE_URL}/supervisor/analytics/network-audio-quality-trends`;
     this.logRequest("GET", url);
@@ -378,6 +704,8 @@ class SupervisorApi {
     return this.handleResponse(response);
   }
 }
+
+
 
 export const supervisorApi = new SupervisorApi();
 export default supervisorApi;

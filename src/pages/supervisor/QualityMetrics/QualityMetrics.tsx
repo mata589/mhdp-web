@@ -1,114 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Add these imports
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Download, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, Typography, Button, Tabs, Tab, Box } from '@mui/material';
+import { Card, CardContent, CardHeader, Typography, Button, Tabs, Tab, Box, Skeleton } from '@mui/material';
 
-// Import the popup components
 import QualityMetricsPopup from '../SuperviserPopup/QualityMetricsPopup';
 import AreasForImprovementDrawer from '../SuperviserPopup/AreasForImprovementDrawer';
+import supervisorApi from '../../../services/api/supervisorApi';
+
+import type {
+  QualityOverview,
+  ConversationQualityTrends,
+  DialogueAnalysis,
+  AgentConversationQuality,
+  AreasForImprovement,
+  NetworkAudioQualityTrends,
+} from '../../../types/supervisor.types';
 
 type Priority = 'high' | 'medium' | 'low';
 
-interface ImprovementArea {
-  text: string;
-  subtext: string;
-  priority: Priority;
-}
+/* ───────────── Skeletons ───────────── */
+const MetricCardSkeleton = () => (
+  <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: '16px' }}>
+      <Skeleton variant="rectangular" width={24} height={24} sx={{ borderRadius: '4px' }} />
+      <Skeleton width="60%" height={20} />
+    </Box>
+    <Skeleton width="40%" height={40} sx={{ marginBottom: '8px', marginTop: '50px' }} />
+    <Skeleton width="55%" height={16} sx={{ marginLeft: '160px' }} />
+  </Card>
+);
 
-const conversationTrendData = [
-  { month: 'Jan', score: 16 },
-  { month: 'Feb', score: 18 },
-  { month: 'Mar', score: 18},
-  { month: 'Apr', score: 19 },
-  { month: 'May', score: 80 },
-  { month: 'Jun', score: 40 },
-  { month: 'Jul', score: 40 },
-  { month: 'Aug', score: 14 },
-  { month: 'Sep', score: 36 },
-  { month: 'Oct', score: 19 },
-  { month: 'Nov', score: 10 },
-  { month: 'Dec', score: 0 }
-];
+const ChartSkeleton = () => (
+  <Box sx={{ padding: '24px' }}>
+    <Skeleton variant="rectangular" height={280} sx={{ borderRadius: '4px' }} />
+  </Box>
+);
 
-const networkQualityData = [
-  { month: 'Jan', audio: 50, network: 75 },
-  { month: 'Feb', audio: 40, network: 40 },
-  { month: 'Mar', audio: 45, network: 30 },
-  { month: 'Apr', audio: 50, network: 20},
-  { month: 'May', audio: 40, network: 50 },
-  { month: 'Jun', audio: 55, network: 65 },
-  { month: 'Jul', audio: 50, network: 60 },
-  { month: 'Aug', audio: 48, network: 80 },
-  { month: 'Sep', audio: 45, network: 25 },
-  { month: 'Oct', audio: 90, network: 15 },
-  { month: 'Nov', audio: 60, network: 90 },
-  { month: 'Dec', audio: 50, network: 30 }
-];
+const ProgressBarSkeleton = () => (
+  <Box sx={{ marginBottom: '24px' }}>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+      <Skeleton width="30%" height={20} />
+      <Skeleton width="15%" height={20} />
+    </Box>
+    <Skeleton variant="rectangular" height={10} sx={{ borderRadius: '10px' }} />
+  </Box>
+);
 
-const dialogueData = [
-  { label: 'Rapport', value: 9, color: '#D32F2F' },
-  { label: 'Listening', value: 36, color: '#FFA500' },
-  { label: 'Analyzing', value: 45, color: '#4682B4' },
-  { label: 'Mirroring', value: 63, color: '#339999' },
-  { label: 'Linking', value: 87, color: '#237F4C' }
-];
+const AgentCardSkeleton = () => (
+  <Box sx={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #f3f4f6' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+      <Skeleton variant="circular" width={32} height={32} />
+      <Skeleton width="40%" height={20} />
+    </Box>
+    <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Box key={i} sx={{ textAlign: 'center', flex: '1' }}>
+          <Skeleton width="100%" height={24} sx={{ marginBottom: '4px' }} />
+          <Skeleton width="80%" height={16} sx={{ margin: '0 auto' }} />
+        </Box>
+      ))}
+    </Box>
+  </Box>
+);
 
-const improvementAreas: ImprovementArea[] = [
-  { text: 'Empathy and understanding', subtext: '8 agents need improvement', priority: 'high' },
-  { text: 'Active listening skills', subtext: '10 agents need improvement', priority: 'high' },
-  { text: 'Non-Judgemental conversations', subtext: '7 agents need improvement', priority: 'high' },
-  { text: 'Clarity in explanation', subtext: '4 agents need improvement', priority: 'medium' },
-  { text: 'Supportive Closure', subtext: '18 agents need improvement', priority: 'low' }
-];
+const ImprovementSkeleton = () => (
+  <Box sx={{ padding: '16px 0', borderBottom: '1px solid #f3f4f6' }}>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ flex: 1 }}>
+        <Skeleton width="60%" height={20} sx={{ marginBottom: '4px' }} />
+        <Skeleton width="40%" height={16} />
+      </Box>
+      <Skeleton width={100} height={24} sx={{ borderRadius: '12px' }} />
+    </Box>
+  </Box>
+);
 
-const agentData = [
-  {
-    name: 'James Okyo',
-    avatar: 'J',
-    badge: ' 90%',
-    metrics: [
-      { label: 'Rapport', value: '90', change: '+2%', trend: 'up' },
-      { label: 'listening', value: '87%', change: '+5%', trend: 'up' },
-      { label: 'Analysis', value: '3m 45s', change: null, trend: null },
-      { label: 'motivating', value: '245', change: null, trend: null },
-      { label: 'Ending', value: '85%', change: null, trend: null }
-    ]
-  },
-  {
-    name: 'Sarah Mukasa',
-    avatar: 'S',
-    badge: null,
-    metrics: [
-      { label: 'Rapport', value: '85', change: null, trend: null },
-      { label: 'listening', value: '82%', change: null, trend: null },
-      { label: 'Analysis', value: '4m 12s', change: null, trend: null },
-      { label: 'motivating', value: '198', change: null, trend: null },
-      { label: 'Ending', value: '78%', change: null, trend: null }
-    ]
-  },
-  {
-    name: 'Betty Mirembe',
-    avatar: 'B',
-    badge: null,
-    metrics: [
-      { label: 'Rapport', value: '92', change: '+10%', trend: 'up' },
-      { label: 'listening', value: '88%', change: null, trend: null },
-      { label: 'Analysis', value: '3m 20s', change: null, trend: null },
-      { label: 'motivating', value: '287', change: null, trend: null },
-      { label: 'Ending', value: '90%', change: null, trend: null }
-    ]
-  }
-];
-
+/* ───────────── Main Component ───────────── */
 export default function QualityMetrics() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedTab, setSelectedTab] = useState(0);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [overview, setOverview] = useState<QualityOverview | null>(null);
+  const [convTrends, setConvTrends] = useState<ConversationQualityTrends | null>(null);
+  const [dialogue, setDialogue] = useState<DialogueAnalysis | null>(null);
+  const [agentsData, setAgentsData] = useState<AgentConversationQuality | null>(null);
+  const [improvements, setImprovements] = useState<AreasForImprovement | null>(null);
+  const [networkTrends, setNetworkTrends] = useState<NetworkAudioQualityTrends | null>(null);
+
   const [showQualityPopup, setShowQualityPopup] = useState(false);
   const [showImprovementDrawer, setShowImprovementDrawer] = useState(false);
 
-  // Define tabs with URLs
   const tabs = [
     { label: 'Overview', url: '/supervisor/Analytics' },
     { label: 'Demographics', url: '/supervisor/Demographics' },
@@ -116,19 +101,66 @@ export default function QualityMetrics() {
     { label: 'Quality Metrics', url: '/supervisor/QualityMetrics' },
   ];
 
-  // Set the active tab based on current URL
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const tabIndex = tabs.findIndex(tab => tab.url === currentPath);
-    if (tabIndex !== -1) {
-      setSelectedTab(tabIndex);
-    }
-  }, [location.pathname]);
+  const currentTab = tabs.findIndex((t) => t.url === location.pathname);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-    navigate(tabs[newValue].url);
+  const handleTabChange = (_: React.SyntheticEvent, v: number) => {
+    navigate(tabs[v].url);
   };
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        setLoading(true);
+        const [
+          overviewRes,
+          convRes,
+          dialogRes,
+          agentsRes,
+          improvementRes,
+          networkRes,
+        ] = await Promise.all([
+          supervisorApi.getQualityOverview(),
+          supervisorApi.getConversationQualityTrends(),
+          supervisorApi.getDialogueAnalysis(),
+          supervisorApi.getAgentConversationQuality(),
+          supervisorApi.getAreasForImprovement(1, 10),
+          supervisorApi.getNetworkAudioQualityTrends(),
+        ]);
+
+        setOverview(overviewRes);
+        setConvTrends(convRes);
+        setDialogue(dialogRes);
+        setAgentsData(agentsRes);
+        setImprovements(improvementRes);
+        setNetworkTrends(networkRes);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, []);
+
+  const conversationChartData = useMemo(
+    () =>
+      convTrends?.data?.map((d) => ({
+        month: d.month,
+        score: Math.round(d.average_score),
+      })) ?? [],
+    [convTrends]
+  );
+
+  const networkAudioChartData = useMemo(
+    () =>
+      networkTrends?.trends?.map((d) => ({
+        month: d.month,
+        audio: Number(d.audio_quality?.toFixed(1)),
+        network: Number(d.network_quality?.toFixed(1)),
+      })) ?? [],
+    [networkTrends]
+  );
 
   const getPriorityColor = (priority: Priority): string => {
     switch(priority) {
@@ -139,14 +171,13 @@ export default function QualityMetrics() {
     }
   };
 
-  const getPriorityIcon = (priority: Priority) => {
-    switch(priority) {
-      case 'high': return <AlertCircle style={{ width: '14px', height: '14px' }} />;
-      case 'medium': return <AlertTriangle style={{ width: '14px', height: '14px' }} />;
-      case 'low': return <CheckCircle style={{ width: '14px', height: '14px' }} />;
-      default: return null;
-    }
-  };
+  if (error) {
+    return (
+      <Box sx={{ p: 6, textAlign: 'center' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -156,7 +187,7 @@ export default function QualityMetrics() {
           <Box sx={{ marginBottom: '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', borderRadius: '8px' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px' }}>
               <Tabs
-                value={selectedTab}
+                value={currentTab}
                 onChange={handleTabChange}
                 sx={{
                   '& .MuiTabs-indicator': { backgroundColor: '#14b8a6', height: '3px' },
@@ -198,74 +229,90 @@ export default function QualityMetrics() {
             </Box>
           </Box>
 
-         {/* Top Metrics Row */}
-  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
-    {/* Avg Conversation Score */}
-    <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: '16px' }}>
-        <Box sx={{ 
-          width: '24px', 
-          height: '24px', 
-          backgroundColor: '#3b82f6', 
-          borderRadius: '4px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <img src="/star.png" alt="" style={{ width: '14px', height: '14px' }} />
-        </Box>
-        <Typography sx={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Avg. Conversation Score</Typography>
-      </Box>
-      <Typography sx={{ fontSize: '32px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '8px',position: 'relative',top: '50px' }}>82%</Typography>
-      <Typography sx={{ fontSize: '13px', color: '#10b981', fontWeight: 500 ,ml:20}}>
-        <span style={{ marginRight: '4px' }}>▲</span>+5% vs last month
-      </Typography>
-    </Card>
+          {/* Top Metrics Row */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
+            {loading ? (
+              <>
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+              </>
+            ) : (
+              <>
+                {/* Avg Conversation Score */}
+                <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: '16px' }}>
+                    <Box sx={{ 
+                      width: '24px', 
+                      height: '24px', 
+                      backgroundColor: '#3b82f6', 
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <img src="/star.png" alt="" style={{ width: '14px', height: '14px' }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Avg. Conversation Score</Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '32px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '8px', position: 'relative', top: '50px' }}>
+                    {overview?.avg_conversation_score.value}%
+                  </Typography>
+                  <Typography sx={{ fontSize: '13px', color: '#10b981', fontWeight: 500, ml: 20 }}>
+                    <span style={{ marginRight: '4px' }}>▲</span>+5% vs last month
+                  </Typography>
+                </Card>
 
-    {/* Overall Network Quality */}
-    <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <Box sx={{ 
-          width: '24px', 
-          height: '24px', 
-          backgroundColor: '#f59e0b', 
-          borderRadius: '4px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <img src="/network.png" alt="" style={{ width: '14px', height: '14px' }} />
-        </Box>
-        <Typography sx={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Overall Network Quality</Typography>
-      </Box>
-      <Typography sx={{ fontSize: '32px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '8px',position: 'relative',top: '50px' }}>3.8/5</Typography>
-      <Typography sx={{ fontSize: '13px', color: '#ef4444', fontWeight: 500 ,ml:20}}>
-        <span style={{ marginRight: '4px' }}>▼</span>-5% vs yesterday
-      </Typography>
-    </Card>
+                {/* Overall Network Quality */}
+                <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <Box sx={{ 
+                      width: '24px', 
+                      height: '24px', 
+                      backgroundColor: '#f59e0b', 
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <img src="/network.png" alt="" style={{ width: '14px', height: '14px' }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Overall Network Quality</Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '32px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '8px', position: 'relative', top: '50px' }}>
+                    {overview?.network_quality.value}/5
+                  </Typography>
+                  <Typography sx={{ fontSize: '13px', color: '#ef4444', fontWeight: 500, ml: 20 }}>
+                    <span style={{ marginRight: '4px' }}>▼</span>-5% vs yesterday
+                  </Typography>
+                </Card>
 
-    {/* Overall Audio Quality */}
-    <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <Box sx={{ 
-          width: '24px', 
-          height: '24px', 
-          backgroundColor: '#14b8a6', 
-          borderRadius: '4px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <img src="/audio.png" alt="" style={{ width: '14px', height: '14px' }} />
-        </Box>
-        <Typography sx={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Overall Audio Quality</Typography>
-      </Box>
-      <Typography sx={{ fontSize: '32px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '8px',position: 'relative',top: '50px' }}>4.5/5 </Typography>
-      <Typography sx={{ fontSize: '13px', color: '#10b981', fontWeight: 500 ,ml:20}}>
-        <span style={{ marginRight: '4px' , }}>▲</span>+5% vs yest
-      </Typography>
-    </Card>
-  </Box>
+                {/* Overall Audio Quality */}
+                <Card sx={{ padding: '20px 24px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <Box sx={{ 
+                      width: '24px', 
+                      height: '24px', 
+                      backgroundColor: '#14b8a6', 
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <img src="/audio.png" alt="" style={{ width: '14px', height: '14px' }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Overall Audio Quality</Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '32px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '8px', position: 'relative', top: '50px' }}>
+                    {overview?.audio_quality.value}/5
+                  </Typography>
+                  <Typography sx={{ fontSize: '13px', color: '#10b981', fontWeight: 500, ml: 20 }}>
+                    <span style={{ marginRight: '4px' }}>▲</span>+5% vs yest
+                  </Typography>
+                </Card>
+              </>
+            )}
+          </Box>
 
           {/* Main Content Grid */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
@@ -275,76 +322,85 @@ export default function QualityMetrics() {
                 title={<Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>a. Conversation quality trends</Typography>}
                 sx={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6' }}
               />
-            <CardContent sx={{ padding: '24px' }}>
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={conversationTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={true} vertical={false} />
-                  <XAxis 
-                    dataKey="month" 
-                    tick={{ fontSize: '12px', fill: '#9ca3af' }} 
-                    axisLine={false} 
-                    tickLine={false}
-                    dy={10}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: '12px', fill: '#9ca3af' }} 
-                    axisLine={false} 
-                    tickLine={false}
-                    domain={[0, 100]}
-                    ticks={[0, 20, 40, 60, 80, 100]}
-                    dx={-10}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      fontSize: '13px'
-                    }}
-                    labelStyle={{ color: '#111827', fontWeight: 600 }}
-                    itemStyle={{ color: '#14b8a6' }}
-                  />
-                  <Line 
-                    type="natural" 
-                    dataKey="score" 
-                    stroke="#14b8a6" 
-                    strokeWidth={3} 
-                    dot={false}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
+              {loading ? (
+                <ChartSkeleton />
+              ) : (
+                <CardContent sx={{ padding: '24px' }}>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={conversationChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={true} vertical={false} />
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: '12px', fill: '#9ca3af' }} 
+                        axisLine={false} 
+                        tickLine={false}
+                        dy={10}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: '12px', fill: '#9ca3af' }} 
+                        axisLine={false} 
+                        tickLine={false}
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                        dx={-10}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white', 
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '13px'
+                        }}
+                        labelStyle={{ color: '#111827', fontWeight: 600 }}
+                        itemStyle={{ color: '#14b8a6' }}
+                      />
+                      <Line 
+                        type="natural" 
+                        dataKey="score" 
+                        stroke="#14b8a6" 
+                        strokeWidth={3} 
+                        dot={false}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              )}
             </Card>
 
             {/* Avg. Dialogue Analysis */}
             <Card sx={{ borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
               <CardHeader
-                title={
-                  <Box>
-                    <Typography sx={{ fontSize: '18px', fontWeight: 900, color: '#111827' }}>b. Avg. Dialogue Analysis</Typography>
-                    
-                  </Box>
-                }
+                title={<Typography sx={{ fontSize: '18px', fontWeight: 900, color: '#111827' }}>b. Avg. Dialogue Analysis</Typography>}
                 sx={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6' }}
               />
               <CardContent sx={{ padding: '24px' }}>
-                {dialogueData.map((item, index) => (
-                  <Box key={index} sx={{ marginBottom: index < dialogueData.length - 1 ? '24px' : 0 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <Typography sx={{ fontSize: '14px', color: '#111827', fontWeight: 500 }}>{item.label}</Typography>
-                      <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{item.value}%</Typography>
+                {loading ? (
+                  <>
+                    <ProgressBarSkeleton />
+                    <ProgressBarSkeleton />
+                    <ProgressBarSkeleton />
+                    <ProgressBarSkeleton />
+                    <ProgressBarSkeleton />
+                  </>
+                ) : (
+                  dialogue?.phases.map((item, index) => (
+                    <Box key={index} sx={{ marginBottom: index < dialogue.phases.length - 1 ? '24px' : 0 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <Typography sx={{ fontSize: '14px', color: '#111827', fontWeight: 500 }}>{item.phase}</Typography>
+                        <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{item.percentage}%</Typography>
+                      </Box>
+                      <Box sx={{ width: '100%', height: '10px', backgroundColor: '#e5e7eb', borderRadius: '10px', overflow: 'hidden' }}>
+                        <Box sx={{ width: `${item.percentage}%`, height: '100%', backgroundColor: '#14b8a6', transition: 'width 0.3s', borderRadius: '10px' }} />
+                      </Box>
                     </Box>
-                    <Box sx={{ width: '100%', height: '10px', backgroundColor: '#e5e7eb', borderRadius: '10px', overflow: 'hidden' }}>
-                      <Box sx={{ width: `${item.value}%`, height: '100%', backgroundColor: item.color, transition: 'width 0.3s', borderRadius: '10px' }} />
-                    </Box>
-                  </Box>
-                ))}
+                  ))
+                )}
               </CardContent>
             </Card>
 
             {/* Agent conversation quality */}
-            <Card sx={{ borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6',bgcolor:'#F9F9F9' }}>
+            <Card sx={{ borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6', bgcolor: '#F9F9F9' }}>
               <Box sx={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>c. Agent conversation quality</Typography>
                 <Typography 
@@ -364,42 +420,17 @@ export default function QualityMetrics() {
                 </Typography>
               </Box>
               <CardContent sx={{ padding: '20px 24px' }}>
-                {agentData.map((agent, idx) => (
-                  <Box key={idx} sx={{ marginBottom: idx < agentData.length - 1 ? '24px' : 0, paddingBottom: idx < agentData.length - 1 ? '24px' : 0, borderBottom: idx < agentData.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Box sx={{ 
-                          width: '32px', 
-                          height: '32px', 
-                          borderRadius: '50%', 
-                          backgroundColor: idx === 0 ? '#CCE5E5' : idx === 1 ? '#FFE5B2' : '#DBE6F0', 
-                          color: idx === 1 ? '#111827' : 'white', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          fontSize: '14px', 
-                          fontWeight: 600 
-                        }}>
-                          {agent.avatar}
-                        </Box>
-                        <Typography sx={{ fontSize: '14px', fontWeight: 300, color: '#111827' }}>{agent.name}</Typography>
-                      </Box>
-                      {agent.badge && (
-                        <Typography sx={{ fontSize: '12px', color: '#14b8a6', fontWeight: 600 }}>
-                          {agent.badge}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
-                      {agent.metrics.map((metric, midx) => (
-                        <Box key={midx} sx={{ textAlign: 'center', flex: '1' }}>
-                          <Typography sx={{ fontSize: '16px', fontWeight: 700, color: '#4682B4', marginBottom: '4px' }}>{metric.value}</Typography>
-                          <Typography sx={{ fontSize: '11px', color: '#6b7280', fontWeight: 500 }}>{metric.label}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
+                {loading ? (
+                  <>
+                    <AgentCardSkeleton />
+                    <AgentCardSkeleton />
+                    <AgentCardSkeleton />
+                  </>
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 6 }}>
+                    <Typography color="text.secondary">Agent performance preview</Typography>
                   </Box>
-                ))}
+                )}
               </CardContent>
             </Card>
 
@@ -413,7 +444,7 @@ export default function QualityMetrics() {
                 alignItems: 'center'
               }}>
                 <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>d. Areas for improvement</Typography>
-                               <Typography 
+                <Typography 
                   onClick={() => setShowImprovementDrawer(true)}
                   sx={{ 
                     fontSize: '13px', 
@@ -429,43 +460,55 @@ export default function QualityMetrics() {
                   View all
                 </Typography>
               </Box>
-              <CardContent 
-              
-              sx={{ padding: '24px', cursor: 'pointer' }}>
-                {improvementAreas.slice(0, 5).map((area, idx) => (
-                  <Box key={idx} sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '16px 0',
-                    borderBottom: idx < 2 ? '1px solid #f3f4f6' : 'none'
-                  }}>
-                    <Box>
-                      <Typography sx={{ fontSize: '14px', fontWeight: 200, color: '#111827' }}>{area.text}</Typography>
-                      <Typography sx={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px', fontWeight: 400 }}>{area.subtext}</Typography>
-                    </Box>
-                    <Box sx={{
+              <CardContent sx={{ padding: '24px', cursor: 'pointer' }}>
+                {loading ? (
+                  <>
+                    <ImprovementSkeleton />
+                    <ImprovementSkeleton />
+                    <ImprovementSkeleton />
+                  </>
+                ) : improvements?.areas?.length ? (
+                  improvements.areas.slice(0, 3).map((area, idx) => (
+                    <Box key={idx} sx={{
                       display: 'flex',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      borderRadius: '12px',
-                      padding: '2px 8px',
-                      color: getPriorityColor(area.priority),
-                      backgroundColor: `${getPriorityColor(area.priority)}33`,
+                      padding: '16px 0',
+                      borderBottom: idx < 2 ? '1px solid #f3f4f6' : 'none'
                     }}>
-                      <span style={{
-                        width: '6px',
-                        height: '6px',
-                        backgroundColor: getPriorityColor(area.priority),
-                        borderRadius: '50%',
-                        display: 'inline-block'
-                      }} />
-                      <span style={{ textTransform: 'capitalize' }}>{area.priority} priority</span>
+                      <Box>
+                        <Typography sx={{ fontSize: '14px', fontWeight: 200, color: '#111827' }}>{area.area_name}</Typography>
+                        <Typography sx={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px', fontWeight: 400 }}>
+                          {area.area_description}
+                        </Typography>
+                      </Box>
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        borderRadius: '12px',
+                        padding: '2px 8px',
+                        color: getPriorityColor(area.priority as Priority),
+                        backgroundColor: `${getPriorityColor(area.priority as Priority)}33`,
+                      }}>
+                        <span style={{
+                          width: '6px',
+                          height: '6px',
+                          backgroundColor: getPriorityColor(area.priority as Priority),
+                          borderRadius: '50%',
+                          display: 'inline-block'
+                        }} />
+                        <span style={{ textTransform: 'capitalize' }}>{area.priority} priority</span>
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
+                  ))
+                ) : (
+                  <Typography align="center" color="text.secondary">
+                    No improvement areas found
+                  </Typography>
+                )}
               </CardContent>
             </Card>
 
@@ -485,25 +528,29 @@ export default function QualityMetrics() {
                     </Box>
                   </Box>
                 </Box>
-                <CardContent sx={{ padding: '24px' }}>
-                  <ResponsiveContainer width="100%" height={320}>
-                    <LineChart data={networkQualityData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                      <XAxis dataKey="month" style={{ fontSize: '12px', fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                      <YAxis style={{ fontSize: '12px', fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="audio" stroke="#14b8a6" strokeWidth={3}  dot={false} />
-                      <Line type="monotone" dataKey="network" stroke="#f59e0b" strokeWidth={3}  dot={false}  />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
+                {loading ? (
+                  <ChartSkeleton />
+                ) : (
+                  <CardContent sx={{ padding: '24px' }}>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <LineChart data={networkAudioChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                        <XAxis dataKey="month" style={{ fontSize: '12px', fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                        <YAxis style={{ fontSize: '12px', fill: '#6b7280' }} axisLine={false} tickLine={false} domain={[0, 5]} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="audio" stroke="#14b8a6" strokeWidth={3} dot={false} />
+                        <Line type="monotone" dataKey="network" stroke="#f59e0b" strokeWidth={3} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                )}
               </Card>
             </Box>
           </Box>
         </Box>
       </Box>
 
-      {/* Popup Components - Rendered conditionally */}
+      {/* Popup Components */}
       {showQualityPopup && (
         <QualityMetricsPopup 
           open={showQualityPopup} 

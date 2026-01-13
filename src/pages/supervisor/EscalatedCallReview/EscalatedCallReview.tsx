@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -17,6 +17,8 @@ import {
   IconButton,
   Divider,
   Avatar,
+  Skeleton,
+  Alert,
 } from '@mui/material';
 import {
   Search,
@@ -26,104 +28,142 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
+  X,
 } from 'lucide-react';
 import CustomChip, { type RiskLevel } from '../../../components/common/CustomChip/CustomChip';
-//import CustomChip, { RiskLevel } from '../../../components/common/CustomChip/CustomChip';
 
-// Map severity to risk level
-type SeverityLevel = 'Critical' | 'High' | 'Medium' | 'Low';
+import type { 
+  EscalationsSummary, 
+  EscalationItem,
+  EscalationsOverview 
+} from '../../../types/supervisor.types';
+import supervisorApi from '../../../services/api/supervisorApi';
 
-const mapSeverityToRisk = (severity: SeverityLevel): RiskLevel => {
-  switch (severity) {
-    case 'Critical':
-      return 'High';
-    case 'High':
-      return 'High';
-    case 'Medium':
-      return 'Medium';
-    case 'Low':
-      return 'Low';
-    default:
-      return 'Medium';
-  }
+// Shimmer Loading Components
+const MetricCardSkeleton = () => (
+  <Card sx={{ boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
+    <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+        <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: '8px' }} />
+        <Skeleton variant="text" width={120} height={20} />
+      </Box>
+      <Skeleton variant="text" width={60} height={40} />
+    </CardContent>
+  </Card>
+);
+
+const CallItemSkeleton = () => (
+  <Box sx={{ py: 2.5, borderTop: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+      <Skeleton variant="circular" width={40} height={40} />
+      <Box sx={{ flex: 1 }}>
+        <Skeleton variant="text" width="60%" height={24} sx={{ mb: 0.5 }} />
+        <Skeleton variant="text" width="80%" height={18} />
+      </Box>
+    </Box>
+    <Box sx={{ display: 'flex', gap: 1.5 }}>
+      <Skeleton variant="rectangular" width={80} height={36} sx={{ borderRadius: '4px' }} />
+      <Skeleton variant="rectangular" width={80} height={36} sx={{ borderRadius: '4px' }} />
+      <Skeleton variant="rectangular" width={80} height={36} sx={{ borderRadius: '4px' }} />
+    </Box>
+  </Box>
+);
+
+// Map risk level for CustomChip
+const mapRiskLevel = (riskLevel: string): RiskLevel => {
+  const level = riskLevel?.toLowerCase();
+  if (level === 'critical' || level === 'high') return 'High';
+  if (level === 'medium') return 'Medium';
+  if (level === 'low') return 'Low';
+  return 'Medium';
 };
 
 export default function EscalatedCallsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('All risk levels');
   const [reviewDialog, setReviewDialog] = useState(false);
-  const [selectedCall, setSelectedCall] = useState<any>(null);
+  const [selectedCall, setSelectedCall] = useState<EscalationItem | null>(null);
   const [resolution, setResolution] = useState('');
-  const [status, setStatus] = useState('pending');
+  const [status, setStatus] = useState<'pending' | 'in_progress' | 'resolved'>('pending');
+  
+  // API State
+  const [summary, setSummary] = useState<EscalationsSummary | null>(null);
+  const [escalatedCalls, setEscalatedCalls] = useState<EscalationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+  const [updating, setUpdating] = useState(false);
+  const limit = 10;
+
+  // Fetch Escalations Summary
+  const fetchSummary = async () => {
+    try {
+      setSummaryLoading(true);
+      const data = await supervisorApi.getEscalationsSummary();
+      setSummary(data);
+    } catch (err) {
+      console.error('Error fetching summary:', err);
+      // Don't show error for summary, just log it
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  // Fetch Escalated Calls
+  const fetchEscalatedCalls = async () => {
+    try {
+      setLoading(true);
+      const data = await supervisorApi.getEscalationsOverview(page, limit);
+      setEscalatedCalls(data.escalations || []);
+      setTotalResults(data.total_results || 0);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching escalated calls:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load escalated calls');
+      setEscalatedCalls([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
+
+  useEffect(() => {
+    fetchEscalatedCalls();
+  }, [page]);
 
   const metrics = [
     {
       title: 'Total Escalations',
-      value: '12',
+      value: summary?.total_escalations?.toString() || '0',
       icon: '/cross1.png',
     },
     {
       title: 'Escalations Today',
-      value: '6',
+      value: summary?.escalations_today?.toString() || '0',
       icon: '/cross2.png',
     },
     {
       title: 'Critical Alerts',
-      value: '4',
+      value: summary?.critical_alerts?.toString() || '0',
       icon: '/cross3.png',
     },
     {
       title: 'Resolved Today',
-      value: '2',
+      value: summary?.resolved_today?.toString() || '0',
       icon: '/cross4.png',
     },
   ];
 
-  const escalatedCalls = [
-    {
-      id: 'ESC-001',
-      type: 'Suicidal intent',
-      severity: 'Critical' as SeverityLevel,
-      callerId: 'Caller ID: 2001',
-      caller: 'John Doe',
-      phone: '+256 700 123 456',
-      agent: 'James Ojat',
-      sentTime: 'Jul 13, 2025 | 10:43AM',
-      duration: '15:30',
-      reason: 'Complex medical query regarding drug interactions',
-      category: 'Medical Consultation',
-    },
-    {
-      id: 'ESC-002',
-      type: 'Severe depression',
-      severity: 'High' as SeverityLevel,
-      callerId: 'Caller ID: 1821',
-      caller: 'Mary Smith',
-      phone: '+256 701 987 654',
-      agent: 'Emma Seeti',
-      sentTime: 'Jul 13, 2025 | 10:43AM',
-      duration: '12:15',
-      reason: 'Patient expressing symptoms of severe depression',
-      category: 'Mental Health',
-    },
-    {
-      id: 'ESC-003',
-      type: 'Suicidal intent',
-      severity: 'Critical' as SeverityLevel,
-      callerId: 'Caller ID: 2001',
-      caller: 'Peter Kato',
-      phone: '+256 702 456 789',
-      agent: 'James Ojat',
-      sentTime: 'Jul 13, 2025 | 10:43AM',
-      duration: '8:45',
-      reason: 'Emergency consultation request',
-      category: 'Emergency',
-    },
-  ];
-
-  const handleViewCall = (call: any) => {
+  const handleViewCall = (call: EscalationItem) => {
     setSelectedCall(call);
     setReviewDialog(true);
+    setStatus('pending');
+    setResolution('');
   };
 
   const handleCloseDialog = () => {
@@ -133,10 +173,59 @@ export default function EscalatedCallsPage() {
     setStatus('pending');
   };
 
-  const handleResolveCall = () => {
-    console.log('Resolving call:', selectedCall?.id, resolution, status);
-    handleCloseDialog();
+  const handleResolveCall = async () => {
+    if (!selectedCall) return;
+    
+    try {
+      setUpdating(true);
+      await supervisorApi.updateEscalation({
+        escalation_id: selectedCall.escalation_id,
+        resolution_status: status,
+        trajectory_of_care: resolution,
+        resolution_notes: resolution,
+      });
+      
+      // Refresh data after successful update
+      await Promise.all([fetchEscalatedCalls(), fetchSummary()]);
+      handleCloseDialog();
+    } catch (err) {
+      console.error('Error updating escalation:', err);
+      alert('Failed to update escalation: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setUpdating(false);
+    }
   };
+
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  // Filter calls based on search and risk level
+  const filteredCalls = escalatedCalls.filter(call => {
+    const matchesSearch = searchQuery === '' || 
+      call.caller_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      call.escalation_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      call.escalation_reason?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesLevel = selectedLevel === 'All risk levels' || 
+      call.risk_level?.toLowerCase() === selectedLevel.toLowerCase();
+    
+    return matchesSearch && matchesLevel;
+  });
+
+  const totalPages = Math.ceil(totalResults / limit);
 
   return (
     <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: 3 }}>
@@ -153,61 +242,67 @@ export default function EscalatedCallsPage() {
           mb: 3,
         }}
       >
-        {metrics.map((metric, index) => (
-          <Card
-            key={index}
-            sx={{
-              boxShadow: 'none',
-              border: '1px solid #E5E7EB',
-              borderRadius: '8px',
-            }}
-          >
-            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
+        {summaryLoading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => <MetricCardSkeleton key={i} />)}
+          </>
+        ) : (
+          metrics.map((metric, index) => (
+            <Card
+              key={index}
+              sx={{
+                boxShadow: 'none',
+                border: '1px solid #E5E7EB',
+                borderRadius: '8px',
+              }}
+            >
+              <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                   <Box
-                    component="img"
-                    src={metric.icon}
-                    alt={metric.title}
                     sx={{
-                      width: 24,
-                      height: 24,
-                      objectFit: 'contain',
+                      width: 40,
+                      height: 40,
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
-                  />
+                  >
+                    <Box
+                      component="img"
+                      src={metric.icon}
+                      alt={metric.title}
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        objectFit: 'contain',
+                      }}
+                    />
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#6B7280',
+                    }}
+                  >
+                    {metric.title}
+                  </Typography>
                 </Box>
                 <Typography
                   sx={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: '#6B7280',
+                    fontSize: '32px',
+                    fontWeight: 700,
+                    color: '#111827',
+                    lineHeight: 1,
                   }}
                 >
-                  {metric.title}
+                  {metric.value}
                 </Typography>
-              </Box>
-              <Typography
-                sx={{
-                  fontSize: '32px',
-                  fontWeight: 700,
-                  color: '#111827',
-                  lineHeight: 1,
-                }}
-              >
-                {metric.value}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </Box>
 
       {/* Main Content Card */}
@@ -229,7 +324,7 @@ export default function EscalatedCallsPage() {
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
               <TextField
-                placeholder="Search by agent or call id..."
+                placeholder="Search by caller ID or escalation ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 size="small"
@@ -278,193 +373,185 @@ export default function EscalatedCallsPage() {
                   }}
                 >
                   <MenuItem value="All risk levels">All risk levels</MenuItem>
-                  <MenuItem value="Critical">Critical</MenuItem>
-                  <MenuItem value="High">High</MenuItem>
-                  <MenuItem value="Medium">Medium</MenuItem>
+                  <MenuItem value="critical">Critical</MenuItem>
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="low">Low</MenuItem>
                 </Select>
               </FormControl>
-              <Button
-                variant="outlined"
-                sx={{
-                  textTransform: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: '#374151',
-                  borderColor: '#E5E7EB',
-                  '&:hover': {
-                    borderColor: '#D1D5DB',
-                    bgcolor: '#F9FAFB',
-                  },
-                }}
-              >
-                Filters
-              </Button>
             </Box>
           </Box>
+
+          {/* Error State */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }} action={
+              <Button size="small" onClick={fetchEscalatedCalls}>
+                Retry
+              </Button>
+            }>
+              {error}
+            </Alert>
+          )}
 
           {/* Call List */}
-          <Box>
-            {escalatedCalls.map((call, index) => (
-              <Box
-                key={call.id}
-                sx={{
-                  py: 2.5,
-                  borderTop: index === 0 ? 'none' : '1px solid #F3F4F6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: 2,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: '20px',
-                      bgcolor: '#CCE5E5',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Phone size={20} color="#6B7280" />
-                  </Box>
-                  <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                      <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
-                        {call.type}
-                      </Typography>
-                      <CustomChip 
-                        label={mapSeverityToRisk(call.severity)} 
-                        variant="risk" 
-                        size="small"
-                      />
+          {loading ? (
+            <Box>
+              {[1, 2, 3].map((i) => <CallItemSkeleton key={i} />)}
+            </Box>
+          ) : filteredCalls.length === 0 ? (
+            <Box sx={{ py: 8, textAlign: 'center' }}>
+              <Typography sx={{ color: '#6B7280', fontSize: '14px' }}>
+                {searchQuery || selectedLevel !== 'All risk levels' 
+                  ? 'No escalated calls match your filters' 
+                  : 'No escalated calls found'}
+              </Typography>
+            </Box>
+          ) : (
+            <Box>
+              {filteredCalls.map((call, index) => (
+                <Box
+                  key={call.escalation_id}
+                  sx={{
+                    py: 2.5,
+                    borderTop: index === 0 ? 'none' : '1px solid #F3F4F6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '20px',
+                        bgcolor: '#CCE5E5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Phone size={20} color="#6B7280" />
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                        {call.callerId}
-                      </Typography>
-                      <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                        Agent: <span style={{ fontWeight: 500, color: '#374151' }}>{call.agent}</span>
-                      </Typography>
-                      <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                        Sent: {call.sentTime}
-                      </Typography>
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5, flexWrap: 'wrap' }}>
+                        <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
+                          {call.escalation_reason || 'Unknown Reason'}
+                        </Typography>
+                        <CustomChip 
+                          label={mapRiskLevel(call.risk_level)} 
+                          variant="risk" 
+                          size="small"
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                          Caller ID: {call.caller_id}
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                          Priority: <span style={{ fontWeight: 500, color: '#374151' }}>{call.priority_level}</span>
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                          Status: <span style={{ fontWeight: 500, color: '#374151' }}>{call.resolution_status}</span>
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                          {formatDateTime(call.sent_at)}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
 
-                <Box sx={{ display: 'flex', gap: 1.5 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Play size={16} />}
-                    sx={{
-                      textTransform: 'none',
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      color: '#008080',
-                      borderColor: '#E5E7EB',
-                      px: 2,
-                      '&:hover': {
-                        borderColor: '#4682B4',
-                        bgcolor: '#F0F9FF',
-                      },
-                    }}
-                  >
-                    Play
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Eye size={16} />}
-                    onClick={() => handleViewCall(call)}
-                    sx={{
-                      textTransform: 'none',
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      color: '#008080',
-                      borderColor: '#E5E7EB',
-                      px: 2,
-                      '&:hover': {
-                        borderColor: '#4682B4',
-                        bgcolor: '#F0F9FF',
-                      },
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<Phone size={16} />}
-                    sx={{
-                      textTransform: 'none',
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      bgcolor: '#00897b',
-                      color: 'white',
-                      px: 2,
-                      '&:hover': {
-                        bgcolor: '#00796b',
-                      },
-                    }}
-                  >
-                    Call
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1.5 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Eye size={16} />}
+                      onClick={() => handleViewCall(call)}
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        color: '#008080',
+                        borderColor: '#E5E7EB',
+                        px: 2,
+                        '&:hover': {
+                          borderColor: '#4682B4',
+                          bgcolor: '#F0F9FF',
+                        },
+                      }}
+                    >
+                      View
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
-          </Box>
+              ))}
+            </Box>
+          )}
 
           {/* Pagination */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mt: 3,
-              pt: 3,
-              borderTop: '1px solid #F3F4F6',
-            }}
-          >
-            <Typography sx={{ fontSize: '14px', color: '#6B7280' }}>
-              Page 1-3 of 5 results
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="outlined"
-                sx={{
-                  minWidth: 'auto',
-                  px: 1.5,
-                  py: 0.75,
-                  borderColor: '#E5E7EB',
-                  color: '#6B7280',
-                  '&:hover': {
-                    borderColor: '#D1D5DB',
-                    bgcolor: '#F9FAFB',
-                  },
-                }}
-              >
-                <ChevronLeft size={18} />
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{
-                  minWidth: 'auto',
-                  px: 1.5,
-                  py: 0.75,
-                  borderColor: '#E5E7EB',
-                  color: '#6B7280',
-                  '&:hover': {
-                    borderColor: '#D1D5DB',
-                    bgcolor: '#F9FAFB',
-                  },
-                }}
-              >
-                <ChevronRight size={18} />
-              </Button>
+          {!loading && escalatedCalls.length > 0 && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mt: 3,
+                pt: 3,
+                borderTop: '1px solid #F3F4F6',
+              }}
+            >
+              <Typography sx={{ fontSize: '14px', color: '#6B7280' }}>
+                Page {page} of {totalPages} ({totalResults} results)
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  sx={{
+                    minWidth: 'auto',
+                    px: 1.5,
+                    py: 0.75,
+                    borderColor: '#E5E7EB',
+                    color: '#6B7280',
+                    '&:hover': {
+                      borderColor: '#D1D5DB',
+                      bgcolor: '#F9FAFB',
+                    },
+                    '&.Mui-disabled': {
+                      borderColor: '#E5E7EB',
+                      color: '#D1D5DB',
+                    },
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                </Button>
+                <Button
+                  variant="outlined"
+                  disabled={page === totalPages}
+                  onClick={() => setPage(page + 1)}
+                  sx={{
+                    minWidth: 'auto',
+                    px: 1.5,
+                    py: 0.75,
+                    borderColor: '#E5E7EB',
+                    color: '#6B7280',
+                    '&:hover': {
+                      borderColor: '#D1D5DB',
+                      bgcolor: '#F9FAFB',
+                    },
+                    '&.Mui-disabled': {
+                      borderColor: '#E5E7EB',
+                      color: '#D1D5DB',
+                    },
+                  }}
+                >
+                  <ChevronRight size={18} />
+                </Button>
+              </Box>
             </Box>
-          </Box>
+          )}
         </CardContent>
       </Card>
 
@@ -473,10 +560,10 @@ export default function EscalatedCallsPage() {
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography sx={{ fontSize: '18px', fontWeight: 600 }}>
-              Call Review - {selectedCall?.id}
+              Call Review - {selectedCall?.escalation_id}
             </Typography>
             <IconButton onClick={handleCloseDialog} size="small">
-              {/* Close icon */}
+              <X size={20} />
             </IconButton>
           </Box>
         </DialogTitle>
@@ -491,39 +578,26 @@ export default function EscalatedCallsPage() {
                   </Typography>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Caller
+                      Caller ID
                     </Typography>
                     <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.caller}
+                      {selectedCall.caller_id}
                     </Typography>
                   </Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Phone
+                      Agent Name
                     </Typography>
                     <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.phone}
+                      {selectedCall.agent_name || 'N/A'}
                     </Typography>
                   </Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Agent
+                      Escalation ID
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: '#4682B4' }}>
-                        {selectedCall.agent.split(' ').map((n: string) => n[0]).join('')}
-                      </Avatar>
-                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                        {selectedCall.agent}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Duration
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.duration}
+                    <Typography variant="body1" sx={{ fontSize: '14px', fontFamily: 'monospace' }}>
+                      {selectedCall.escalation_id}
                     </Typography>
                   </Box>
                 </Box>
@@ -538,36 +612,49 @@ export default function EscalatedCallsPage() {
                       Reason
                     </Typography>
                     <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.reason}
+                      {selectedCall.escalation_reason}
                     </Typography>
                   </Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Category
+                      Type
                     </Typography>
-                    <CustomChip 
-                      label={selectedCall.category as any} 
-                      variant="outcome" 
-                      size="small"
-                      showDot={false}
-                    />
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      Escalation
+                    </Typography>
                   </Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Severity
+                      Risk Level
                     </Typography>
                     <CustomChip 
-                      label={mapSeverityToRisk(selectedCall.severity)} 
+                      label={mapRiskLevel(selectedCall.risk_level)} 
                       variant="risk" 
                       size="small"
                     />
                   </Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Priority Level
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                      {selectedCall.priority_level}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                      Current Status
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontSize: '14px', fontWeight: 500 }}>
+                      {selectedCall.resolution_status}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
                       Escalation Time
                     </Typography>
                     <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.sentTime}
+                      {formatDateTime(selectedCall.sent_at)}
                     </Typography>
                   </Box>
                 </Box>
@@ -577,13 +664,13 @@ export default function EscalatedCallsPage() {
               <Box>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
-                  Resolution
+                  Resolution & Follow-up
                 </Typography>
                 <TextField
                   multiline
                   rows={4}
                   fullWidth
-                  placeholder="Enter resolution details..."
+                  placeholder="Enter resolution details, trajectory of care, or follow-up notes..."
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value)}
                   sx={{
@@ -596,13 +683,12 @@ export default function EscalatedCallsPage() {
                 <FormControl fullWidth size="small">
                   <Select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    onChange={(e) => setStatus(e.target.value as any)}
                     sx={{ fontSize: '14px' }}
                   >
                     <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="in-review">In Review</MenuItem>
+                    <MenuItem value="in_progress">In Progress</MenuItem>
                     <MenuItem value="resolved">Resolved</MenuItem>
-                    <MenuItem value="closed">Closed</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -612,6 +698,7 @@ export default function EscalatedCallsPage() {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             onClick={handleCloseDialog}
+            disabled={updating}
             sx={{
               textTransform: 'none',
               fontSize: '14px',
@@ -623,6 +710,7 @@ export default function EscalatedCallsPage() {
           <Button
             variant="contained"
             onClick={handleResolveCall}
+            disabled={updating || !resolution.trim()}
             startIcon={<CheckCircle size={16} />}
             sx={{
               textTransform: 'none',
@@ -631,9 +719,13 @@ export default function EscalatedCallsPage() {
               '&:hover': {
                 bgcolor: '#00796b',
               },
+              '&.Mui-disabled': {
+                bgcolor: '#D1D5DB',
+                color: '#9CA3AF',
+              },
             }}
           >
-            Update Call
+            {updating ? 'Updating...' : 'Update Call'}
           </Button>
         </DialogActions>
       </Dialog>

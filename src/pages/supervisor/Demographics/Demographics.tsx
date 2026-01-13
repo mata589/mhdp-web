@@ -1,5 +1,6 @@
+// pages/supervisor/Demographics.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Add these imports
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   PieChart,
   Pie,
@@ -11,7 +12,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Download, User, Users, Globe } from 'lucide-react';
+import type { PieLabelRenderProps } from 'recharts';
+import { Download, User } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -21,54 +23,45 @@ import {
   Tabs,
   Tab,
   Box,
+  Skeleton,
 } from '@mui/material';
 
-const genderData = [
-  { name: 'Female', value: 480, color: '#008080', percentage: 72 },
-  { name: 'Male', value: 120, color: '#f5a623', percentage: 20 },
-];
+import type {
+  GenderBreakdown,
+  LanguageUsage,
+  CallerTypeBreakdown,
+  TrajectoryOfCare,
+} from '../../../types/supervisor.types'; // Adjust path as needed
+import supervisorApi from '../../../services/api/supervisorApi';
 
-const languageData = [
-  { name: 'English', value: 20, color: '#4682B4' },
-  { name: 'Luganda', value: 40, color: '#f5a623' },
-  { name: 'Swahili', value: 30, color: '#0d9488' },
-];
+const COLORS = {
+  teal: '#0d9488',
+  orange: '#f5a623',
+  blue: '#4682B4',
+  darkTeal: '#008080',
+  gray: '#6b7280',
+};
 
-const trajectoryData = [
-  { name: 'Already in care', value: 480, color: '#4682B4', percentage: 80 },
-  { name: 'Still in community', value: 120, color: '#f5a623', percentage: 20 },
-];
+const formatPercentage = (value: number, total: number): string =>
+  total === 0 ? '0%' : `${Math.round((value / total) * 100)}%`;
 
-const callerTypes = [
-  {
-    icon: User,
-    label: 'Patient',
-    percentage: '86% of total calls',
-    count: 480,
-    color: '#0d7a8a',
-  },
-  {
-    icon: User,
-    label: 'Caregiver',
-    count: 110,
-    percentage: '30% of total calls',
-    color: '#5b7fa6',
-  },
-  {
-    icon: User,
-    label: 'General public',
-    count: 20,
-    percentage: '4% of total calls',
-    color: '#f5a623',
-  },
-];
+// Simple label renderer with proper typing
+const renderPercentageLabel = ({ percent }: PieLabelRenderProps): string =>
+  typeof percent === 'number' ? `${Math.round(percent * 100)}%` : '0%';
 
-export default function Dashboard() {
+const Demographics = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedTab, setSelectedTab] = useState(0);
 
-  // Define tabs with URLs
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Data states
+  const [gender, setGender] = useState<GenderBreakdown | null>(null);
+  const [language, setLanguage] = useState<LanguageUsage | null>(null);
+  const [callerType, setCallerType] = useState<CallerTypeBreakdown | null>(null);
+  const [trajectory, setTrajectory] = useState<TrajectoryOfCare | null>(null);
+
   const tabs = [
     { label: 'Overview', url: '/supervisor/Analytics' },
     { label: 'Demographics', url: '/supervisor/Demographics' },
@@ -76,32 +69,80 @@ export default function Dashboard() {
     { label: 'Quality Metrics', url: '/supervisor/QualityMetrics' },
   ];
 
-  // Set the active tab based on current URL
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const tabIndex = tabs.findIndex(tab => tab.url === currentPath);
-    if (tabIndex !== -1) {
-      setSelectedTab(tabIndex);
-    }
-  }, [location.pathname]);
+  const [selectedTab, setSelectedTab] = useState(
+    tabs.findIndex((tab) => tab.url === location.pathname) || 1
+  );
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
     navigate(tabs[newValue].url);
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [g, l, c, t] = await Promise.all([
+          supervisorApi.getGenderBreakdown(),
+          supervisorApi.getLanguageUsage(),
+          supervisorApi.getCallerTypeBreakdown(),
+          supervisorApi.getTrajectoryOfCare(),
+        ]);
+
+        setGender(g);
+        setLanguage(l);
+        setCallerType(c);
+        setTrajectory(t);
+      } catch (err: any) {
+        setError('Failed to load demographics data. Please try again later.');
+        console.error('Demographics fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Prepare chart data
+  const genderChartData = gender?.breakdown.map((item) => ({
+    name: item.gender,
+    value: item.count,
+    percentage: formatPercentage(item.count, gender.total_callers),
+    color: item.gender.toLowerCase() === 'female' ? COLORS.darkTeal : COLORS.orange,
+  })) ?? [];
+
+  const languageChartData = language?.usage.map((item) => ({
+    name: item.language,
+    value: item.count,
+    color:
+      item.language === 'English' ? COLORS.blue :
+      item.language === 'Luganda' ? COLORS.orange :
+      COLORS.teal,
+  })) ?? [];
+
+  const trajectoryChartData = trajectory?.distribution.map((item) => ({
+    name: item.trajectory_of_care,
+    value: item.count,
+    percentage: formatPercentage(item.count, trajectory.total_records),
+    color: item.trajectory_of_care.toLowerCase().includes('already') ? COLORS.blue : COLORS.orange,
+  })) ?? [];
+
+  const callerTypeItems = callerType?.breakdown ?? [];
+
+  const isEmptyData =
+    !gender?.total_callers &&
+    !language?.total_calls &&
+    !callerType?.total_calls &&
+    !trajectory?.total_records;
 
   return (
     <Box sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh', p: 3 }}>
       <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
         {/* Header */}
-        <Card
-          sx={{
-            backgroundColor: 'white',
-            borderBottom: '1px solid #e5e7eb',
-            mb: 3,
-            borderRadius: 2,
-          }}
-        >
+        <Card sx={{ mb: 3, borderRadius: 2 }}>
           <Box
             sx={{
               display: 'flex',
@@ -114,173 +155,225 @@ export default function Dashboard() {
             <Tabs
               value={selectedTab}
               onChange={handleTabChange}
-              sx={{
-                '& .MuiTab-root': { textTransform: 'none', fontSize: 14 },
-              }}
+              sx={{ '& .MuiTab-root': { textTransform: 'none', fontSize: 14 } }}
             >
-              {tabs.map((tab, index) => (
-                <Tab key={index} label={tab.label} />
+              {tabs.map((tab, i) => (
+                <Tab key={i} label={tab.label} />
               ))}
             </Tabs>
 
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Typography sx={{ fontSize: 14, color: '#6b7280' }}>
-                04/08/2025 - 04/09/2025
+              <Typography sx={{ fontSize: 14, color: COLORS.gray }}>
+                Last 30 days
               </Typography>
               <Button
                 variant="contained"
+                startIcon={<Download size={16} />}
                 sx={{
-                  backgroundColor: '#0d9488',
+                  backgroundColor: COLORS.teal,
                   textTransform: 'none',
                   '&:hover': { backgroundColor: '#0c7c73' },
                 }}
               >
-                <Download style={{ width: 16, height: 16, marginRight: 8 }} />
                 Export report
               </Button>
             </Box>
           </Box>
         </Card>
 
-        {/* Content - rest of your component stays the same */}
+        {error && (
+          <Typography color="error" align="center" sx={{ my: 4 }}>
+            {error}
+          </Typography>
+        )}
+
+        {isEmptyData && !loading && (
+          <Typography align="center" color="text.secondary" sx={{ my: 8 }}>
+            No demographic data available for the selected period.
+          </Typography>
+        )}
+
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-          {/* Gender breakdown */}
+          {/* 1. Gender breakdown */}
           <Box sx={{ flex: '1 1 calc(50% - 12px)', minWidth: 400 }}>
-            <Card>
+            <Card sx={{ borderRadius: 2 }}>
               <CardHeader
                 title={
-                  <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
-                    a. Gender breakdown
-                  </Typography>
+                  loading ? (
+                    <Skeleton width="55%" height={28} />
+                  ) : (
+                    <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
+                      a. Gender breakdown
+                    </Typography>
+                  )
                 }
                 subheader={
-                  <Typography sx={{ fontSize: 14, color: '#6b7280', mt: 0.5 }}>
-                    Total: 3,347 callers
-                  </Typography>
+                  loading ? (
+                    <Skeleton width="40%" height={20} sx={{ mt: 0.5 }} />
+                  ) : (
+                    <Typography sx={{ fontSize: 14, color: COLORS.gray, mt: 0.5 }}>
+                      Total: {gender?.total_callers?.toLocaleString() ?? 0} callers
+                    </Typography>
+                  )
                 }
               />
               <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={genderData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry.percentage}%`}
-                      outerRadius={80}
-                      dataKey="value"
-                    >
-                      {genderData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-
-                <Box mt={2}>
-                  {genderData.map((item, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        mb: 1,
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            backgroundColor: item.color,
-                          }}
-                        />
-                        <Typography sx={{ fontSize: 14 }}>{item.name}</Typography>
-                      </Box>
-                      <Typography sx={{ fontSize: 14, fontWeight: 500 }}>
-                        {item.value}
-                      </Typography>
+                {loading ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Skeleton variant="circular" width={180} height={180} />
+                    <Box sx={{ width: '100%', mt: 4 }}>
+                      <Skeleton height={36} />
+                      <Skeleton height={36} sx={{ mt: 1.5 }} />
                     </Box>
-                  ))}
-                </Box>
+                  </Box>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={genderChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={renderPercentageLabel}
+                          outerRadius={90}
+                          dataKey="value"
+                        >
+                          {genderChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    <Box mt={2}>
+                      {genderChartData.map((item, i) => (
+                        <Box
+                          key={i}
+                          sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: '50%',
+                                backgroundColor: item.color,
+                              }}
+                            />
+                            <Typography variant="body2">{item.name}</Typography>
+                          </Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {item.value.toLocaleString()} ({item.percentage})
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </>
+                )}
               </CardContent>
             </Card>
           </Box>
 
-          {/* Language usage */}
+          {/* 2. Language usage */}
           <Box sx={{ flex: '1 1 calc(50% - 12px)', minWidth: 400 }}>
-            <Card>
+            <Card sx={{ borderRadius: 2 }}>
               <CardHeader
                 title={
-                  <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
-                    b. Language usage
-                  </Typography>
+                  loading ? (
+                    <Skeleton width="50%" height={28} />
+                  ) : (
+                    <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
+                      b. Language usage
+                    </Typography>
+                  )
                 }
               />
               <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={languageData}>
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {languageData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-
-                <Box mt={2}>
-                  {languageData.map((item, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        mb: 1,
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            backgroundColor: item.color,
-                          }}
-                        />
-                        <Typography sx={{ fontSize: 14 }}>{item.name}</Typography>
-                      </Box>
-                      <Typography sx={{ fontSize: 14, fontWeight: 500 }}>
-                        {item.value}
-                      </Typography>
+                {loading ? (
+                  <>
+                    <Skeleton variant="rectangular" height={250} sx={{ borderRadius: 1 }} />
+                    <Box mt={2}>
+                      <Skeleton height={36} />
+                      <Skeleton height={36} sx={{ mt: 1.5 }} />
+                      <Skeleton height={36} sx={{ mt: 1.5 }} />
                     </Box>
-                  ))}
-                </Box>
+                  </>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={languageChartData}>
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {languageChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                    <Box mt={2}>
+                      {languageChartData.map((item, i) => (
+                        <Box
+                          key={i}
+                          sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: '50%',
+                                backgroundColor: item.color,
+                              }}
+                            />
+                            <Typography variant="body2">{item.name}</Typography>
+                          </Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {item.value.toLocaleString()}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </>
+                )}
               </CardContent>
             </Card>
           </Box>
 
-          {/* Caller type */}
+          {/* 3. Caller type */}
           <Box sx={{ flex: '1 1 calc(50% - 12px)', minWidth: 400 }}>
-            <Card>
+            <Card sx={{ borderRadius: 2 }}>
               <CardHeader
                 title={
-                  <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
-                    c. Caller type
-                  </Typography>
+                  loading ? (
+                    <Skeleton width="45%" height={28} />
+                  ) : (
+                    <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
+                      c. Caller type
+                    </Typography>
+                  )
                 }
               />
               <CardContent>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                  {callerTypes.map((caller, index) => {
-                    const Icon = caller.icon;
-                    return (
+                {loading ? (
+                  Array(3)
+                    .fill(0)
+                    .map((_, i) => (
+                      <Skeleton
+                        key={i}
+                        variant="rectangular"
+                        height={88}
+                        sx={{ mb: 2, borderRadius: 2 }}
+                      />
+                    ))
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {callerTypeItems.map((item, i) => (
                       <Box
-                        key={index}
+                        key={i}
                         sx={{
                           border: '1px solid #e5e7eb',
                           borderRadius: 2,
@@ -293,92 +386,108 @@ export default function Dashboard() {
                       >
                         <Box
                           sx={{
-                            width: 40,
-                            height: 40,
+                            width: 48,
+                            height: 48,
                             borderRadius: 2,
-                            backgroundColor: caller.color,
+                            backgroundColor: item.caller_type.toLowerCase().includes('patient')
+                              ? COLORS.teal
+                              : COLORS.orange,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
                         >
-                          <Icon style={{ width: 20, height: 20, color: 'white' }} />
+                          <User size={24} color="white" />
                         </Box>
+
                         <Box sx={{ flex: 1 }}>
-                          <Typography sx={{ fontSize: 14, fontWeight: 500 }}>
-                            {caller.label}
+                          <Typography variant="body2" fontWeight={500}>
+                            {item.caller_type}
                           </Typography>
-                          <Typography sx={{ fontSize: 20, fontWeight: 500 }}>
-                            {caller.count}
+                          <Typography variant="h6" fontWeight={600}>
+                            {item.count.toLocaleString()}
                           </Typography>
                         </Box>
-                        <Typography sx={{ fontSize: 12, color: '#6b7280', mt: 0.3 }}>
-                          {caller.percentage}
+
+                        <Typography variant="caption" color="text.secondary">
+                          {formatPercentage(item.count, callerType?.total_calls ?? 1)}
                         </Typography>
                       </Box>
-                    );
-                  })}
-                </Box>
+                    ))}
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </Box>
 
-          {/* Trajectory of care */}
+          {/* 4. Trajectory of care */}
           <Box sx={{ flex: '1 1 calc(50% - 12px)', minWidth: 400 }}>
-            <Card>
+            <Card sx={{ borderRadius: 2 }}>
               <CardHeader
                 title={
-                  <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
-                    d. Trajectory of care
-                  </Typography>
+                  loading ? (
+                    <Skeleton width="60%" height={28} />
+                  ) : (
+                    <Typography sx={{ fontSize: 16, fontWeight: 500 }}>
+                      d. Trajectory of care
+                    </Typography>
+                  )
                 }
               />
               <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={trajectoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry.percentage}%`}
-                      outerRadius={80}
-                      dataKey="value"
-                    >
-                      {trajectoryData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-
-                <Box mt={2}>
-                  {trajectoryData.map((item, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        mb: 1,
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            backgroundColor: item.color,
-                          }}
-                        />
-                        <Typography sx={{ fontSize: 14 }}>{item.name}</Typography>
-                      </Box>
-                      <Typography sx={{ fontSize: 14, fontWeight: 500 }}>
-                        {item.value}
-                      </Typography>
+                {loading ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Skeleton variant="circular" width={180} height={180} />
+                    <Box sx={{ width: '100%', mt: 4 }}>
+                      <Skeleton height={36} />
+                      <Skeleton height={36} sx={{ mt: 1.5 }} />
                     </Box>
-                  ))}
-                </Box>
+                  </Box>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={trajectoryChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={renderPercentageLabel}
+                          outerRadius={90}
+                          dataKey="value"
+                        >
+                          {trajectoryChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    <Box mt={2}>
+                      {trajectoryChartData.map((item, i) => (
+                        <Box
+                          key={i}
+                          sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: '50%',
+                                backgroundColor: item.color,
+                              }}
+                            />
+                            <Typography variant="body2">{item.name}</Typography>
+                          </Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {item.value.toLocaleString()} ({item.percentage})
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </>
+                )}
               </CardContent>
             </Card>
           </Box>
@@ -386,4 +495,6 @@ export default function Dashboard() {
       </Box>
     </Box>
   );
-}
+};
+
+export default Demographics;

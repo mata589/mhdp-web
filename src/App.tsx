@@ -106,12 +106,15 @@ const SupervisorRoutes: React.FC = () => {
       <Route path="call-history" element={<SupervisorCallHistory />} />
       <Route path="call-detail" element={<SupervisorCallDetails />} />
       <Route path="staff-performance" element={<StaffPerformance />} />
+      
+      {/* Staff Details with dynamic userId parameter */}
+      <Route path="staff-details/:userId" element={<StaffDetailsPage />} />
+      <Route path="staff-details/:userId/call-history" element={<CallHistoryTab />} />
+      
       <Route path="analytics" element={<SupervisorAnalytics />} />
       <Route path="Demographics" element={<Demographics />} />
       <Route path="TopicAnalysis" element={<TopicAnalysis />} />
       <Route path="QualityMetrics" element={<QualityMetrics />} />
-      <Route path="StaffDetailsPage" element={<StaffDetailsPage />} />
-      <Route path="CallHistoryTab" element={<CallHistoryTab />} />
       <Route path="training" element={<div>Training Materials Page</div>} />
       <Route path="help" element={<div>Help and Support Page</div>} />
       <Route path="settings" element={<Settings />} />

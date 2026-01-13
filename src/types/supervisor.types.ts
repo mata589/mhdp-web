@@ -224,11 +224,12 @@ export interface MissedCallsResponse {
 export interface CallHistoryItem {
   call_id: string;
   caller_id: string;
-  primary_topic: string;
+  agent_name: string;
+  primary_topic: string | null;
   risk_level: "low" | "medium" | "high" | "critical";
   outcome: "resolved" | "escalated" | "pending" | "missed";
-  quality_score: number;
-  language: string;
+  quality_score: string | null;
+  language: string | null;
   call_start_time: string;
   call_end_time: string;
   created_at: string;
@@ -467,4 +468,121 @@ export interface NetworkAudioQualityTrend {
 
 export interface NetworkAudioQualityTrends {
   trends: NetworkAudioQualityTrend[];
+}
+
+// ============================================
+// STAFF DETAILS TYPES
+// ============================================
+
+export interface StaffDetailsBasic {
+  user_id: string;
+  full_name: string;
+  email: string;
+  role: string;
+  date_joined: string;
+  status: "available" | "on_call" | "on_break" | "offline";
+  last_active: string;
+}
+
+export interface PerformanceMetric {
+  value: number;
+  percentage_change: number;
+  comparison_period: string;
+}
+
+export interface StaffPerformanceOverview {
+  total_calls: PerformanceMetric;
+  calls_today: PerformanceMetric;
+  escalated_calls: PerformanceMetric;
+  average_call_duration: PerformanceMetric;
+  quality_score: PerformanceMetric;
+}
+
+export interface QualityBreakdown {
+  overall_quality: number;
+  rapport: number;
+  listening: number;
+  analyzing: number;
+  motivating: number;
+  ending: number;
+}
+
+export interface ImprovementAreaItem {
+  area_name: string;
+  priority_level: "high" | "medium" | "low";
+  relevance_score: number;
+}
+
+export interface ConversationQualityInsights {
+  user_id: string;
+  period_start: string;
+  period_end: string;
+  quality_breakdown: QualityBreakdown;
+  areas_for_improvement: ImprovementAreaItem[];
+}
+
+export interface QualityTrendDataPoint {
+  month: string;
+  average_quality_score: number;
+}
+
+export interface ConversationQualityTrendsData {
+  date_range: string;
+  data_points: QualityTrendDataPoint[];
+}
+// Add this to your types/user.types.ts or types/supervisor.types.ts file
+
+// types/supervisor.types.ts
+
+export interface Speaker {
+  speaker: string;
+  text: string;
+  start_time: number;
+  end_time?: number;
+}
+
+export interface DetectedKeyword {
+  keyword: string;
+}
+
+export interface TopicDiscussed {
+  topic_name: string;
+}
+
+export interface ConversationQuality {
+  overall_quality_score: number;
+  rapport_score: number;
+  listening_score: number;
+  analyzing_score: number;
+  motivating_score: number;
+  // ... other fields if needed
+}
+
+export interface EscalationDetails {
+  escalation_id: string;
+  call_id: string;
+  caller_id: string;
+  risk_level: string;
+  priority_level?: string;
+  escalation_reason: string;
+  escalation_type?: string;
+  resolution_status: string;
+  trajectory_of_care?: string;
+  escalated_to?: string;
+  escalated_by?: string;
+  call_summary?: string;
+  call_notes?: string;
+
+  // These were missing → now properly defined as optional
+  audio_url?: string;
+  caller_type?: string;
+  caller_gender?: string;
+  caller_age?: number | string;
+  speakers?: Speaker[];
+  detected_keywords?: DetectedKeyword[];
+  topics_discussed?: TopicDiscussed[];
+  conversation_quality?: ConversationQuality;
+
+  call_start_time: string;
+  call_end_time?: string;
 }
