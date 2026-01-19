@@ -17,8 +17,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  CircularProgress,
   Alert,
+  Skeleton,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -31,6 +31,41 @@ import { CallRecordingPlayer } from '../../../components/common/CallRecordingPla
 
 import type { CallHistoryItem, RiskLevel, CallOutcome } from '../../../types/agent.types';
 import agentApi from '../../../services/api/agentApi';
+
+// Shimmer Loading Components
+const ShimmerTableRow: React.FC = () => (
+  <TableRow sx={{ borderBottom: '1px solid #f3f4f6' }}>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="text" width="80%" height={20} />
+      <Skeleton variant="text" width="60%" height={16} sx={{ mt: 0.5 }} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="text" width="70%" height={20} />
+      <Skeleton variant="text" width="50%" height={16} sx={{ mt: 0.5 }} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="text" width="85%" height={20} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: 1 }} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="rectangular" width={90} height={24} sx={{ borderRadius: 1 }} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Skeleton variant="circular" width={14} height={14} />
+        <Skeleton variant="text" width={40} height={20} />
+      </Box>
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Skeleton variant="circular" width={32} height={32} />
+        <Skeleton variant="circular" width={32} height={32} />
+      </Box>
+    </TableCell>
+  </TableRow>
+);
 
 const getRiskLevelColor = (riskLevel: string) => {
   switch (riskLevel) {
@@ -265,7 +300,7 @@ export const CallHistory: React.FC = () => {
         </Typography>
       </Box>
       
-      {/* Search and Filters */}
+      {/* Search and Filters - Always visible */}
       <Box sx={{
         mb: 3,
         display: 'flex',
@@ -278,6 +313,7 @@ export const CallHistory: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          disabled={loading}
           sx={{
             flex: { xs: '1 1 100%', sm: '1 1 auto' },
             '& .MuiOutlinedInput-root': {
@@ -305,6 +341,7 @@ export const CallHistory: React.FC = () => {
               setStatusFilter(e.target.value as 'all' | 'resolved' | 'unresolved' | 'escalated' | 'transferred');
               setCurrentPage(1);
             }}
+            disabled={loading}
             displayEmpty
             sx={{
               bgcolor: 'white',
@@ -332,6 +369,7 @@ export const CallHistory: React.FC = () => {
               setRiskFilter(e.target.value as RiskLevel | 'all');
               setCurrentPage(1);
             }}
+            disabled={loading}
             displayEmpty
             sx={{
               bgcolor: 'white',
@@ -351,6 +389,7 @@ export const CallHistory: React.FC = () => {
         
         <Button
           startIcon={<FilterListIcon />}
+          disabled={loading}
           sx={{
             bgcolor: 'white',
             color: '#6b7280',
@@ -376,11 +415,98 @@ export const CallHistory: React.FC = () => {
         </Alert>
       )}
       
-      {/* Loading State */}
+      {/* Loading State or Content */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
+        <>
+          {/* Shimmer Table */}
+          <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 120
+                    }}>
+                      Date & Time
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Caller ID
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Primary Topic
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Risk level
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Outcome
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 100
+                    }}>
+                      Quality Score
+                    </TableCell>
+                    <TableCell sx={{ 
+                      fontWeight: 600, 
+                      color: '#374151', 
+                      fontSize: { xs: '12px', sm: '14px' }, 
+                      py: 2,
+                      minWidth: 80
+                    }}>
+                      Action
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {[...Array(10)].map((_, index) => (
+                    <ShimmerTableRow key={index} />
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+
+          {/* Shimmer Pagination */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Skeleton variant="text" width={180} height={20} />
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: 1 }} />
+            </Box>
+          </Box>
+        </>
       ) : (
         <>
           {/* Call History Table */}

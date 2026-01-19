@@ -11,17 +11,16 @@ import {
   Box,
   Button,
   Avatar,
-  CircularProgress,
   Alert,
+  Skeleton,
+  Card,
+  CardContent,
 } from "@mui/material";
 import {
   Call,
   CallEnd,
-  Escalator,
-  Assessment,
   History,
   Phone,
-  TrendingUp,
   Person,
   Voicemail,
 } from "@mui/icons-material";
@@ -43,6 +42,73 @@ import type {
   AvailabilityStatus,
 } from "../../../types/agent.types";
 import agentApi from "../../../services/api/agentApi";
+
+// Shimmer Loading Components
+const ShimmerActionCard: React.FC = () => (
+  <Card sx={{ height: '100%', borderRadius: 2 }}>
+    <CardContent>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Skeleton variant="circular" width={48} height={48} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" width="60%" height={24} />
+          <Skeleton variant="text" width="80%" height={20} />
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
+const ShimmerMetricCard: React.FC = () => (
+  <Card sx={{ height: '100%', borderRadius: 2 }}>
+    <CardContent>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Skeleton variant="circular" width={48} height={48} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" width="50%" height={20} />
+          <Skeleton variant="text" width="40%" height={32} />
+          <Skeleton variant="text" width="30%" height={16} />
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
+const ShimmerTable: React.FC = () => (
+  <Card sx={{ borderRadius: 2 }}>
+    <CardContent>
+      <Box sx={{ mb: 3 }}>
+        <Skeleton variant="text" width="30%" height={32} sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <Skeleton variant="rectangular" width={120} height={40} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width={120} height={40} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width={120} height={40} sx={{ borderRadius: 1 }} />
+        </Box>
+      </Box>
+      
+      {[...Array(5)].map((_, index) => (
+        <Box 
+          key={index} 
+          sx={{ 
+            display: 'flex', 
+            gap: 2, 
+            py: 2, 
+            borderBottom: index < 4 ? '1px solid #e0e0e0' : 'none' 
+          }}
+        >
+          <Skeleton variant="text" width="15%" height={20} />
+          <Skeleton variant="text" width="12%" height={20} />
+          <Skeleton variant="text" width="18%" height={20} />
+          <Skeleton variant="rectangular" width="8%" height={24} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="rectangular" width="10%" height={24} sx={{ borderRadius: 1 }} />
+          <Skeleton variant="text" width="8%" height={20} />
+          <Skeleton variant="text" width="10%" height={20} />
+          <Skeleton variant="circular" width={32} height={32} />
+          <Skeleton variant="circular" width={32} height={32} />
+        </Box>
+      ))}
+    </CardContent>
+  </Card>
+);
 
 export const AgentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -66,7 +132,6 @@ export const AgentDashboard: React.FC = () => {
         const availability = await agentApi.getAvailability();
         setAgentName(`${availability.first_name} ${availability.last_name}`);
         
-        // Map API status to AgentStatus
         const statusMap: Record<AvailabilityStatus, AgentStatus> = {
           available: "Available",
           on_call: "On Call",
@@ -89,7 +154,6 @@ export const AgentDashboard: React.FC = () => {
       setError(null);
 
       try {
-        // Fetch overview and recent calls in parallel
         const [overviewData, callsData] = await Promise.all([
           agentApi.getOverview(),
           agentApi.getRecentCallActivity(5, 0),
@@ -110,7 +174,6 @@ export const AgentDashboard: React.FC = () => {
 
   const handleStatusChange = async (newStatus: AgentStatus) => {
     try {
-      // Map AgentStatus to API AvailabilityStatus
       const statusMap: Record<AgentStatus, AvailabilityStatus> = {
         Available: "available",
         "On Call": "on_call",
@@ -138,7 +201,6 @@ export const AgentDashboard: React.FC = () => {
     setPlayingCallId(null);
   };
 
-  // Simulate incoming call for demo purposes
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowIncomingCall(true);
@@ -159,7 +221,6 @@ export const AgentDashboard: React.FC = () => {
     setShowIncomingCall(false);
   };
 
-  // If a call is selected, show the call details page
   if (selectedCallId) {
     return (
       <CallDetailsPage
@@ -169,17 +230,14 @@ export const AgentDashboard: React.FC = () => {
     );
   }
 
-  // Find the call being played
   const playingCall = recentCalls.find((call) => call.call_id === playingCallId);
 
-  // Helper function to format duration from seconds
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Helper function to format date time
   const formatDateTime = (startTime: string, endTime: string): string => {
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -204,7 +262,6 @@ export const AgentDashboard: React.FC = () => {
     return `${startStr} - ${endStr}`;
   };
 
-  // Helper function to map API outcomes to CustomChip outcomes
   const mapOutcome = (outcome: string): CallOutcome => {
     const outcomeMap: Record<string, CallOutcome> = {
       'resolved': 'Advice Given',
@@ -217,7 +274,6 @@ export const AgentDashboard: React.FC = () => {
     return outcomeMap[outcome] || 'Referred';
   };
 
-  // Helper function to map API risk levels to CustomChip risk levels
   const mapRiskLevel = (level: string): RiskLevel => {
     const levelMap: Record<string, RiskLevel> = {
       'low': 'Low',
@@ -228,7 +284,6 @@ export const AgentDashboard: React.FC = () => {
     return levelMap[level] || 'Low';
   };
 
-  // Transform API calls to table format
   const transformedCalls = recentCalls.map((call) => ({
     id: call.call_id,
     dateTime: formatDateTime(call.call_start_time, call.call_end_time),
@@ -243,23 +298,6 @@ export const AgentDashboard: React.FC = () => {
     onView: () => handleViewCall(call.call_id),
   }));
 
-  // Show loading state
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          backgroundColor: "#fafafa",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box
       sx={{
@@ -269,14 +307,12 @@ export const AgentDashboard: React.FC = () => {
         position: "relative",
       }}
     >
-      {/* Error Alert */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
-      {/* Call Recording Player Popup */}
       {playingCallId && playingCall && (
         <CallRecordingPlayer
           callId={playingCallId}
@@ -288,7 +324,6 @@ export const AgentDashboard: React.FC = () => {
         />
       )}
 
-      {/* Incoming Call Popup */}
       {showIncomingCall && (
         <Box
           sx={{
@@ -551,147 +586,181 @@ export const AgentDashboard: React.FC = () => {
           </Box>
 
           <Box
-  sx={{
-    display: "flex",
-    border: "2px solid #e0e0e0",
-    borderRadius: "25px",
-    overflow: "hidden",
-    backgroundColor: "white",
-    width: { xs: "100%", sm: "auto" },
-    justifyContent: { xs: "center", sm: "flex-start" },
-  }}
->
-  {(["Available", "On Call", "On Break", "Offline"] as const).map(
-    (statusOption, index) => (
-      <Button
-        key={statusOption}
-        onClick={() => handleStatusChange(statusOption)}
-        sx={{
-          px: 3,
-          py: 1,
-          backgroundColor:
-            status === statusOption ? "white" : "transparent",
-          color: status === statusOption ? "#000" : "#666",
-          fontWeight: status === statusOption ? 600 : 400,
-          borderRadius: 0,
-          border: "none",
-          borderRight: index < 3 ? "1px solid #e0e0e0" : "none",
-          textTransform: "none",
-          minWidth: { xs: "25%", sm: 80 },
-          "&:hover": {
-            backgroundColor:
-              status === statusOption ? "white" : "#f5f5f5",
-          },
-          "&::before":
-            status === statusOption
-              ? {
-                  content: '"✓"',
-                  marginRight: "8px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                }
-              : {},
-        }}
-      >
-        {statusOption}
-      </Button>
-    )
-  )}
-</Box>
+            sx={{
+              display: "flex",
+              border: "2px solid #e0e0e0",
+              borderRadius: "25px",
+              overflow: "hidden",
+              backgroundColor: "white",
+              width: { xs: "100%", sm: "auto" },
+              justifyContent: { xs: "center", sm: "flex-start" },
+            }}
+          >
+            {(["Available", "On Call", "On Break", "Offline"] as const).map(
+              (statusOption, index) => (
+                <Button
+                  key={statusOption}
+                  onClick={() => handleStatusChange(statusOption)}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    backgroundColor:
+                      status === statusOption ? "white" : "transparent",
+                    color: status === statusOption ? "#000" : "#666",
+                    fontWeight: status === statusOption ? 600 : 400,
+                    borderRadius: 0,
+                    border: "none",
+                    borderRight: index < 3 ? "1px solid #e0e0e0" : "none",
+                    textTransform: "none",
+                    minWidth: { xs: "25%", sm: 80 },
+                    "&:hover": {
+                      backgroundColor:
+                        status === statusOption ? "white" : "#f5f5f5",
+                    },
+                    "&::before":
+                      status === statusOption
+                        ? {
+                            content: '"✓"',
+                            marginRight: "8px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                          }
+                        : {},
+                  }}
+                >
+                  {statusOption}
+                </Button>
+              )
+            )}
+          </Box>
         </Box>
       </Box>
 
       {/* Action Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <ActionCard
-            icon={<History />}
-            iconBgColor="#ffa500"
-            title="View call history"
-            subtitle="Review past calls and insights"
-            onClick={() => navigate("/agent/call-history")}
-          />
+      {loading ? (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={4}>
+            <ShimmerActionCard />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <ShimmerActionCard />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <ShimmerActionCard />
+          </Grid>
         </Grid>
+      ) : (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={4}>
+            <ActionCard
+              icon={<History />}
+              iconBgColor="#ffa500"
+              title="View call history"
+              subtitle="Review past calls and insights"
+              onClick={() => navigate("/agent/call-history")}
+            />
+          </Grid>
 
-        <Grid item xs={12} md={4}>
-          <ActionCard
-            icon={<Voicemail />}
-            iconBgColor="#f44336"
-            title="Check Voice Mail"
-            subtitle="Listen to voice mail messages"
-            onClick={() => navigate("/agent/voicemails")}
-          />
-        </Grid>
+          <Grid item xs={12} md={4}>
+            <ActionCard
+              icon={<Voicemail />}
+              iconBgColor="#f44336"
+              title="Check Voice Mail"
+              subtitle="Listen to voice mail messages"
+              onClick={() => navigate("/agent/voicemails")}
+            />
+          </Grid>
 
-        <Grid item xs={12} md={4}>
-          <ActionCard
-            icon={<Call />}
-            iconBgColor="#008080"
-            title="Make a call"
-            subtitle="Take outline going calls"
-          />
+          <Grid item xs={12} md={4}>
+            <ActionCard
+              icon={<Call />}
+              iconBgColor="#008080"
+              title="Make a call"
+              subtitle="Take outline going calls"
+            />
+          </Grid>
         </Grid>
-      </Grid>
+      )}
 
       {/* Metrics Cards */}
-      {overview && (
-  <Grid container spacing={3} sx={{ mb: 4 }}>
-    <Grid item xs={12} sm={6} md={3}>
-      <MetricCard
-        iconSrc={totalCallsIcon}
-        iconBgColor="#008080"
-        label="Total Calls"
-        value={overview.total_calls}
-        trend={overview.total_calls_change.trend !== 'no_change' ? {
-          value: overview.total_calls_change.percent,
-          isPositive: overview.total_calls_change.trend === "up",
-        } : undefined}
-      />
-    </Grid>
+      {loading ? (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <ShimmerMetricCard />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <ShimmerMetricCard />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <ShimmerMetricCard />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <ShimmerMetricCard />
+          </Grid>
+        </Grid>
+      ) : overview ? (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              iconSrc={totalCallsIcon}
+              iconBgColor="#008080"
+              label="Total Calls"
+              value={overview.total_calls}
+              trend={overview.total_calls_change.trend !== 'no_change' ? {
+                value: overview.total_calls_change.percent,
+                isPositive: overview.total_calls_change.trend === "up",
+              } : undefined}
+            />
+          </Grid>
 
-    <Grid item xs={12} sm={6} md={3}>
-      <MetricCard
-        iconSrc={todayCallsIcon}
-        iconBgColor="#ffa500"
-        label="Calls Today"
-        value={overview.calls_today}
-        trend={overview.calls_today_change.trend !== 'no_change' ? {
-          value: overview.calls_today_change.percent,
-          isPositive: overview.calls_today_change.trend === "up",
-        } : undefined}
-      />
-    </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              iconSrc={todayCallsIcon}
+              iconBgColor="#ffa500"
+              label="Calls Today"
+              value={overview.calls_today}
+              trend={overview.calls_today_change.trend !== 'no_change' ? {
+                value: overview.calls_today_change.percent,
+                isPositive: overview.calls_today_change.trend === "up",
+              } : undefined}
+            />
+          </Grid>
 
-    <Grid item xs={12} sm={6} md={3}>
-      <MetricCard
-        iconSrc={escalatedCallsIcon}
-        iconBgColor="#f44336"
-        label="Escalated Calls"
-        value={overview.escalated_calls}
-        trend={overview.escalated_calls_change.trend !== 'no_change' ? {
-          value: overview.escalated_calls_change.percent,
-          isPositive: overview.escalated_calls_change.trend === "down",
-        } : undefined}
-      />
-    </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              iconSrc={escalatedCallsIcon}
+              iconBgColor="#f44336"
+              label="Escalated Calls"
+              value={overview.escalated_calls}
+              trend={overview.escalated_calls_change.trend !== 'no_change' ? {
+                value: overview.escalated_calls_change.percent,
+                isPositive: overview.escalated_calls_change.trend === "down",
+              } : undefined}
+            />
+          </Grid>
 
-    <Grid item xs={12} sm={6} md={3}>
-      <MetricCard
-        iconSrc={qualityScoreIcon}
-        iconBgColor="#607d8b"
-        label="Quality Score"
-        value={overview.quality_score}
-      />
-    </Grid>
-  </Grid>
-)}
+          <Grid item xs={12} sm={6} md={3}>
+            <MetricCard
+              iconSrc={qualityScoreIcon}
+              iconBgColor="#607d8b"
+              label="Quality Score"
+              value={overview.quality_score}
+            />
+          </Grid>
+        </Grid>
+      ) : null}
+
       {/* Recent Call Activity */}
-      <CallActivityTable
-        calls={transformedCalls}
-        showFilters={true}
-        showPagination={false}
-        onViewAll={() => navigate("/agent/call-history")}
-      />
+      {loading ? (
+        <ShimmerTable />
+      ) : (
+        <CallActivityTable
+          calls={transformedCalls}
+          showFilters={true}
+          showPagination={false}
+          onViewAll={() => navigate("/agent/call-history")}
+        />
+      )}
     </Box>
   );
 };
