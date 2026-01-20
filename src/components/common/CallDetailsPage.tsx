@@ -8,9 +8,9 @@ import {
   Chip,
   Button,
   IconButton,
-  CircularProgress,
   Alert,
   LinearProgress,
+  Skeleton,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -27,6 +27,252 @@ interface CallDetailsPageProps {
   onBack?: () => void;
   backPath?: string;
 }
+
+// Shimmer Loading Component
+const ShimmerBox: React.FC<{ width?: string | number; height?: number; sx?: any }> = ({ 
+  width = "100%", 
+  height = 20, 
+  sx = {} 
+}) => (
+  <Skeleton
+    variant="rectangular"
+    width={width}
+    height={height}
+    sx={{
+      borderRadius: 1,
+      bgcolor: "#f3f4f6",
+      ...sx,
+    }}
+    animation="wave"
+  />
+);
+
+const LoadingState: React.FC = () => {
+  return (
+    <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+      {/* Header Shimmer */}
+      <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+          <ShimmerBox width={40} height={40} sx={{ borderRadius: "50%" }} />
+          <Box sx={{ flex: 1 }}>
+            <ShimmerBox width={200} height={28} sx={{ mb: 1 }} />
+            <ShimmerBox width={300} height={16} />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Main Content */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: 2, md: 3 },
+        }}
+      >
+        {/* Left Column */}
+        <Box sx={{ flex: 1 }}>
+          {/* Call Info Card Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              mb: 3,
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "#eff6ff",
+                p: { xs: 2, sm: 3 },
+                borderRadius: 1,
+                mb: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+                  gap: { xs: 2, sm: 3 },
+                }}
+              >
+                {[...Array(6)].map((_, i) => (
+                  <Box key={i}>
+                    <ShimmerBox width={80} height={12} sx={{ mb: 0.5 }} />
+                    <ShimmerBox width={120} height={16} />
+                  </Box>
+                ))}
+              </Box>
+              <Box sx={{ mt: 2 }}>
+                <ShimmerBox width={80} height={12} sx={{ mb: 1 }} />
+                <ShimmerBox width={60} height={24} />
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Call Summary Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              mb: 3,
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={120} height={20} sx={{ mb: 2 }} />
+            <ShimmerBox width="100%" height={16} sx={{ mb: 1 }} />
+            <ShimmerBox width="100%" height={16} sx={{ mb: 1 }} />
+            <ShimmerBox width="80%" height={16} />
+          </Paper>
+
+          {/* Call Recording Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              mb: 3,
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={150} height={20} sx={{ mb: 2 }} />
+            <ShimmerBox width="100%" height={60} />
+          </Paper>
+
+          {/* Transcription Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              mb: 3,
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={120} height={20} sx={{ mb: 2 }} />
+            {[...Array(4)].map((_, i) => (
+              <Box key={i} sx={{ mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <ShimmerBox width={24} height={24} sx={{ borderRadius: "50%" }} />
+                  <ShimmerBox width={60} height={16} />
+                  <ShimmerBox width={40} height={12} />
+                </Box>
+                <ShimmerBox width="90%" height={14} sx={{ ml: 4 }} />
+              </Box>
+            ))}
+          </Paper>
+
+          {/* Call Notes Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={100} height={20} sx={{ mb: 2 }} />
+            <ShimmerBox width="100%" height={16} sx={{ mb: 1 }} />
+            <ShimmerBox width="95%" height={16} />
+          </Paper>
+        </Box>
+
+        {/* Right Column */}
+        <Box sx={{ width: { xs: "100%", md: 320 }, display: "flex", flexDirection: "column", gap: 3 }}>
+          {/* Sentiment Analysis Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={150} height={20} sx={{ mb: 2 }} />
+            <Box sx={{ mb: 2 }}>
+              <ShimmerBox width={100} height={12} sx={{ mb: 0.5 }} />
+              <ShimmerBox width={80} height={24} />
+            </Box>
+            <Box>
+              <ShimmerBox width={100} height={12} sx={{ mb: 0.5 }} />
+              <ShimmerBox width={80} height={24} />
+            </Box>
+          </Paper>
+
+          {/* Conversation Quality Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={180} height={20} sx={{ mb: 2 }} />
+            {[...Array(6)].map((_, i) => (
+              <Box key={i} sx={{ mb: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                  <ShimmerBox width={80} height={14} />
+                  <ShimmerBox width={40} height={14} />
+                </Box>
+                <ShimmerBox width="100%" height={6} />
+              </Box>
+            ))}
+          </Paper>
+
+          {/* Detected Keywords Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={150} height={20} sx={{ mb: 2 }} />
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {[...Array(5)].map((_, i) => (
+                <ShimmerBox key={i} width={100} height={24} />
+              ))}
+            </Box>
+          </Paper>
+
+          {/* Topics Discussed Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={140} height={20} sx={{ mb: 2 }} />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {[...Array(3)].map((_, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    bgcolor: "#f9fafb",
+                    p: 1.5,
+                    borderRadius: 1,
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <ShimmerBox width="80%" height={14} sx={{ mb: 0.5 }} />
+                  <ShimmerBox width={100} height={11} />
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+
+          {/* Outcome Shimmer */}
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+            }}
+          >
+            <ShimmerBox width={80} height={20} sx={{ mb: 2 }} />
+            <ShimmerBox width={100} height={24} />
+          </Paper>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   callId: propCallId,
@@ -121,19 +367,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   };
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          bgcolor: "#f8fafc",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingState />;
   }
 
   if (error || !callDetails) {
