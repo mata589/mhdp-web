@@ -17,7 +17,7 @@ import {
   Select,
   MenuItem,
   FormControl,
-  CircularProgress,
+  Skeleton,
   Alert,
 } from '@mui/material';
 import {
@@ -180,6 +180,34 @@ const formatStatusLabel = (status: string) => {
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
 };
+
+// Shimmer Loading Row Component
+const ShimmerRow: React.FC = () => (
+  <TableRow sx={{ borderBottom: '1px solid #f3f4f6' }}>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="text" width="80%" height={20} />
+      <Skeleton variant="text" width="60%" height={20} sx={{ mt: 0.5 }} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="text" width="70%" height={20} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="text" width="50%" height={20} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="rounded" width={70} height={24} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Skeleton variant="rounded" width={90} height={24} />
+    </TableCell>
+    <TableCell sx={{ py: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Skeleton variant="circular" width={32} height={32} />
+        <Skeleton variant="circular" width={32} height={32} />
+      </Box>
+    </TableCell>
+  </TableRow>
+);
 
 export const VoicemailListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -385,190 +413,186 @@ export const VoicemailListPage: React.FC = () => {
         </Alert>
       )}
       
-      {/* Loading State */}
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          {/* Voicemails Table */}
-          <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                    <TableCell sx={{ 
-                      fontWeight: 600, 
-                      color: '#374151', 
-                      fontSize: { xs: '12px', sm: '14px' }, 
-                      py: 2,
-                      minWidth: 120
-                    }}>
-                      Date & Time
-                    </TableCell>
-                    <TableCell sx={{ 
-                      fontWeight: 600, 
-                      color: '#374151', 
-                      fontSize: { xs: '12px', sm: '14px' }, 
-                      py: 2,
-                      minWidth: 100
-                    }}>
-                      Caller ID
-                    </TableCell>
-                    <TableCell sx={{ 
-                      fontWeight: 600, 
-                      color: '#374151', 
-                      fontSize: { xs: '12px', sm: '14px' }, 
-                      py: 2,
-                      minWidth: 100
-                    }}>
-                      Duration
-                    </TableCell>
-                    <TableCell sx={{ 
-                      fontWeight: 600, 
-                      color: '#374151', 
-                      fontSize: { xs: '12px', sm: '14px' }, 
-                      py: 2,
-                      minWidth: 100
-                    }}>
-                      Risk level
-                    </TableCell>
-                    <TableCell sx={{ 
-                      fontWeight: 600, 
-                      color: '#374151', 
-                      fontSize: { xs: '12px', sm: '14px' }, 
-                      py: 2,
-                      minWidth: 100
-                    }}>
-                      Status
-                    </TableCell>
-                    <TableCell sx={{ 
-                      fontWeight: 600, 
-                      color: '#374151', 
-                      fontSize: { xs: '12px', sm: '14px' }, 
-                      py: 2,
-                      minWidth: 80
-                    }}>
-                      Action
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {voicemails.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          No voicemails found
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    voicemails.map((voicemail) => {
-                      const riskStyle = getRiskLevelColor(voicemail.risk_level);
-                      const statusProps = getStatusChipProps(voicemail.status);
-                      return (
-                        <TableRow
-                          key={voicemail.call_id}
+      {/* Voicemails Table */}
+      <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#374151', 
+                  fontSize: { xs: '12px', sm: '14px' }, 
+                  py: 2,
+                  minWidth: 120
+                }}>
+                  Date & Time
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#374151', 
+                  fontSize: { xs: '12px', sm: '14px' }, 
+                  py: 2,
+                  minWidth: 100
+                }}>
+                  Caller ID
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#374151', 
+                  fontSize: { xs: '12px', sm: '14px' }, 
+                  py: 2,
+                  minWidth: 100
+                }}>
+                  Duration
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#374151', 
+                  fontSize: { xs: '12px', sm: '14px' }, 
+                  py: 2,
+                  minWidth: 100
+                }}>
+                  Risk level
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#374151', 
+                  fontSize: { xs: '12px', sm: '14px' }, 
+                  py: 2,
+                  minWidth: 100
+                }}>
+                  Status
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#374151', 
+                  fontSize: { xs: '12px', sm: '14px' }, 
+                  py: 2,
+                  minWidth: 80
+                }}>
+                  Action
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                // Shimmer loading rows
+                Array.from({ length: 5 }).map((_, index) => (
+                  <ShimmerRow key={index} />
+                ))
+              ) : voicemails.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No voicemails found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                voicemails.map((voicemail) => {
+                  const riskStyle = getRiskLevelColor(voicemail.risk_level);
+                  const statusProps = getStatusChipProps(voicemail.status);
+                  return (
+                    <TableRow
+                      key={voicemail.call_id}
+                      sx={{
+                        '&:hover': { bgcolor: '#f9fafb' },
+                        borderBottom: '1px solid #f3f4f6',
+                      }}
+                    >
+                      <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                        <Typography
+                          variant="body2"
                           sx={{
-                            '&:hover': { bgcolor: '#f9fafb' },
-                            borderBottom: '1px solid #f3f4f6',
+                            color: '#111827',
+                            whiteSpace: 'pre-line',
+                            lineHeight: 1.4
                           }}
                         >
-                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: '#111827',
-                                whiteSpace: 'pre-line',
-                                lineHeight: 1.4
-                              }}
-                            >
-                              {formatDateTime(voicemail.call_start_time, voicemail.call_end_time)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                            <Typography variant="body2" sx={{ color: '#111827' }}>
-                              {voicemail.caller_id}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                            <Typography variant="body2" sx={{ color: '#111827' }}>
-                              {formatDuration(voicemail.duration_seconds)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 2 }}>
-                            <Chip
-                              label={riskStyle.label}
-                              size="small"
-                              variant="outlined"
-                              {...getRiskChipProps(voicemail.risk_level)}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ py: 2 }}>
-                            <Chip
-                              label={formatStatusLabel(voicemail.status)}
-                              size="small"
-                              variant="outlined"
-                              {...statusProps}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ py: 2 }}>
-                            <ActionButtonsGroup
-                              onPlay={() => handlePlayVoicemail(voicemail.call_id)}
-                              onView={() => handleViewVoicemail(voicemail.call_id)}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-          
-          {/* Pagination */}
-          {totalResults > 0 && (
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
-                Page {startItem}-{endIndex} of {totalResults} results
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  sx={{
-                    color: '#6b7280',
-                    fontSize: '14px',
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    '&:disabled': {
-                      color: '#d1d5db',
-                    },
-                  }}
-                >
-                  ‹ Previous
-                </Button>
-                <Button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  sx={{
-                    color: '#6b7280',
-                    fontSize: '14px',
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    '&:disabled': {
-                      color: '#d1d5db',
-                    },
-                  }}
-                >
-                  Next ›
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </>
+                          {formatDateTime(voicemail.call_start_time, voicemail.call_end_time)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                        <Typography variant="body2" sx={{ color: '#111827' }}>
+                          {voicemail.caller_id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
+                        <Typography variant="body2" sx={{ color: '#111827' }}>
+                          {formatDuration(voicemail.duration_seconds)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Chip
+                          label={riskStyle.label}
+                          size="small"
+                          variant="outlined"
+                          {...getRiskChipProps(voicemail.risk_level)}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Chip
+                          label={formatStatusLabel(voicemail.status)}
+                          size="small"
+                          variant="outlined"
+                          {...statusProps}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <ActionButtonsGroup
+                          onPlay={() => handlePlayVoicemail(voicemail.call_id)}
+                          onView={() => handleViewVoicemail(voicemail.call_id)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+      
+      {/* Pagination */}
+      {!loading && totalResults > 0 && (
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '14px' }}>
+            Page {startItem}-{endIndex} of {totalResults} results
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              sx={{
+                color: '#6b7280',
+                fontSize: '14px',
+                textTransform: 'none',
+                minWidth: 'auto',
+                '&:disabled': {
+                  color: '#d1d5db',
+                },
+              }}
+            >
+              ‹ Previous
+            </Button>
+            <Button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              sx={{
+                color: '#6b7280',
+                fontSize: '14px',
+                textTransform: 'none',
+                minWidth: 'auto',
+                '&:disabled': {
+                  color: '#d1d5db',
+                },
+              }}
+            >
+              Next ›
+            </Button>
+          </Box>
+        </Box>
       )}
     </Box>
   );
