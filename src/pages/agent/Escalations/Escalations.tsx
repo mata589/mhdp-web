@@ -127,7 +127,7 @@ export default function EscalatedCallsPage() {
           limit,
           offset,
           searchQuery || undefined,
-          riskLevel,
+        
           undefined,
           undefined
         );

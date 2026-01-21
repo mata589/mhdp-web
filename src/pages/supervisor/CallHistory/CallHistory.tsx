@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// src/pages/agent/CallHistory/CallHistory.tsx
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+// src/pages/supervisor/CallHistory/CallHistory.tsx
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -21,6 +20,8 @@ import {
   FormControl,
   LinearProgress,
   IconButton,
+  Alert,
+  Skeleton,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -28,952 +29,522 @@ import {
   ArrowBack as ArrowBackIcon,
   PlayArrow as PlayArrowIcon,
   Download as DownloadIcon,
+  Pause as PauseIcon,
 } from '@mui/icons-material';
+
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
-import type { CallOutcome, RiskLevel } from '../../../components/common/CustomChip/CustomChip';
 import CustomChip from '../../../components/common/CustomChip/CustomChip';
-import AIAnalysisCard from '../../../components/common/AnalysisCard';
-//import CustomChip, { RiskLevel, CallOutcome } from '../../../components/common/CustomChip/CustomChip';
+import type { RiskLevel, CallOutcome } from '../../../components/common/CustomChip/CustomChip';
 
-// Map risk levels from string to RiskLevel type
-const mapRiskLevel = (risk: string): RiskLevel => {
-  switch (risk.toLowerCase()) {
-    case 'high':
-    case 'critical':
-      return 'High';
-    case 'medium':
-      return 'Medium';
-    case 'low':
-      return 'Low';
-    default:
-      return 'Medium';
-  }
+import type { CallHistoryItem, CallHistoryResponse, CallRecord, DetectedKeyword, TopicDiscussed, SpeakerSegment } from "../../../types/supervisor.types";
+import supervisorApi from "../../../services/api/supervisorApi";
+
+// Shimmer animation styles
+const shimmerStyles = {
+  '@keyframes shimmer': {
+    '0%': { backgroundPosition: '-200% 0' },
+    '100%': { backgroundPosition: '200% 0' },
+  },
+  shimmerBg: {
+    background: 'linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 1.5s infinite',
+  },
 };
 
-// Map outcome to CallOutcome type
-const mapOutcome = (outcome: string): CallOutcome => {
-  switch (outcome) {
-    case 'Advice Given':
-      return 'Advice Given';
-    case 'Escalated':
-      return 'Escalated';
-    case 'Referred':
-      return 'Referred';
-    default:
-      return 'Advice Given';
-  }
+// ────────────────────────────────────────────────
+// Mapping functions
+// ────────────────────────────────────────────────
+const mapRiskLevel = (risk: string | undefined): RiskLevel => {
+  if (!risk) return 'Medium';
+  const lower = risk.toLowerCase();
+  if (lower.includes('critical') || lower.includes('high')) return 'High';
+  if (lower.includes('medium')) return 'Medium';
+  if (lower.includes('low')) return 'Low';
+  return 'Medium';
 };
 
-const mockCallHistory = [
-  {
-    id: '#2090',
-    dateTime: 'Mon, July 13, 2025\n10:41 AM - 10:51 AM',
-    callerID: '#2090\nEnglish',
-    primaryTopic: 'Anxiety Management',
-    riskLevel: 'medium',
-    outcome: 'Advice Given',
-    qualityScore: 78,
-  },
-  {
-    id: '#2031',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2031\nEnglish',
-    primaryTopic: 'Depression',
-    riskLevel: 'high',
-    outcome: 'Escalated',
-    qualityScore: 81,
-  },
-  {
-    id: '#2034',
-    dateTime: 'Mon, July 13, 2025\n10:41 AM - 10:51 AM',
-    callerID: '#2034\nLuganda',
-    primaryTopic: 'Psychosis',
-    riskLevel: 'low',
-    outcome: 'Advice Given',
-    qualityScore: 78,
-  },
-  {
-    id: '#2031-2',
-    dateTime: 'Mon, July 13, 2025\n10:41 AM - 10:51 AM',
-    callerID: '#2031\nEnglish',
-    primaryTopic: 'Anxiety Management',
-    riskLevel: 'medium',
-    outcome: 'Referred',
-    qualityScore: 78,
-  },
-  {
-    id: '#2063',
-    dateTime: 'Mon, July 13, 2025\n10:41 AM - 10:51 AM',
-    callerID: '#2063\nEnglish',
-    primaryTopic: 'Anxiety Management',
-    riskLevel: 'high',
-    outcome: 'Advice Given',
-    qualityScore: 78,
-  },
-  {
-    id: '#2031-3',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2031\nEnglish',
-    primaryTopic: 'Depression',
-    riskLevel: 'low',
-    outcome: 'Referred',
-    qualityScore: 78,
-  },
-  {
-    id: '#2012',
-    dateTime: 'Mon, July 13, 2025\n10:43 AM - 10:51 AM',
-    callerID: '#2012\nEnglish',
-    primaryTopic: 'Psychosis',
-    riskLevel: 'medium',
-    outcome: 'Advice Given',
-    qualityScore: 78,
-  },
-];
-
-// Mock data for call details
-// Mock data function - replace with API call
-const getCallDetails = (callId: string) => {
-  return {
-    id: callId,
-    callerType: "Patient",
-    language: "English, Luganda",
-    gender: "Female",
-    frequencyOfCare: "Anxiety Disorder",
-    trajectoryOfCare: "Already in care",
-    riskLevel: "Critical",
-    agent: "James Gipar",
-    speakers: {
-      caller: "54%",
-      agent: "46%",
-    },
-    sentiment: {
-      agent: { value: 80, label: "Positive", color: "#16a34a" },
-      caller: { value: 69, label: "Neutral", color: "#d97706" },
-      conversation: { value: 90, label: "Good", color: "#16a34a" },
-    },
-    technicalQuality: {
-      network: { value: 3.8, max: 5 },
-      audio: {
-        value: 4.5,
-        max: 5,
-        note: "Clear audio except background noise",
-      },
-    },
-    keywords: [
-      "depression",
-      "work",
-      "stress",
-      "medication",
-      "family",
-      "suicide",
-      "anxiety",
-    ],
-    topics: ["Depression", "Anxiety management", "Psychosis"],
-    outcome: {
-      status: "Transferred",
-      reason: "Peer Support Worker needed",
-      escalatedTo: "Mary Nantongo",
-      time: "Jul 13, 2025 | 10:43AM",
-      note: "",
-    },
-    summary: `The caller discussed difficulties managing anxiety, including trouble sleeping and medication adherence side effects. They expressed concerns about missing doses occasionally.
-
-The agent responded with empathy, provided guidance on coping strategies (e.g., breathing exercises), and clarified the importance of medication compliance. The caller was receptive, and no immediate risk was...`,
-    callNotes: `Caller reported anxiety linked to family stress and poor sleep. Skips medication due to side effects. Advised on basic coping techniques and encouraged clinical follow-up. No immediate risk identified. Preferred language, Luganda and remained engaged throughout the call.`,
-    transcription: [
-      {
-        speaker: "James Gipar",
-        time: "0:01",
-        text: "Hello, this is Dr. James from Butabika. How can I help you today?",
-      },
-      {
-        speaker: "Caller #2031",
-        time: "0:06",
-        text: "Hi, I've been feeling very anxious lately and I'm not sure what to do about it. It's affecting my work and my relationships.",
-      },
-      {
-        speaker: "James Gipar",
-        time: "0:08",
-        text: "I understand that anxiety can be very challenging. Can you tell me more about when these feelings started and what might be triggering them?",
-      },
-    ],
-    recording: {
-      duration: "0:45 / 2:18",
-      isPlaying: false,
-    },
-    conversationQualityMetrics: [
-      { name: "Rapport", value: 90, color: "#10b981" },
-      { name: "Listening", value: 70, color: "#3b82f6" },
-      { name: "Analyzing", value: 78, color: "#14b8a6" },
-      { name: "Motivating", value: 36, color: "#f59e0b" },
-    ],
-  };
+const mapOutcome = (outcome: string | undefined): CallOutcome => {
+  if (!outcome) return 'Advice Given';
+  const normalized = outcome.trim().toLowerCase();
+  if (normalized.includes('resolved') || normalized === 'advice given') return 'Advice Given';
+  if (normalized.includes('escalated') || normalized.includes('transferred')) return 'Escalated';
+  if (normalized.includes('referred')) return 'Referred';
+  return 'Advice Given';
 };
 
-const getQualityScoreColor = (score: number) => {
-  if (score >= 80) return '#16a34a';
-  if (score >= 60) return '#d97706';
+const getQualityScoreColor = (score: string | number | null): string => {
+  if (!score) return '#6b7280';
+  const num = typeof score === 'string' ? parseFloat(score) : score;
+  if (isNaN(num)) return '#6b7280';
+  if (num >= 80) return '#16a34a';
+  if (num >= 60) return '#d97706';
   return '#dc2626';
 };
 
-// Call Details Component
-const CallDetails: React.FC<{ callId: string; onBack: () => void }> = ({ callId, onBack }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const callDetails = getCallDetails(callId);
+// ────────────────────────────────────────────────
+// Call Details Component with shimmer
+// ────────────────────────────────────────────────
+interface CallDetailsProps {
+  callId: string;
+  onBack: () => void;
+}
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
+const CallDetails: React.FC<CallDetailsProps> = ({ callId, onBack }) => {
+  const [call, setCall] = useState<CallRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchCall = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await supervisorApi.getCallDetails(callId);
+        if (mounted) setCall(data);
+      } catch (err: any) {
+        if (mounted) setError(err.message || "Could not load call details");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchCall();
+
+    return () => {
+      mounted = false;
+    };
+  }, [callId]);
+
+  const handlePlayPause = () => setIsPlaying(!isPlaying);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+        {/* Header skeleton */}
+        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Skeleton variant="circular" width={40} height={40} />
+              <Box>
+                <Skeleton variant="text" width={180} height={32} />
+                <Skeleton variant="text" width={140} height={20} />
+              </Box>
+            </Box>
+            <Skeleton variant="rectangular" width={120} height={40} sx={{ borderRadius: 1 }} />
+          </Box>
+        </Box>
+
+        {/* Main content skeleton */}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Paper sx={{ p: 3, borderRadius: 2 }}>
+              <Box sx={{ bgcolor: '#eff6ff', p: 3, borderRadius: 1, mb: 3 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+                  {[...Array(6)].map((_, i) => (
+                    <Box key={i}>
+                      <Skeleton variant="text" width={80} height={16} sx={{ mb: 0.5 }} />
+                      <Skeleton variant="text" width={100} height={24} />
+                    </Box>
+                  ))}
+                </Box>
+                <Box sx={{ mt: 3 }}>
+                  <Skeleton variant="text" width={80} height={16} sx={{ mb: 1 }} />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Skeleton variant="rounded" width={100} height={24} />
+                    <Skeleton variant="rounded" width={100} height={24} />
+                  </Box>
+                </Box>
+              </Box>
+            </Paper>
+
+            {[...Array(3)].map((_, i) => (
+              <Paper key={i} sx={{ p: 3, borderRadius: 2 }}>
+                <Skeleton variant="text" width={140} height={28} sx={{ mb: 2 }} />
+                <Skeleton variant="text" width="100%" height={20} />
+                <Skeleton variant="text" width="90%" height={20} sx={{ mt: 1 }} />
+                <Skeleton variant="text" width="70%" height={20} sx={{ mt: 1 }} />
+              </Paper>
+            ))}
+
+            <Paper sx={{ p: 3, borderRadius: 2 }}>
+              <Skeleton variant="text" width={140} height={28} sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Skeleton variant="circular" width={40} height={40} />
+                <Skeleton variant="rectangular" sx={{ flex: 1, height: 6, borderRadius: 4 }} />
+                <Skeleton variant="text" width={60} height={20} />
+                <Skeleton variant="circular" width={32} height={32} />
+              </Box>
+            </Paper>
+          </Box>
+
+          <Box sx={{ width: { md: 340 }, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {[...Array(4)].map((_, i) => (
+              <Paper key={i} sx={{ p: 3, borderRadius: 2 }}>
+                <Skeleton variant="text" width={140} height={28} sx={{ mb: 2 }} />
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {[...Array(5)].map((_, j) => (
+                    <Skeleton key={j} variant="rounded" width={80} height={24} />
+                  ))}
+                </Box>
+              </Paper>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error || !call) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center', color: 'error.main' }}>
+        <Typography variant="h6">Error</Typography>
+        <Typography>{error || "Call not found"}</Typography>
+        <Button variant="outlined" onClick={onBack} sx={{ mt: 3 }}>
+          Go Back
+        </Button>
+      </Box>
+    );
+  }
+
+  // ────────────────────────────────────────────────
+  // Real Call Details content (your original content)
+  // ────────────────────────────────────────────────
+  const riskLevel = mapRiskLevel(call.risk_level);
+  const outcome = mapOutcome(call.outcome?.transfer_type || call.outcome?.reason_of_transfer);
+
+  const callerSpeaksPercentage = call.speakers.length > 0
+    ? Math.round((call.speakers.filter(s => s.speaker === "Caller").length / call.speakers.length) * 100) + "%"
+    : "50%";
+
+  const agentSpeaksPercentage = (100 - parseInt(callerSpeaksPercentage)) + "%";
+
   return (
-     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
-         {/* Header */}
-         <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-           <Box
-             sx={{
-               display: "flex",
-               alignItems: "center",
-               justifyContent: "space-between",
-               flexDirection: { xs: "column", sm: "row" },
-               gap: { xs: 2, sm: 0 },
-               mb: { xs: 2, sm: 0 },
-             }}
-           >
-             <Box sx={{ display: "flex", alignItems: { xs: "flex-start", sm: "center" }, gap: 2 }}>
-               <IconButton
-                 onClick={onBack}
-                 sx={{
-                   color: "#6b7280",
-                   "&:hover": { bgcolor: "#f3f4f6" },
-                 }}
-               >
-                 <ArrowBackIcon />
-               </IconButton>
-               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                   <Typography
-                     variant="h5"
-                     sx={{ fontWeight: 600, color: "#111827", fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
-                   >
-                     Outgoing Call {callDetails.id}
-                   </Typography>
-                   <Chip
-                     label="Transferred"
-                     size="small"
-                     sx={{
-                       bgcolor: "#eff6ff",
-                       color: "#2563eb",
-                       border: "1px solid #bfdbfe",
-                       fontWeight: 500,
-                       fontSize: "12px",
-                     }}
-                   />
-                 </Box>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#6b7280", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 400 }}
-                 >
-                   Jul 13, 2025 | 10:43AM - 11:06AM
-                 </Typography>
-               </Box>
-             </Box>
-             <Button
-               variant="contained"
-               sx={{
-                 bgcolor: "#dc2626",
-                 color: "white",
-                 borderRadius: 1,
-                 textTransform: "none",
-                 fontWeight: 500,
-                 px: { xs: 3, sm: 2 },
-                 justifySelf: "flex-end",
-                 "&:hover": { bgcolor: "#b91c1c" },
-               }}
-             >
-               Escalate call
-             </Button>
-           </Box>
-         </Box>
-   
-         {/* Main Content */}
-         <Box
-           sx={{
-             display: "flex",
-             flexDirection: { xs: "column", md: "row" },
-             gap: { xs: 2, md: 3 },
-           }}
-         >
-           {/* Left Column */}
-           <Box sx={{ flex: 1 }}>
-             {/* Call Info Card */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 mb: 3,
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Box
-                 sx={{
-                   backgroundColor: "#eff6ff",
-                   p: { xs: 2, sm: 3 },
-                   borderRadius: 1,
-                   mb: 3,
-                 }}
-               >
-                 <Box
-                   sx={{
-                     display: "grid",
-                     gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
-                     gap: { xs: 2, sm: 3 },
-                   }}
-                 >
-                   <Box>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                     >
-                       Caller ID
-                     </Typography>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500 }}
-                     >
-                       #{callDetails.id}
-                     </Typography>
-                   </Box>
-                   <Box>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                     >
-                       Caller Type
-                     </Typography>
-                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                       <CustomChip label="Patient" variant="caller" size="small" showDot={false} />
-                     </Box>
-                   </Box>
-                   <Box>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                     >
-                       Risk Level
-                     </Typography>
-                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                       <CustomChip label="Critical" variant="risk" size="small" showDot={true} />
-                     </Box>
-                   </Box>
-                   <Box>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                     >
-                       Language
-                     </Typography>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500 }}
-                     >
-                       {callDetails.language}
-                     </Typography>
-                   </Box>
-                   <Box>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                     >
-                       Caller Sex
-                     </Typography>
-                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                       <Typography
-                         variant="body2"
-                         sx={{
-                           color: "#111827",
-                           fontSize: { xs: "13px", sm: "14px" },
-                           fontWeight: 500,
-                         }}
-                       >
-                         Female
-                       </Typography>
-                     </Box>
-                   </Box>
-                   <Box>
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                     >
-                       Trajectory of care
-                     </Typography>
-                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                       <Typography
-                         variant="body2"
-                         sx={{
-                           color: "#111827",
-                           fontSize: { xs: "13px", sm: "14px" },
-                           fontWeight: 500,
-                         }}
-                       >
-                         {callDetails.trajectoryOfCare}
-                       </Typography>
-                     </Box>
-                   </Box>
-                 </Box>
-                 <Box sx={{ mt: { xs: 2, sm: 2 } }}>
-                   <Typography
-                     variant="body2"
-                     sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 1 }}
-                   >
-                     Speakers
-                   </Typography>
-                   <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                     <Chip
-                       label={`Caller (${callDetails.speakers.caller})`}
-                       size="small"
-                       sx={{
-                         bgcolor: "#dbeafe",
-                         color: "#1e40af",
-                         border: "1px solid #bfdbfe",
-                         fontWeight: 500,
-                         fontSize: "12px",
-                       }}
-                     />
-                     <Chip
-                       label={`Agent (${callDetails.speakers.agent})`}
-                       size="small"
-                       sx={{
-                         bgcolor: "#dbeafe",
-                         color: "#1e40af",
-                         border: "1px solid #bfdbfe",
-                         fontWeight: 500,
-                         fontSize: "12px",
-                       }}
-                     />
-                   </Box>
-                 </Box>
-               </Box>
-             </Paper>
-   
-             {/* Call Summary */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 mb: 3,
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 2,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Call Summary
-               </Typography>
-               <Typography
-                 variant="body2"
-                 sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" }, lineHeight: 1.6 }}
-               >
-                 {callDetails.summary}
-               </Typography>
-               <Button
-                 variant="text"
-                 sx={{
-                   color: "#0891b2",
-                   fontSize: { xs: "13px", sm: "14px" },
-                   textTransform: "none",
-                   p: 0,
-                   mt: 1,
-                   "&:hover": {
-                     bgcolor: "transparent",
-                     textDecoration: "underline",
-                   },
-                 }}
-               >
-                 View more
-               </Button>
-             </Paper>
-   
-             {/* Call Recording */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 mb: 3,
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 2,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Call Recording
-               </Typography>
-               <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-                 <IconButton
-                   onClick={handlePlayPause}
-                   sx={{
-                     bgcolor: "#0891b2",
-                     color: "white",
-                     width: 32,
-                     height: 32,
-                     "&:hover": { bgcolor: "#0e7490" },
-                   }}
-                 >
-                   <PlayArrowIcon sx={{ fontSize: 18 }} />
-                 </IconButton>
-                 <Box sx={{ flex: 1, minWidth: { xs: 200, sm: "auto" } }}>
-                   <LinearProgress
-                     variant="determinate"
-                     value={20}
-                     sx={{
-                       height: 6,
-                       borderRadius: 3,
-                       bgcolor: "#e5e7eb",
-                       "& .MuiLinearProgress-bar": {
-                         bgcolor: "#0891b2",
-                         borderRadius: 3,
-                       },
-                     }}
-                   />
-                 </Box>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#6b7280", fontSize: { xs: "13px", sm: "14px" }, mr: 1 }}
-                 >
-                   {callDetails.recording.duration}
-                 </Typography>
-                 <IconButton sx={{ color: "#6b7280" }}>
-                   <DownloadIcon sx={{ fontSize: 18 }} />
-                 </IconButton>
-               </Box>
-             </Paper>
-   
-             {/* Transcription */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 mb: 3,
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 2,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Transcription
-               </Typography>
-               <Box sx={{ maxHeight: { xs: 250, sm: 300 }, overflowY: "auto" }}>
-                 {callDetails.transcription.map((entry, index) => (
-                   <Box key={index} sx={{ mb: 2 }}>
-                     <Box
-                       sx={{
-                         display: "flex",
-                         alignItems: "center",
-                         gap: 1,
-                         mb: 0.5,
-                       }}
-                     >
-                       <Box
-                         sx={{
-                           width: 24,
-                           height: 24,
-                           borderRadius: "50%",
-                           bgcolor: entry.speaker.includes("James") ? "#0891b2" : "#6b7280",
-                           color: "white",
-                           display: "flex",
-                           alignItems: "center",
-                           justifyContent: "center",
-                           fontSize: "12px",
-                           fontWeight: 600,
-                         }}
-                       >
-                         {entry.speaker.includes("James") ? "J" : "C"}
-                       </Box>
-                       <Typography
-                         variant="body2"
-                         sx={{
-                           fontWeight: 500,
-                           color: "#111827",
-                           fontSize: { xs: "13px", sm: "14px" },
-                         }}
-                       >
-                         {entry.speaker}
-                       </Typography>
-                       <Typography
-                         variant="body2"
-                         sx={{ color: "#6b7280", fontSize: "12px" }}
-                       >
-                         {entry.time}
-                       </Typography>
-                     </Box>
-                     <Typography
-                       variant="body2"
-                       sx={{
-                         color: "#374151",
-                         fontSize: { xs: "13px", sm: "14px" },
-                         ml: { xs: 2, sm: 4 },
-                         lineHeight: 1.5,
-                       }}
-                     >
-                       {entry.text}
-                     </Typography>
-                   </Box>
-                 ))}
-               </Box>
-             </Paper>
-   
-             {/* Call Notes */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 2,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Call Notes
-               </Typography>
-               <Typography
-                 variant="body2"
-                 sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" }, lineHeight: 1.6 }}
-               >
-                 {callDetails.callNotes}
-               </Typography>
-             </Paper>
-           </Box>
-   
-           {/* Right Column */}
-           <Box sx={{ width: { xs: "100%", md: 320 }, display: "flex", flexDirection: "column", gap: 3 }}>
-             {/* Analysis Card */}
-             <AIAnalysisCard callDetails={callDetails} />
-   
-             {/* Technical Quality */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 3,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Technical Quality
-               </Typography>
-               <Box sx={{ mb: 3 }}>
-                 <Box
-                   sx={{
-                     display: "flex",
-                     justifyContent: "space-between",
-                     alignItems: "center",
-                     mb: 1,
-                   }}
-                 >
-                   <Typography
-                     variant="body2"
-                     sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                   >
-                     Network Quality
-                   </Typography>
-                   <Typography
-                     variant="body2"
-                     sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                   >
-                     {callDetails.technicalQuality.network.value}/{callDetails.technicalQuality.network.max}
-                   </Typography>
-                 </Box>
-                 <LinearProgress
-                   variant="determinate"
-                   value={
-                     (callDetails.technicalQuality.network.value / callDetails.technicalQuality.network.max) * 100
-                   }
-                   sx={{
-                     height: 6,
-                     borderRadius: 3,
-                     bgcolor: "#e5e7eb",
-                     "& .MuiLinearProgress-bar": {
-                       bgcolor: "#d97706",
-                       borderRadius: 3,
-                     },
-                   }}
-                 />
-               </Box>
-               <Box>
-                 <Box
-                   sx={{
-                     display: "flex",
-                     justifyContent: "space-between",
-                     alignItems: "center",
-                     mb: 1,
-                   }}
-                 >
-                   <Typography
-                     variant="body2"
-                     sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                   >
-                     Audio Quality
-                   </Typography>
-                   <Typography
-                     variant="body2"
-                     sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                   >
-                     {callDetails.technicalQuality.audio.value}/{callDetails.technicalQuality.audio.max}
-                   </Typography>
-                 </Box>
-                 <LinearProgress
-                   variant="determinate"
-                   value={
-                     (callDetails.technicalQuality.audio.value / callDetails.technicalQuality.audio.max) * 100
-                   }
-                   sx={{
-                     height: 6,
-                     borderRadius: 3,
-                     bgcolor: "#e5e7eb",
-                     "& .MuiLinearProgress-bar": {
-                       bgcolor: "#16a34a",
-                       borderRadius: 3,
-                     },
-                   }}
-                 />
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mt: 0.5 }}
-                 >
-                   {callDetails.technicalQuality.audio.note}
-                 </Typography>
-               </Box>
-             </Paper>
-   
-             {/* Detected Keywords */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 2,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Detected Keywords
-               </Typography>
-               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                 {callDetails.keywords.map((keyword, index) => (
-                   <Chip
-                     key={index}
-                     label={keyword}
-                     size="small"
-                     sx={{
-                       bgcolor: "#f3f4f6",
-                       color: "#374151",
-                       fontSize: "12px",
-                       height: 24,
-                     }}
-                   />
-                 ))}
-               </Box>
-             </Paper>
-   
-             {/* Topics Discussed */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Typography
-                 variant="h6"
-                 sx={{
-                   fontWeight: 600,
-                   color: "#111827",
-                   mb: 2,
-                   fontSize: { xs: "15px", sm: "16px" },
-                 }}
-               >
-                 Topics Discussed
-               </Typography>
-               <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                 {callDetails.topics.map((topic, index) => (
-                   <Box
-                     key={index}
-                     sx={{
-                       bgcolor: "#f9fafb",
-                       p: { xs: 1.5, sm: 1.5 },
-                       borderRadius: 1,
-                       border: "1px solid #e5e7eb",
-                     }}
-                   >
-                     <Typography
-                       variant="body2"
-                       sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                     >
-                       {topic}
-                     </Typography>
-                   </Box>
-                 ))}
-               </Box>
-             </Paper>
-   
-             {/* Outcome */}
-             <Paper
-               sx={{
-                 p: { xs: 2, sm: 3 },
-                 borderRadius: 2,
-                 boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-               }}
-             >
-               <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                 <Typography
-                   variant="h6"
-                   sx={{ fontWeight: 600, color: "#111827", fontSize: { xs: "15px", sm: "16px" } }}
-                 >
-                   Outcome
-                 </Typography>
-                 <Chip
-                   label={callDetails.outcome.status}
-                   size="small"
-                   sx={{
-                     bgcolor: "#eff6ff",
-                     color: "#2563eb",
-                     border: "1px solid #bfdbfe",
-                     fontWeight: 500,
-                     fontSize: "12px",
-                   }}
-                 />
-               </Box>
-               <Box sx={{ mb: 2 }}>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                 >
-                   Date of Transfer
-                 </Typography>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500 }}
-                 >
-                   {callDetails.outcome.time}
-                 </Typography>
-               </Box>
-               <Box sx={{ mb: 2 }}>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                 >
-                   Reason of Transfer
-                 </Typography>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500 }}
-                 >
-                   {callDetails.outcome.reason}
-                 </Typography>
-               </Box>
-               <Box>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                 >
-                   Transferred To
-                 </Typography>
-                 <Typography
-                   variant="body2"
-                   sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" } }}
-                 >
-                   {callDetails.outcome.escalatedTo}
-                 </Typography>
-               </Box>
-             </Paper>
-           </Box>
-         </Box>
-       </Box>
+    <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+      <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 2, sm: 0 },
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <IconButton onClick={onBack} color="inherit">
+              <ArrowBackIcon />
+            </IconButton>
+            <Box>
+              <Typography variant="h5" fontWeight={600}>
+                Outgoing Call {call.call_id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {new Date(call.call_start_time).toLocaleString()} –{' '}
+                {call.call_end_time
+                  ? new Date(call.call_end_time).toLocaleTimeString()
+                  : 'ongoing'}
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            color="error"
+            sx={{ textTransform: 'none' }}
+          >
+            Escalate call
+          </Button>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 3,
+        }}
+      >
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Box sx={{ bgcolor: '#eff6ff', p: 3, borderRadius: 1, mb: 3 }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+                  gap: 3,
+                }}
+              >
+                <div>
+                  <Typography variant="body2" color="text.secondary">Caller ID</Typography>
+                  <Typography fontWeight={500}>#{call.caller_id}</Typography>
+                </div>
+                <div>
+                  <Typography variant="body2" color="text.secondary">Caller Type</Typography>
+                  <CustomChip label={call.caller_type} variant="caller" size="small" />
+                </div>
+                <div>
+                  <Typography variant="body2" color="text.secondary">Risk Level</Typography>
+                  <CustomChip
+                    label={call.risk_level.toUpperCase()}
+                    variant="risk"
+                    size="small"
+                    showDot
+                  />
+                </div>
+                <div>
+                  <Typography variant="body2" color="text.secondary">Language</Typography>
+                  <Typography fontWeight={500}>{call.language}</Typography>
+                </div>
+                <div>
+                  <Typography variant="body2" color="text.secondary">Gender</Typography>
+                  <Typography fontWeight={500}>{call.caller_gender}</Typography>
+                </div>
+                <div>
+                  <Typography variant="body2" color="text.secondary">Trajectory</Typography>
+                  <Typography fontWeight={500}>{call.trajectory_of_care}</Typography>
+                </div>
+              </Box>
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Speakers
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip label={`Caller (${callerSpeaksPercentage})`} size="small" color="primary" variant="outlined" />
+                  <Chip label={`Agent (${agentSpeaksPercentage})`} size="small" color="primary" variant="outlined" />
+                </Box>
+              </Box>
+            </Box>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Call Summary</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+              {call.call_summary || 'No summary available'}
+            </Typography>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Call Notes</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+              {call.call_notes || 'No notes added'}
+            </Typography>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Transcription</Typography>
+            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+              {call.speakers.map((segment: SpeakerSegment, i: number) => (
+                <Box key={i} sx={{ mb: 2, display: 'flex', gap: 2 }}>
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      bgcolor: segment.speaker === 'Agent' ? 'primary.main' : 'grey.500',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    {segment.speaker[0]}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 0.5 }}>
+                      <Typography variant="subtitle2">{segment.speaker}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(segment.start_time * 1000).toISOString().substr(14, 5)}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2">{segment.text}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Call Recording</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton
+                onClick={handlePlayPause}
+                sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' } }}
+              >
+                {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+              </IconButton>
+              <Box sx={{ flex: 1 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={30}
+                  sx={{ height: 6, borderRadius: 4 }}
+                />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.floor(call.call_duration_seconds / 60)}:{(call.call_duration_seconds % 60).toString().padStart(2, '0')}
+              </Typography>
+              {call.audio_file_path && (
+                <IconButton color="primary" title="Download recording">
+                  <DownloadIcon />
+                </IconButton>
+              )}
+            </Box>
+          </Paper>
+        </Box>
+
+        <Box sx={{ width: { md: 340 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Detected Keywords</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {call.detected_keywords?.map((kw: DetectedKeyword, i: number) => (
+                <Chip key={i} label={kw.keyword} size="small" />
+              )) || <Typography variant="body2" color="text.secondary">None detected</Typography>}
+            </Box>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Topics Discussed</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {call.topics_discussed?.map((t: TopicDiscussed, i: number) => (
+                <Paper
+                  key={i}
+                  variant="outlined"
+                  sx={{ p: 1.5, bgcolor: t.is_primary ? 'primary.50' : undefined }}
+                >
+                  <Typography variant="body2">
+                    {t.topic_name}
+                    {t.is_primary && <Chip label="Primary" size="small" color="primary" sx={{ ml: 1 }} />}
+                  </Typography>
+                </Paper>
+              )) || <Typography variant="body2" color="text.secondary">No topics identified</Typography>}
+            </Box>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Outcome</Typography>
+            <Chip
+              label={call.outcome?.transfer_type || call.outcome?.reason_of_transfer || 'Completed'}
+              color="primary"
+              variant="outlined"
+              sx={{ mb: 2 }}
+            />
+            {call.outcome?.reason_of_transfer && (
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="body2" color="text.secondary">Reason</Typography>
+                <Typography>{call.outcome.reason_of_transfer}</Typography>
+              </Box>
+            )}
+            {call.outcome?.date_of_transfer && (
+              <Box>
+                <Typography variant="body2" color="text.secondary">Date of Transfer</Typography>
+                <Typography>{new Date(call.outcome.date_of_transfer).toLocaleString()}</Typography>
+              </Box>
+            )}
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Conversation Quality</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div>
+                <Box display="flex" justifyContent="space-between" mb={0.5}>
+                  <Typography variant="body2">Overall</Typography>
+                  <Typography fontWeight={500}>{call.conversation_quality.overall_score}%</Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={call.conversation_quality.overall_score}
+                  sx={{ height: 8, borderRadius: 4 }}
+                />
+              </div>
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
+// ────────────────────────────────────────────────
+// Main CallHistory Component
+// ────────────────────────────────────────────────
 export const CallHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All status');
   const [languageFilter, setLanguageFilter] = useState('All languages');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
+
+  const [data, setData] = useState<CallHistoryResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const itemsPerPage = 10;
-  // If a call is selected, show the call details page
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const offset = (currentPage - 1) * itemsPerPage;
+        const response = await supervisorApi.getCallHistory({ limit: itemsPerPage, offset });
+        setData(response);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch call history');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [currentPage]);
+
   if (selectedCallId) {
-    return (
-      <CallDetails
-        callId={selectedCallId}
-        onBack={() => setSelectedCallId(null)}
-      />
-    );
+    return <CallDetails callId={selectedCallId} onBack={() => setSelectedCallId(null)} />;
   }
-  const filteredCalls = mockCallHistory.filter(call => {
-    const matchesSearch = call.callerID.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      call.primaryTopic.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
-  const totalPages = Math.ceil(filteredCalls.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedCalls = filteredCalls.slice(startIndex, startIndex + itemsPerPage);
-  const handleViewCall = (callId: string) => {
-    setSelectedCallId(callId);
-  };
-  const handlePlayCall = (callId: string) => {
-    console.log('Play call:', callId);
-    // Add your play functionality here
-  };
+
+  const filteredCalls = data?.results.filter((call: CallHistoryItem) => {
+    const matchesSearch =
+      call.caller_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (call.primary_topic?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === 'All status' ||
+      mapOutcome(call.outcome).toLowerCase() === statusFilter.toLowerCase();
+
+    const matchesLanguage =
+      languageFilter === 'All languages' ||
+      (call.language?.toLowerCase() || '') === languageFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus && matchesLanguage;
+  }) || [];
+
+  const totalPages = Math.ceil((data?.total_results || 0) / itemsPerPage);
+
+  const handleViewCall = (callId: string) => setSelectedCallId(callId);
+  const handlePlayCall = (callId: string) => console.log('Play call:', callId);
+  const handlePageChange = (newPage: number) => setCurrentPage(newPage);
+
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
-      {/* Header */}
       <Box sx={{ mb: { xs: 2, sm: 3 } }}>
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           Call history
         </Typography>
       </Box>
-      {/* Search and Filters */}
-      <Box sx={{ 
-        mb: 3, 
-        display: 'flex', 
-        gap: { xs: 1, sm: 2 }, 
-        alignItems: { xs: 'stretch', sm: 'center' },
-        flexDirection: { xs: 'column', sm: 'row' }
-      }}>
+
+      <Box
+        sx={{
+          mb: 3,
+          display: 'flex',
+          gap: { xs: 1, sm: 2 },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          flexDirection: { xs: 'column', sm: 'row' },
+        }}
+      >
         <TextField
           placeholder="Search by caller ID, agent or topic..."
           value={searchTerm}
@@ -981,11 +552,7 @@ export const CallHistory: React.FC = () => {
           sx={{
             flex: 1,
             width: { xs: '100%', sm: 'auto' },
-            '& .MuiOutlinedInput-root': {
-              bgcolor: 'white',
-              height: 40,
-              fontSize: '14px',
-            },
+            '& .MuiOutlinedInput-root': { bgcolor: 'white', height: 40, fontSize: '14px' },
           }}
           InputProps={{
             startAdornment: (
@@ -1004,14 +571,12 @@ export const CallHistory: React.FC = () => {
               bgcolor: 'white',
               height: 40,
               fontSize: '14px',
-              '& .MuiSelect-select': {
-                py: 1,
-              },
+              '& .MuiSelect-select': { py: 1 },
             }}
           >
             <MenuItem value="All status">All status</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
-            <MenuItem value="Escalated">Escalated</MenuItem>
+            <MenuItem value="resolved">Resolved</MenuItem>
+            <MenuItem value="escalated">Escalated</MenuItem>
           </Select>
         </FormControl>
         <FormControl sx={{ minWidth: { xs: '100%', sm: 140 }, height: 40 }}>
@@ -1023,14 +588,12 @@ export const CallHistory: React.FC = () => {
               bgcolor: 'white',
               height: 40,
               fontSize: '14px',
-              '& .MuiSelect-select': {
-                py: 1,
-              },
+              '& .MuiSelect-select': { py: 1 },
             }}
           >
             <MenuItem value="All languages">All languages</MenuItem>
-            <MenuItem value="English">English</MenuItem>
-            <MenuItem value="Luganda">Luganda</MenuItem>
+            <MenuItem value="english">English</MenuItem>
+            <MenuItem value="luganda">Luganda</MenuItem>
           </Select>
         </FormControl>
         <Button
@@ -1043,229 +606,206 @@ export const CallHistory: React.FC = () => {
             fontSize: '14px',
             textTransform: 'none',
             minWidth: { xs: '100%', sm: 'auto' },
-            '&:hover': {
-              bgcolor: '#f9fafb',
-            },
+            '&:hover': { bgcolor: '#f9fafb' },
           }}
         >
           More Filters
         </Button>
       </Box>
-      {/* Call History Table */}
-      <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-        <TableContainer sx={{ 
-          overflowX: { xs: 'auto', sm: 'visible' },
-          borderRadius: 1,
-          border: '1px solid #e5e7eb'
-        }}>
-          <Table sx={{ minWidth: { xs: 600, sm: 'auto' } }}>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f9fafb' }}>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Date/Time
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Caller
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Topic
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Risk
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Outcome
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Score
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '0.75rem', sm: '14px' }, 
-                  py: { xs: 1, sm: 2 },
-                  whiteSpace: 'nowrap'
-                }}>
-                  Action
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {displayedCalls.map((call) => {
-                const scoreColor = getQualityScoreColor(call.qualityScore);
-                return (
-                  <TableRow
-                    key={call.id}
-                    sx={{
-                      '&:hover': { bgcolor: '#f9fafb' },
-                      borderBottom: '1px solid #f3f4f6',
-                    }}
-                  >
-                    <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontSize: { xs: '0.8125rem', sm: '14px' },
-                          color: '#111827',
-                          whiteSpace: { xs: 'normal', sm: 'pre-line' },
-                          lineHeight: 1.4
-                        }}
-                      >
-                        {call.dateTime}
-                      </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+      {loading ? (
+        <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+          <TableContainer sx={{ borderRadius: 1, border: '1px solid #e5e7eb' }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Date/Time</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Caller</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Topic</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Risk</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Outcome</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Score</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '14px', py: 2 }}>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {[...Array(itemsPerPage)].map((_, index) => (
+                  <TableRow key={index} sx={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ height: 20, width: '80%', ...shimmerStyles.shimmerBg, borderRadius: 1 }} />
                     </TableCell>
-                    <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontSize: { xs: '0.8125rem', sm: '14px' },
-                          color: '#111827',
-                          whiteSpace: { xs: 'normal', sm: 'pre-line' },
-                          lineHeight: 1.4
-                        }}
-                      >
-                        {call.callerID}
-                      </Typography>
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ height: 20, width: '90%', ...shimmerStyles.shimmerBg, borderRadius: 1 }} />
                     </TableCell>
-                    <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontSize: { xs: '0.8125rem', sm: '14px' }, 
-                          color: '#111827',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }} 
-                      >
-                        {call.primaryTopic}
-                      </Typography>
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ height: 20, width: '70%', ...shimmerStyles.shimmerBg, borderRadius: 1 }} />
                     </TableCell>
-                    <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
-                      <CustomChip
-                        label={mapRiskLevel(call.riskLevel)}
-                        variant="risk"
-                        size="small"
-                      />
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ height: 24, width: 80, ...shimmerStyles.shimmerBg, borderRadius: 12 }} />
                     </TableCell>
-                    <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
-                      <CustomChip
-                        label={mapOutcome(call.outcome)}
-                        variant="outcome"
-                        size="small"
-                      />
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ height: 24, width: 100, ...shimmerStyles.shimmerBg, borderRadius: 12 }} />
                     </TableCell>
-                    <TableCell sx={{ py: { xs: 1, sm: 2 }, textAlign: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 }, justifyContent: 'center' }}>
-                        <Box
-                          sx={{
-                            width: { xs: 4, sm: 6 },
-                            height: { xs: 4, sm: 6 },
-                            borderRadius: '50%',
-                            bgcolor: scoreColor,
-                          }}
-                        />
-                        <Typography variant="body2" sx={{ fontSize: { xs: '0.8125rem', sm: '14px' }, color: '#111827' }}>
-                          {call.qualityScore}%
-                        </Typography>
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ height: 20, width: '50%', ...shimmerStyles.shimmerBg, borderRadius: 1 }} />
+                    </TableCell>
+                    <TableCell sx={{ py: 2 }}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Box sx={{ height: 32, width: 32, ...shimmerStyles.shimmerBg, borderRadius: 1 }} />
+                        <Box sx={{ height: 32, width: 32, ...shimmerStyles.shimmerBg, borderRadius: 1 }} />
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ py: { xs: 1, sm: 2 }, textAlign: 'center' }}>
-                      <ActionButtonsGroup
-                        onPlay={() => handlePlayCall(call.id)}
-                        onView={() => handleViewCall(call.id)}
-                      />
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      ) : (
+        <>
+          <Paper sx={{ overflow: 'hidden', borderRadius: 2, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+            <TableContainer sx={{ overflowX: { xs: 'auto', sm: 'visible' }, borderRadius: 1, border: '1px solid #e5e7eb' }}>
+              <Table sx={{ minWidth: { xs: 600, sm: 'auto' } }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f9fafb' }}>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Date/Time
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Caller
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Topic
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Risk
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Outcome
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Score
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: { xs: '0.75rem', sm: '14px' }, py: { xs: 1, sm: 2 } }}>
+                      Action
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-      {/* Pagination */}
-      <Box sx={{ 
-        mt: 3, 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: { xs: 2, sm: 0 }
-      }}>
-        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: { xs: '0.8125rem', sm: '14px' } }}>
-          Page 1-{Math.min(itemsPerPage, filteredCalls.length)} of {filteredCalls.length} results
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-end' } }}>
-          <Button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                </TableHead>
+                <TableBody>
+                  {filteredCalls.map((call: CallHistoryItem) => (
+                    <TableRow
+                      key={call.call_id}
+                      sx={{
+                        '&:hover': { bgcolor: '#f9fafb' },
+                        borderBottom: '1px solid #f3f4f6',
+                      }}
+                    >
+                      <TableCell sx={{ py: { xs: 1, sm: 2 }, minWidth: { xs: 120, sm: 170 } }}>
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.8125rem', sm: '14px' }, color: '#111827', whiteSpace: 'pre-line' }}>
+                          {new Date(call.call_start_time).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                          {'\n'}
+                          {new Date(call.call_start_time).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })} - {new Date(call.call_end_time).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.8125rem', sm: '14px' }, color: '#111827' }}>
+                          {call.caller_id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.8125rem', sm: '14px' }, color: '#111827' }}>
+                          {call.primary_topic || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
+                        <CustomChip
+                          label={mapRiskLevel(call.risk_level)}
+                          variant="risk"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
+                        <CustomChip
+                          label={mapOutcome(call.outcome)}
+                          variant="outcome"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.8125rem', sm: '14px' }, color: '#111827' }}>
+                          {call.quality_score || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 1, sm: 2 } }}>
+                        <ActionButtonsGroup
+                          onPlay={() => handlePlayCall(call.call_id)}
+                          onView={() => handleViewCall(call.call_id)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+
+          <Box
             sx={{
-              color: '#6b7280',
-              fontSize: { xs: '0.75rem', sm: '14px' },
-              textTransform: 'none',
-              minWidth: { xs: '100%', sm: 'auto' },
-              flex: { xs: 1, sm: 'unset' },
-              '&:disabled': {
-                color: '#d1d5db',
-              },
+              mt: 3,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 2, sm: 0 },
             }}
           >
-            ‹ Previous
-          </Button>
-          <Button
-            component={Link}
-            to="/supervisor/call-detail"
-            sx={{
-              color: '#6b7280',
-              fontSize: { xs: '0.75rem', sm: '14px' },
-              textTransform: 'none',
-              minWidth: { xs: '100%', sm: 'auto' },
-              flex: { xs: 1, sm: 'unset' },
-              '&:disabled': {
-                color: '#d1d5db',
-              },
-            }}
-          >
-            Next ›
-          </Button>
-        </Box>
-      </Box>
+            <Typography variant="body2" sx={{ color: '#6b7280', fontSize: { xs: '0.8125rem', sm: '14px' } }}>
+              Page {currentPage} of {totalPages} ({data?.total_results || 0} total results)
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                sx={{
+                  color: '#6b7280',
+                  fontSize: { xs: '0.75rem', sm: '14px' },
+                  textTransform: 'none',
+                  '&:disabled': { color: '#d1d5db' },
+                }}
+              >
+                ‹ Previous
+              </Button>
+              <Button
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                sx={{
+                  color: '#6b7280',
+                  fontSize: { xs: '0.75rem', sm: '14px' },
+                  textTransform: 'none',
+                  '&:disabled': { color: '#d1d5db' },
+                }}
+              >
+                Next ›
+              </Button>
+            </Box>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
