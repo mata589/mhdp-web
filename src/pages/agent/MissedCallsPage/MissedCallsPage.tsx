@@ -24,12 +24,15 @@ import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   Visibility as ViewIcon,
-  Phone as CallBackIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 import type { MissedCall, RiskLevel, MissedCallStatus } from '../../../types/agent.types';
 import agentApi from '../../../services/api/agentApi';
+import { CallBackButton } from '../../../components/common/CallBackButton/CallBackButton';
+import { DateRangeSelector } from '../../../components/common/DateRangeSelector/DateRangeSelector';
+import { CallPopup } from '../../../components/common/CallPopupProps/CallPopupProps';
+
 
 const getRiskLevelColor = (riskLevel: RiskLevel) => {
   switch (riskLevel) {
@@ -151,22 +154,60 @@ const formatDateTime = (startTime: string, endTime: string) => {
   return `${datePart}\n${startTimePart} - ${endTimePart}`;
 };
 
-const calculateDuration = (startTime: string, endTime: string) => {
-  const start = new Date(startTime).getTime();
-  const end = new Date(endTime).getTime();
-  const durationMs = end - start;
-  const seconds = Math.floor(durationMs / 1000);
-  return seconds;
-};
-
-const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
 const formatStatusLabel = (status: string) => {
   return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
+// Parse date range string to start and end dates with datetime format
+const parseDateRange = (dateRange: string): { startDate: string; endDate: string } | null => {
+  if (!dateRange) return null;
+  
+  const parts = dateRange.split(' - ');
+  if (parts.length !== 2) return null;
+  
+  const [start, end] = parts;
+  
+  // Convert MM/DD/YYYY to YYYY-MM-DDTHH:MM:SS format for API (datetime format)
+  const parseDate = (dateStr: string, isEndDate: boolean = false): string | null => {
+    try {
+      const trimmed = dateStr.trim();
+      const [month, day, year] = trimmed.split('/');
+      
+      if (!month || !day || !year) {
+        console.error('Invalid date format:', dateStr);
+        return null;
+      }
+      
+      const paddedMonth = month.padStart(2, '0');
+      const paddedDay = day.padStart(2, '0');
+      
+      // Validate date ranges
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      const y = parseInt(year, 10);
+      
+      if (m < 1 || m > 12 || d < 1 || d > 31 || y < 2000 || y > 2100) {
+        console.error('Date out of valid range:', dateStr);
+        return null;
+      }
+      
+      // Add time component: start of day for start_date, end of day for end_date
+      const time = isEndDate ? 'T23:59:59' : 'T00:00:00';
+      return `${year}-${paddedMonth}-${paddedDay}${time}`;
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+      return null;
+    }
+  };
+  
+  const startDate = parseDate(start, false);
+  const endDate = parseDate(end, true);
+  
+  if (!startDate || !endDate) {
+    return null;
+  }
+  
+  return { startDate, endDate };
 };
 
 // Shimmer Loading Component
@@ -200,7 +241,7 @@ const TableRowSkeleton: React.FC = () => (
 export const MissedCallsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [dateRange, setDateRange] = useState(''); // Empty initially - no default date
   const [statusFilter, setStatusFilter] = useState<MissedCallStatus | 'all'>('all');
   const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,6 +249,16 @@ export const MissedCallsPage: React.FC = () => {
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Call popup state
+  const [showCallPopup, setShowCallPopup] = useState(false);
+  const [activeCall, setActiveCall] = useState<{
+    callId: string;
+    phoneNumber: string;
+    callerName?: string;
+  } | null>(null);
+  const [callDuration, setCallDuration] = useState(0);
+  const [isCallActive, setIsCallActive] = useState(false);
   
   const itemsPerPage = 10;
 
@@ -219,12 +270,25 @@ export const MissedCallsPage: React.FC = () => {
         setError(null);
         
         const offset = (currentPage - 1) * itemsPerPage;
+        
+        // Parse date range for API only if dateRange is provided
+        let dates = null;
+        if (dateRange) {
+          dates = parseDateRange(dateRange);
+          
+          if (!dates) {
+            setError('Invalid date range format. Please select a valid date range.');
+            setLoading(false);
+            return;
+          }
+        }
+        
         const response = await agentApi.getMissedCalls(
           itemsPerPage,
           offset,
           searchTerm || undefined,
-          undefined, // startDate
-          undefined, // endDate
+          dates?.startDate, // Only send if dates exist
+          dates?.endDate,   // Only send if dates exist
           statusFilter !== 'all' ? statusFilter : undefined,
           riskFilter !== 'all' && riskFilter !== 'critical' ? riskFilter : undefined
         );
@@ -232,15 +296,48 @@ export const MissedCallsPage: React.FC = () => {
         setMissedCalls(response.results);
         setTotalResults(response.total_results);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch missed calls');
+        let errorMessage = 'Failed to fetch missed calls';
+        
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === 'object' && err !== null) {
+          // Try to extract meaningful error info from object
+          const errObj = err as any;
+          if (errObj.detail) {
+            errorMessage = typeof errObj.detail === 'string' 
+              ? errObj.detail 
+              : JSON.stringify(errObj.detail);
+          } else {
+            errorMessage = JSON.stringify(err);
+          }
+        }
+        
+        setError(errorMessage);
         console.error('Error fetching missed calls:', err);
+        console.error('Request params:', { 
+          searchTerm, 
+          dateRange, 
+          parsedDates: dateRange ? parseDateRange(dateRange) : null,
+          statusFilter, 
+          riskFilter 
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchMissedCalls();
-  }, [currentPage, searchTerm, riskFilter, statusFilter]);
+  }, [currentPage, searchTerm, dateRange, riskFilter, statusFilter]);
+
+  // Handle call duration timer
+  useEffect(() => {
+    if (isCallActive) {
+      const timer = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isCallActive]);
 
   const totalPages = Math.ceil(totalResults / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -251,17 +348,65 @@ export const MissedCallsPage: React.FC = () => {
     navigate(`/agent/call-review/${callId}`);
   };
 
-  const handleCallBack = (callId: string) => {
-    console.log('Calling back:', callId);
-    // Implement call back functionality here
+  const handleCallBack = (call: MissedCall) => {
+    setActiveCall({
+      callId: call.call_id,
+      phoneNumber: call.caller_id,
+    });
+    setShowCallPopup(true);
+    setCallDuration(0);
+    setIsCallActive(false);
+  };
+
+  const handleCallConnect = () => {
+    // Simulate call connecting - in real implementation, this would initiate the actual call
+    setIsCallActive(true);
+    console.log('Call connected to:', activeCall?.phoneNumber);
+    
+    // Navigate to live call interface after a short delay
+    setTimeout(() => {
+      navigate('/agent/live-call');
+    }, 1000);
+  };
+
+  const handleEndCall = () => {
+    setShowCallPopup(false);
+    setIsCallActive(false);
+    setCallDuration(0);
+    setActiveCall(null);
+  };
+
+  const handleMinimize = () => {
+    setShowCallPopup(false);
+    // Keep the call active in the background
+    // The popup can be reopened from a notification or status indicator
   };
 
   const handleSearch = () => {
     setCurrentPage(1); // Reset to first page on new search
   };
 
+  const handleDateRangeChange = (newDateRange: string) => {
+    setDateRange(newDateRange);
+    setCurrentPage(1); // Reset to first page on date change
+  };
+
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Call Popup */}
+      {activeCall && (
+        <CallPopup
+          callId={activeCall.callId}
+          phoneNumber={activeCall.phoneNumber}
+          callerName={activeCall.callerName}
+          mode={isCallActive ? "active" : "outgoing"}
+          duration={callDuration}
+          open={showCallPopup}
+          onEndCall={handleEndCall}
+          onMinimize={handleMinimize}
+        />
+      )}
+
       {/* Header */}
       <Box sx={{ mb: { xs: 2, sm: 3 } }}>
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
@@ -282,6 +427,7 @@ export const MissedCallsPage: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          disabled={loading}
           sx={{
             flex: { xs: '1 1 100%', sm: '1 1 auto' },
             '& .MuiOutlinedInput-root': {
@@ -299,6 +445,15 @@ export const MissedCallsPage: React.FC = () => {
           }}
         />
         
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          value={dateRange}
+          onChange={handleDateRangeChange}
+          sx={{
+            flex: { xs: '1 1 100%', sm: '0 0 auto' }
+          }}
+        />
+        
         <FormControl sx={{ 
           minWidth: { xs: '100%', sm: 120 },
           flex: { xs: '1 1 100%', sm: '0 0 auto' }
@@ -309,6 +464,7 @@ export const MissedCallsPage: React.FC = () => {
               setStatusFilter(e.target.value as MissedCallStatus | 'all');
               setCurrentPage(1);
             }}
+            disabled={loading}
             displayEmpty
             sx={{
               bgcolor: 'white',
@@ -335,6 +491,7 @@ export const MissedCallsPage: React.FC = () => {
               setRiskFilter(e.target.value as RiskLevel | 'all');
               setCurrentPage(1);
             }}
+            disabled={loading}
             displayEmpty
             sx={{
               bgcolor: 'white',
@@ -354,6 +511,7 @@ export const MissedCallsPage: React.FC = () => {
         
         <Button
           startIcon={<FilterListIcon />}
+          disabled={loading}
           sx={{
             bgcolor: 'white',
             color: '#6b7280',
@@ -410,7 +568,7 @@ export const MissedCallsPage: React.FC = () => {
                   py: 2,
                   minWidth: 80
                 }}>
-                  Duration
+                  Call Count
                 </TableCell>
                 <TableCell sx={{ 
                   fontWeight: 600, 
@@ -459,7 +617,6 @@ export const MissedCallsPage: React.FC = () => {
                 missedCalls.map((call) => {
                   const riskStyle = getRiskLevelColor(call.risk_level);
                   const statusProps = getStatusChipProps(call.status);
-                  const duration = calculateDuration(call.last_call_start_time, call.last_call_end_time);
                   
                   return (
                     <TableRow
@@ -487,8 +644,8 @@ export const MissedCallsPage: React.FC = () => {
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                        <Typography variant="body2" sx={{ color: '#111827' }}>
-                          {formatDuration(duration)}
+                        <Typography variant="body2" sx={{ color: '#111827', fontWeight: 500 }}>
+                          {call.call_count}
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ py: 2 }}>
@@ -527,20 +684,9 @@ export const MissedCallsPage: React.FC = () => {
                           >
                             View
                           </Button>
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<CallBackIcon />}
-                            onClick={() => handleCallBack(call.call_id)}
-                            sx={{
-                              bgcolor: '#0d9488',
-                              '&:hover': { bgcolor: '#0f766e' },
-                              fontSize: '12px',
-                              textTransform: 'none',
-                            }}
-                          >
-                            Call back
-                          </Button>
+                          <CallBackButton
+                            onClick={() => handleCallBack(call)}
+                          />
                         </Box>
                       </TableCell>
                     </TableRow>

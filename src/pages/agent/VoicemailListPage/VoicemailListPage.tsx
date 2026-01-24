@@ -23,10 +23,14 @@ import {
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
+  Visibility as ViewIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
 import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
+import { DateRangeSelector } from '../../../components/common/DateRangeSelector/DateRangeSelector';
+import { CallBackButton } from '../../../components/common/CallBackButton/CallBackButton';
+import { CallPopup } from '../../../components/common/CallPopupProps/CallPopupProps';
 
 import type { Voicemail, RiskLevel, VoicemailStatus } from '../../../types/agent.types';
 import agentApi from '../../../services/api/agentApi';
@@ -181,6 +185,58 @@ const formatStatusLabel = (status: string) => {
   ).join(' ');
 };
 
+// Parse date range string to start and end dates with datetime format
+const parseDateRange = (dateRange: string): { startDate: string; endDate: string } | null => {
+  if (!dateRange) return null;
+  
+  const parts = dateRange.split(' - ');
+  if (parts.length !== 2) return null;
+  
+  const [start, end] = parts;
+  
+  // Convert MM/DD/YYYY to YYYY-MM-DDTHH:MM:SS format for API (datetime format)
+  const parseDate = (dateStr: string, isEndDate: boolean = false): string | null => {
+    try {
+      const trimmed = dateStr.trim();
+      const [month, day, year] = trimmed.split('/');
+      
+      if (!month || !day || !year) {
+        console.error('Invalid date format:', dateStr);
+        return null;
+      }
+      
+      const paddedMonth = month.padStart(2, '0');
+      const paddedDay = day.padStart(2, '0');
+      
+      // Validate date ranges
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      const y = parseInt(year, 10);
+      
+      if (m < 1 || m > 12 || d < 1 || d > 31 || y < 2000 || y > 2100) {
+        console.error('Date out of valid range:', dateStr);
+        return null;
+      }
+      
+      // Add time component: start of day for start_date, end of day for end_date
+      const time = isEndDate ? 'T23:59:59' : 'T00:00:00';
+      return `${year}-${paddedMonth}-${paddedDay}${time}`;
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+      return null;
+    }
+  };
+  
+  const startDate = parseDate(start, false);
+  const endDate = parseDate(end, true);
+  
+  if (!startDate || !endDate) {
+    return null;
+  }
+  
+  return { startDate, endDate };
+};
+
 // Shimmer Loading Row Component
 const ShimmerRow: React.FC = () => (
   <TableRow sx={{ borderBottom: '1px solid #f3f4f6' }}>
@@ -192,9 +248,6 @@ const ShimmerRow: React.FC = () => (
       <Skeleton variant="text" width="70%" height={20} />
     </TableCell>
     <TableCell sx={{ py: 2 }}>
-      <Skeleton variant="text" width="50%" height={20} />
-    </TableCell>
-    <TableCell sx={{ py: 2 }}>
       <Skeleton variant="rounded" width={70} height={24} />
     </TableCell>
     <TableCell sx={{ py: 2 }}>
@@ -204,6 +257,7 @@ const ShimmerRow: React.FC = () => (
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Skeleton variant="circular" width={32} height={32} />
         <Skeleton variant="circular" width={32} height={32} />
+        <Skeleton variant="rounded" width={90} height={32} />
       </Box>
     </TableCell>
   </TableRow>
@@ -212,7 +266,7 @@ const ShimmerRow: React.FC = () => (
 export const VoicemailListPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [dateRange, setDateRange] = useState(''); // Empty initially - no default date
   const [statusFilter, setStatusFilter] = useState<VoicemailStatus | 'all'>('all');
   const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -221,6 +275,16 @@ export const VoicemailListPage: React.FC = () => {
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Call popup state
+  const [showCallPopup, setShowCallPopup] = useState(false);
+  const [activeCall, setActiveCall] = useState<{
+    callId: string;
+    phoneNumber: string;
+    callerName?: string;
+  } | null>(null);
+  const [callDuration, setCallDuration] = useState(0);
+  const [isCallActive, setIsCallActive] = useState(false);
   
   const itemsPerPage = 10;
 
@@ -232,12 +296,25 @@ export const VoicemailListPage: React.FC = () => {
         setError(null);
         
         const offset = (currentPage - 1) * itemsPerPage;
+        
+        // Parse date range for API only if dateRange is provided
+        let dates = null;
+        if (dateRange) {
+          dates = parseDateRange(dateRange);
+          
+          if (!dates) {
+            setError('Invalid date range format. Please select a valid date range.');
+            setLoading(false);
+            return;
+          }
+        }
+        
         const response = await agentApi.getVoicemails(
           itemsPerPage,
           offset,
           searchTerm || undefined,
-          undefined, // startDate
-          undefined, // endDate
+          dates?.startDate, // Only send if dates exist
+          dates?.endDate,   // Only send if dates exist
           statusFilter !== 'all' ? statusFilter : undefined,
           riskFilter !== 'all' ? riskFilter : undefined
         );
@@ -245,15 +322,48 @@ export const VoicemailListPage: React.FC = () => {
         setVoicemails(response.results);
         setTotalResults(response.total_results);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch voicemails');
+        let errorMessage = 'Failed to fetch voicemails';
+        
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === 'object' && err !== null) {
+          // Try to extract meaningful error info from object
+          const errObj = err as any;
+          if (errObj.detail) {
+            errorMessage = typeof errObj.detail === 'string' 
+              ? errObj.detail 
+              : JSON.stringify(errObj.detail);
+          } else {
+            errorMessage = JSON.stringify(err);
+          }
+        }
+        
+        setError(errorMessage);
         console.error('Error fetching voicemails:', err);
+        console.error('Request params:', { 
+          searchTerm, 
+          dateRange, 
+          parsedDates: dateRange ? parseDateRange(dateRange) : null,
+          statusFilter, 
+          riskFilter 
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchVoicemails();
-  }, [currentPage, searchTerm, riskFilter, statusFilter]);
+  }, [currentPage, searchTerm, dateRange, riskFilter, statusFilter]);
+
+  // Handle call duration timer
+  useEffect(() => {
+    if (isCallActive) {
+      const timer = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isCallActive]);
 
   const totalPages = Math.ceil(totalResults / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -272,8 +382,47 @@ export const VoicemailListPage: React.FC = () => {
     setPlayingVoicemailId(null);
   };
 
+  const handleCallBack = (voicemail: Voicemail) => {
+    setActiveCall({
+      callId: voicemail.call_id,
+      phoneNumber: voicemail.caller_id,
+    });
+    setShowCallPopup(true);
+    setCallDuration(0);
+    setIsCallActive(false);
+  };
+
+  const handleCallConnect = () => {
+    // Simulate call connecting - in real implementation, this would initiate the actual call
+    setIsCallActive(true);
+    console.log('Call connected to:', activeCall?.phoneNumber);
+    
+    // Navigate to live call interface after a short delay
+    setTimeout(() => {
+      navigate('/agent/live-call');
+    }, 1000);
+  };
+
+  const handleEndCall = () => {
+    setShowCallPopup(false);
+    setIsCallActive(false);
+    setCallDuration(0);
+    setActiveCall(null);
+  };
+
+  const handleMinimize = () => {
+    setShowCallPopup(false);
+    // Keep the call active in the background
+    // The popup can be reopened from a notification or status indicator
+  };
+
   const handleSearch = () => {
     setCurrentPage(1); // Reset to first page on new search
+  };
+
+  const handleDateRangeChange = (newDateRange: string) => {
+    setDateRange(newDateRange);
+    setCurrentPage(1); // Reset to first page on date change
   };
 
   // Find the voicemail being played
@@ -290,6 +439,20 @@ export const VoicemailListPage: React.FC = () => {
           isPopup={true}
           open={true}
           onClose={handleClosePlayer}
+        />
+      )}
+
+      {/* Call Popup */}
+      {activeCall && (
+        <CallPopup
+          callId={activeCall.callId}
+          phoneNumber={activeCall.phoneNumber}
+          callerName={activeCall.callerName}
+          mode={isCallActive ? "active" : "outgoing"}
+          duration={callDuration}
+          open={showCallPopup}
+          onEndCall={handleEndCall}
+          onMinimize={handleMinimize}
         />
       )}
       
@@ -327,6 +490,15 @@ export const VoicemailListPage: React.FC = () => {
                 <SearchIcon sx={{ fontSize: 18, color: '#9ca3af' }} />
               </InputAdornment>
             ),
+          }}
+        />
+        
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          value={dateRange}
+          onChange={handleDateRangeChange}
+          sx={{
+            flex: { xs: '1 1 100%', sm: '0 0 auto' }
           }}
         />
         
@@ -402,7 +574,7 @@ export const VoicemailListPage: React.FC = () => {
             },
           }}
         >
-          More Filters
+          Filters
         </Button>
       </Box>
       
@@ -444,15 +616,6 @@ export const VoicemailListPage: React.FC = () => {
                   py: 2,
                   minWidth: 100
                 }}>
-                  Duration
-                </TableCell>
-                <TableCell sx={{ 
-                  fontWeight: 600, 
-                  color: '#374151', 
-                  fontSize: { xs: '12px', sm: '14px' }, 
-                  py: 2,
-                  minWidth: 100
-                }}>
                   Risk level
                 </TableCell>
                 <TableCell sx={{ 
@@ -469,7 +632,7 @@ export const VoicemailListPage: React.FC = () => {
                   color: '#374151', 
                   fontSize: { xs: '12px', sm: '14px' }, 
                   py: 2,
-                  minWidth: 80
+                  minWidth: 150
                 }}>
                   Action
                 </TableCell>
@@ -483,7 +646,7 @@ export const VoicemailListPage: React.FC = () => {
                 ))
               ) : voicemails.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                     <Typography variant="body2" color="text.secondary">
                       No voicemails found
                     </Typography>
@@ -518,11 +681,6 @@ export const VoicemailListPage: React.FC = () => {
                           {voicemail.caller_id}
                         </Typography>
                       </TableCell>
-                      <TableCell sx={{ py: 2, fontSize: { xs: '12px', sm: '14px' } }}>
-                        <Typography variant="body2" sx={{ color: '#111827' }}>
-                          {formatDuration(voicemail.duration_seconds)}
-                        </Typography>
-                      </TableCell>
                       <TableCell sx={{ py: 2 }}>
                         <Chip
                           label={riskStyle.label}
@@ -540,10 +698,15 @@ export const VoicemailListPage: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell sx={{ py: 2 }}>
-                        <ActionButtonsGroup
-                          onPlay={() => handlePlayVoicemail(voicemail.call_id)}
-                          onView={() => handleViewVoicemail(voicemail.call_id)}
-                        />
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          <ActionButtonsGroup
+                            onPlay={() => handlePlayVoicemail(voicemail.call_id)}
+                            onView={() => handleViewVoicemail(voicemail.call_id)}
+                          />
+                          <CallBackButton
+                            onClick={() => handleCallBack(voicemail)}
+                          />
+                        </Box>
                       </TableCell>
                     </TableRow>
                   );

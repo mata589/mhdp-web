@@ -28,6 +28,7 @@ import {
 import { ActionButtonsGroup } from '../../../components/common/ActionButtonsGroup/ActionButtonsGroup';
 import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
 import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
+import { DateRangeSelector } from '../../../components/common/DateRangeSelector/DateRangeSelector';
 
 import type { CallHistoryItem, RiskLevel, CallOutcome } from '../../../types/agent.types';
 import agentApi from '../../../services/api/agentApi';
@@ -199,9 +200,61 @@ const formatDuration = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+// Parse date range string to start and end dates with datetime format
+const parseDateRange = (dateRange: string): { startDate: string; endDate: string } | null => {
+  if (!dateRange) return null;
+  
+  const parts = dateRange.split(' - ');
+  if (parts.length !== 2) return null;
+  
+  const [start, end] = parts;
+  
+  // Convert MM/DD/YYYY to YYYY-MM-DDTHH:MM:SS format for API (datetime format)
+  const parseDate = (dateStr: string, isEndDate: boolean = false): string | null => {
+    try {
+      const trimmed = dateStr.trim();
+      const [month, day, year] = trimmed.split('/');
+      
+      if (!month || !day || !year) {
+        console.error('Invalid date format:', dateStr);
+        return null;
+      }
+      
+      const paddedMonth = month.padStart(2, '0');
+      const paddedDay = day.padStart(2, '0');
+      
+      // Validate date ranges
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      const y = parseInt(year, 10);
+      
+      if (m < 1 || m > 12 || d < 1 || d > 31 || y < 2000 || y > 2100) {
+        console.error('Date out of valid range:', dateStr);
+        return null;
+      }
+      
+      // Add time component: start of day for start_date, end of day for end_date
+      const time = isEndDate ? 'T23:59:59' : 'T00:00:00';
+      return `${year}-${paddedMonth}-${paddedDay}${time}`;
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+      return null;
+    }
+  };
+  
+  const startDate = parseDate(start, false);
+  const endDate = parseDate(end, true);
+  
+  if (!startDate || !endDate) {
+    return null;
+  }
+  
+  return { startDate, endDate };
+};
+
 export const CallHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [dateRange, setDateRange] = useState(''); // Empty initially - no default date
   const [statusFilter, setStatusFilter] = useState<'all' | 'resolved' | 'unresolved' | 'escalated' | 'transferred'>('all');
   const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -222,12 +275,25 @@ export const CallHistory: React.FC = () => {
         setError(null);
         
         const offset = (currentPage - 1) * itemsPerPage;
+        
+        // Parse date range for API only if dateRange is provided
+        let dates = null;
+        if (dateRange) {
+          dates = parseDateRange(dateRange);
+          
+          if (!dates) {
+            setError('Invalid date range format. Please select a valid date range.');
+            setLoading(false);
+            return;
+          }
+        }
+        
         const response = await agentApi.getCallHistory(
           itemsPerPage,
           offset,
           searchTerm || undefined,
-          undefined, // startDate
-          undefined, // endDate
+          dates?.startDate, // Only send if dates exist
+          dates?.endDate,   // Only send if dates exist
           riskFilter !== 'all' ? riskFilter : undefined,
           statusFilter !== 'all' ? statusFilter as 'resolved' | 'unresolved' | 'escalated' | 'transferred' : undefined
         );
@@ -235,15 +301,38 @@ export const CallHistory: React.FC = () => {
         setCalls(response.results);
         setTotalResults(response.total_results);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch call history');
+        let errorMessage = 'Failed to fetch call history';
+        
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === 'object' && err !== null) {
+          // Try to extract meaningful error info from object
+          const errObj = err as any;
+          if (errObj.detail) {
+            errorMessage = typeof errObj.detail === 'string' 
+              ? errObj.detail 
+              : JSON.stringify(errObj.detail);
+          } else {
+            errorMessage = JSON.stringify(err);
+          }
+        }
+        
+        setError(errorMessage);
         console.error('Error fetching call history:', err);
+        console.error('Request params:', { 
+          searchTerm, 
+          dateRange, 
+          parsedDates: dateRange ? parseDateRange(dateRange) : null,
+          statusFilter, 
+          riskFilter 
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchCallHistory();
-  }, [currentPage, searchTerm, riskFilter, statusFilter]);
+  }, [currentPage, searchTerm, dateRange, riskFilter, statusFilter]);
 
   // If a call is selected, show the call details page
   if (selectedCallId) {
@@ -274,6 +363,11 @@ export const CallHistory: React.FC = () => {
 
   const handleSearch = () => {
     setCurrentPage(1); // Reset to first page on new search
+  };
+
+  const handleDateRangeChange = (newDateRange: string) => {
+    setDateRange(newDateRange);
+    setCurrentPage(1); // Reset to first page on date change
   };
 
   // Find the call being played
@@ -328,6 +422,15 @@ export const CallHistory: React.FC = () => {
                 <SearchIcon sx={{ fontSize: 18, color: '#9ca3af' }} />
               </InputAdornment>
             ),
+          }}
+        />
+        
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          value={dateRange}
+          onChange={handleDateRangeChange}
+          sx={{
+            flex: { xs: '1 1 100%', sm: '0 0 auto' }
           }}
         />
         

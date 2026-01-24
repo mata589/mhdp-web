@@ -9,23 +9,20 @@ import qualityScoreIcon from '../../../assets/images/qualityscore_calls.png';
 import {
   Typography,
   Box,
-  Button,
-  Avatar,
   Alert,
   Skeleton,
   Card,
   CardContent,
+  Button,
 } from "@mui/material";
 import {
-  Call,
-  CallEnd,
   History,
-  Phone,
-  Person,
+  Call,
   Voicemail,
 } from "@mui/icons-material";
 import { CallDetailsPage } from "../../../components/common/CallDetailsPage";
 import { CallRecordingPlayer } from "../../../components/common/CallRecordingPlayer";
+
 import type {
   AgentStatus,
   CallOutcome,
@@ -42,6 +39,7 @@ import type {
   AvailabilityStatus,
 } from "../../../types/agent.types";
 import agentApi from "../../../services/api/agentApi";
+import { CallPopup } from "../../../components/common/CallPopupProps/CallPopupProps";
 
 // Shimmer Loading Components
 const ShimmerActionCard: React.FC = () => (
@@ -324,233 +322,16 @@ export const AgentDashboard: React.FC = () => {
         />
       )}
 
-      {showIncomingCall && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: { xs: 80, md: 120 },
-            right: { xs: 10, md: 20 },
-            left: { xs: 10, md: "auto" },
-            width: { xs: "calc(100vw - 20px)", md: 320 },
-            maxWidth: 320,
-            height: 320,
-            backgroundColor: "linear-gradient(to bottom, #CCE5E5, #F2FAFA)",
-            background: "linear-gradient(to bottom, #CCE5E5, #F2FAFA)",
-            borderRadius: "18px",
-            p: 3,
-            pt: 4,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "space-between",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-            zIndex: 1000,
-          }}
-        >
-          <Box sx={{ textAlign: "center", width: "100%" }}>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                color: "#2c3e50",
-                mb: 1,
-                fontSize: "1.5rem",
-              }}
-            >
-              Call #2031
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                justifyContent: "center",
-                mb: 3,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 10,
-                  height: 10,
-                  backgroundColor: "#22c55e",
-                  borderRadius: "50%",
-                }}
-              />
-              <Typography
-                variant="body1"
-                sx={{
-                  color: "#5a6c7d",
-                  fontWeight: 500,
-                  fontSize: "1rem",
-                }}
-              >
-                Incoming...
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                justifyContent: "center",
-                mb: 3,
-              }}
-            >
-              <Avatar
-                sx={{
-                  backgroundColor: "#7fa8a3",
-                  color: "white",
-                  width: 50,
-                  height: 50,
-                }}
-              >
-                <Person sx={{ fontSize: "1.5rem" }} />
-              </Avatar>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 600,
-                  color: "#2c3e50",
-                  fontSize: "1.4rem",
-                }}
-              >
-                039 701 234 567
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              width: "100%",
-              justifyContent: "space-between",
-              px: 1,
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                width: "100%",
-                justifyContent: "space-between",
-                px: 1,
-              }}
-            >
-              <Button
-                onClick={handleVoicemail}
-                sx={{
-                  width: 70,
-                  height: 50,
-                  backgroundColor: "#e8eaed",
-                  color: "#5f6368",
-                  borderRadius: "25px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: "unset",
-                  "&:hover": {
-                    backgroundColor: "#dadce0",
-                  },
-                }}
-              >
-                <Phone sx={{ fontSize: 24, transform: "rotate(15deg)" }} />
-              </Button>
-
-              <Button
-                onClick={handleDecline}
-                sx={{
-                  width: 70,
-                  height: 50,
-                  backgroundColor: "#ea4335",
-                  color: "white",
-                  borderRadius: "25px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: "unset",
-                  "&:hover": {
-                    backgroundColor: "#d33b2c",
-                  },
-                }}
-              >
-                <CallEnd sx={{ fontSize: 24 }} />
-              </Button>
-
-              <Button
-                onClick={handleAnswer}
-                sx={{
-                  width: 70,
-                  height: 50,
-                  backgroundColor: "#34a853",
-                  color: "white",
-                  borderRadius: "25px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: "unset",
-                  "&:hover": {
-                    backgroundColor: "#2d8f47",
-                  },
-                }}
-              >
-                <Call sx={{ fontSize: 24 }} />
-              </Button>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                width: "100%",
-                justifyContent: "space-between",
-                px: 1,
-                mt: 1,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 500,
-                  fontSize: "0.85rem",
-                  color: "#2c3e50",
-                  width: 70,
-                  textAlign: "center",
-                }}
-              >
-                Voicemail
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 500,
-                  fontSize: "0.85rem",
-                  color: "#2c3e50",
-                  width: 70,
-                  textAlign: "center",
-                }}
-              >
-                Decline
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 500,
-                  fontSize: "0.85rem",
-                  color: "#2c3e50",
-                  width: 70,
-                  textAlign: "center",
-                }}
-              >
-                Answer
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      )}
+      {/* Incoming Call Popup */}
+      <CallPopup
+        callId="2031"
+        phoneNumber="039 701 234 567"
+        mode="incoming"
+        open={showIncomingCall}
+        onAnswer={handleAnswer}
+        onDecline={handleDecline}
+        onVoicemail={handleVoicemail}
+      />
 
       {/* Header Section */}
       <Box sx={{ mb: 4 }}>
