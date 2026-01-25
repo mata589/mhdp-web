@@ -21,6 +21,7 @@ import AIAnalysisCard from "./AnalysisCard";
 import type { CallDetailsResponse } from "../../types/agent.types";
 import agentApi from "../../services/api/agentApi";
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
+import { CallInfoCard } from "./CallInfoCard/CallInfoCard";
 
 interface CallDetailsPageProps {
   callId?: string;
@@ -29,10 +30,10 @@ interface CallDetailsPageProps {
 }
 
 // Shimmer Loading Component
-const ShimmerBox: React.FC<{ width?: string | number; height?: number; sx?: any }> = ({ 
-  width = "100%", 
-  height = 20, 
-  sx = {} 
+const ShimmerBox: React.FC<{ width?: string | number; height?: number; sx?: any }> = ({
+  width = "100%",
+  height = 20,
+  sx = {}
 }) => (
   <Skeleton
     variant="rectangular"
@@ -282,7 +283,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   const navigate = useNavigate();
   const { callId: paramCallId } = useParams<{ callId: string }>();
   const callId = propCallId || paramCallId || "";
-  
+
   const [callDetails, setCallDetails] = useState<CallDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -400,45 +401,28 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
             mb: { xs: 2, sm: 0 },
           }}
         >
-          <Box sx={{ display: "flex", alignItems: { xs: "flex-start", sm: "center" }, gap: 2 }}>
+          {/* Back + Date */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <IconButton
               onClick={handleBack}
-              sx={{
-                color: "#6b7280",
-                "&:hover": { bgcolor: "#f3f4f6" },
-              }}
+              sx={{ color: "#6b7280", "&:hover": { bgcolor: "#f3f4f6" } }}
             >
               <ArrowBackIcon />
             </IconButton>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography
-                  variant="h5"
-                  sx={{ fontWeight: 600, color: "#111827", fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
-                >
-                  Call {callDetails.call_id.slice(0, 8)}
-                </Typography>
-                <Chip
-                  label={callDetails.call_status}
-                  size="small"
-                  sx={{
-                    bgcolor: statusColors.bg,
-                    color: statusColors.color,
-                    border: `1px solid ${statusColors.border}`,
-                    fontWeight: 500,
-                    fontSize: "12px",
-                    textTransform: "capitalize",
-                  }}
-                />
-              </Box>
-              <Typography
-                variant="body2"
-                sx={{ color: "#6b7280", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 400 }}
-              >
-                {formatDateTime(callDetails.call_start_time)} - {formatDateTime(callDetails.call_end_time)}
-              </Typography>
-            </Box>
+
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#6b7280",
+                fontSize: { xs: "13px", sm: "14px" },
+                fontWeight: 400,
+              }}
+            >
+              {formatDateTime(callDetails.call_start_time)} – {formatDateTime(callDetails.call_end_time)}
+            </Typography>
           </Box>
+
+          {/* Escalate button – only shown when not already escalated */}
           {callDetails.outcome !== "escalated" && (
             <Button
               variant="contained"
@@ -449,7 +433,6 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                 textTransform: "none",
                 fontWeight: 500,
                 px: { xs: 3, sm: 2 },
-                justifySelf: "flex-end",
                 "&:hover": { bgcolor: "#b91c1c" },
               }}
             >
@@ -469,213 +452,66 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
       >
         {/* Left Column */}
         <Box sx={{ flex: 1 }}>
-          {/* Call Info Card */}
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              mb: 3,
-              borderRadius: 2,
-              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+          <CallInfoCard
+            header={{
+              title: `Call ${callDetails.call_id.slice(0, 8)}`,
+              statusChip: {
+                label: callDetails.call_status,
+                bgcolor: statusColors.bg,
+                color: statusColors.color,
+                border: statusColors.border,
+              },
+              subtitle: `${formatDateTime(callDetails.call_start_time)} – ${formatDateTime(callDetails.call_end_time)}`,
             }}
-          >
-            <Box
-              sx={{
-                backgroundColor: "#eff6ff",
-                p: { xs: 2, sm: 3 },
-                borderRadius: 1,
-                mb: 3,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
-                  gap: { xs: 2, sm: 3 },
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Caller ID
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500 }}
-                  >
-                    {callDetails.caller_id}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Caller Type
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Chip
-                      label={callDetails.caller_type || "Unknown"}
-                      size="small"
-                      sx={{
-                        bgcolor: "#dbeafe",
-                        color: "#1e40af",
-                        border: "1px solid #bfdbfe",
-                        fontWeight: 500,
-                        fontSize: "12px",
-                        textTransform: "capitalize",
-                      }}
-                    />
-                  </Box>
-                </Box>
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Risk Level
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Chip
-                      label={callDetails.risk_level}
-                      size="small"
-                      sx={{
-                        bgcolor: riskColors.bg,
-                        color: riskColors.color,
-                        border: `1px solid ${riskColors.border}`,
-                        fontWeight: 500,
-                        fontSize: "12px",
-                        textTransform: "capitalize",
-                      }}
-                    />
-                  </Box>
-                </Box>
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Language
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#111827", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500, textTransform: "capitalize" }}
-                  >
-                    {callDetails.language}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Caller Gender
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#111827",
-                      fontSize: { xs: "13px", sm: "14px" },
-                      fontWeight: 500,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {callDetails.caller_gender}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Caller Age
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#111827",
-                      fontSize: { xs: "13px", sm: "14px" },
-                      fontWeight: 500,
-                    }}
-                  >
-                    {callDetails.caller_age || "Unknown"}
-                  </Typography>
-                </Box>
-                {callDetails.trajectory_of_care && (
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                    >
-                      Trajectory of Care
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#111827",
-                        fontSize: { xs: "13px", sm: "14px" },
-                        fontWeight: 500,
-                      }}
-                    >
-                      {callDetails.trajectory_of_care}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-              <Box sx={{ mt: { xs: 2, sm: 2 } }}>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 1 }}
-                >
-                  Duration
-                </Typography>
-                <Chip
-                  label={formatDuration(callDetails.call_duration_seconds)}
-                  size="small"
-                  sx={{
-                    bgcolor: "#dbeafe",
-                    color: "#1e40af",
-                    border: "1px solid #bfdbfe",
-                    fontWeight: 500,
-                    fontSize: "12px",
-                  }}
-                />
-              </Box>
-            </Box>
-          </Paper>
+            fields={[
+              { label: "Caller ID", value: callDetails.caller_id },
+              {
+                label: "Caller Type",
+                value: createChipValue(
+                  callDetails.caller_type || "Unknown",
+                  "#dbeafe",
+                  "#1e40af",
+                  "#bfdbfe"
+                ),
+              },
+              {
+                label: "Risk Level",
+                value: createChipValue(
+                  callDetails.risk_level,
+                  riskColors.bg,
+                  riskColors.color,
+                  riskColors.border
+                ),
+              },
+              { label: "Language", value: callDetails.language },
+              { label: "Caller Gender", value: callDetails.caller_gender },
+              { label: "Caller Age", value: callDetails.caller_age || "Unknown" },
+              ...(callDetails.trajectory_of_care
+                ? [{ label: "Trajectory of Care", value: callDetails.trajectory_of_care }]
+                : []),
+              {
+                label: "Duration",
+                value: createChipValue(
+                  formatDuration(callDetails.call_duration_seconds),
+                  "#dbeafe",
+                  "#1e40af",
+                  "#bfdbfe"
+                ),
+              },
+            ]}
+          />
 
-          {/* Call Summary */}
           {callDetails.call_summary && (
-            <Paper
-              sx={{
-                p: { xs: 2, sm: 3 },
-                mb: 3,
-                borderRadius: 2,
-                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 600,
-                  color: "#111827",
-                  mb: 2,
-                  fontSize: { xs: "15px", sm: "16px" },
-                }}
-              >
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 2, boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)" }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: "#111827", mb: 2 }}>
                 Call Summary
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" }, lineHeight: 1.6 }}
-              >
+              <Typography variant="body2" sx={{ color: "#374151", lineHeight: 1.6 }}>
                 {callDetails.call_summary}
               </Typography>
             </Paper>
           )}
 
-          {/* Call Recording - Using CallRecordingPlayer component */}
           {callDetails.audio_url && (
             <Box sx={{ mb: 3 }}>
               <CallRecordingPlayer
@@ -835,12 +671,12 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                     label={callDetails.caller_sentiment}
                     size="small"
                     sx={{
-                      bgcolor: callDetails.caller_sentiment === "positive" ? "#d1fae5" : 
-                               callDetails.caller_sentiment === "negative" ? "#fee2e2" : "#fef3c7",
-                      color: callDetails.caller_sentiment === "positive" ? "#059669" : 
-                             callDetails.caller_sentiment === "negative" ? "#dc2626" : "#d97706",
-                      border: `1px solid ${callDetails.caller_sentiment === "positive" ? "#a7f3d0" : 
-                                          callDetails.caller_sentiment === "negative" ? "#fecaca" : "#fde68a"}`,
+                      bgcolor: callDetails.caller_sentiment === "positive" ? "#d1fae5" :
+                        callDetails.caller_sentiment === "negative" ? "#fee2e2" : "#fef3c7",
+                      color: callDetails.caller_sentiment === "positive" ? "#059669" :
+                        callDetails.caller_sentiment === "negative" ? "#dc2626" : "#d97706",
+                      border: `1px solid ${callDetails.caller_sentiment === "positive" ? "#a7f3d0" :
+                        callDetails.caller_sentiment === "negative" ? "#fecaca" : "#fde68a"}`,
                       fontWeight: 500,
                       fontSize: "12px",
                       textTransform: "capitalize",
@@ -860,12 +696,12 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                     label={callDetails.agent_sentiment}
                     size="small"
                     sx={{
-                      bgcolor: callDetails.agent_sentiment === "positive" ? "#d1fae5" : 
-                               callDetails.agent_sentiment === "negative" ? "#fee2e2" : "#fef3c7",
-                      color: callDetails.agent_sentiment === "positive" ? "#059669" : 
-                             callDetails.agent_sentiment === "negative" ? "#dc2626" : "#d97706",
-                      border: `1px solid ${callDetails.agent_sentiment === "positive" ? "#a7f3d0" : 
-                                          callDetails.agent_sentiment === "negative" ? "#fecaca" : "#fde68a"}`,
+                      bgcolor: callDetails.agent_sentiment === "positive" ? "#d1fae5" :
+                        callDetails.agent_sentiment === "negative" ? "#fee2e2" : "#fef3c7",
+                      color: callDetails.agent_sentiment === "positive" ? "#059669" :
+                        callDetails.agent_sentiment === "negative" ? "#dc2626" : "#d97706",
+                      border: `1px solid ${callDetails.agent_sentiment === "positive" ? "#a7f3d0" :
+                        callDetails.agent_sentiment === "negative" ? "#fecaca" : "#fde68a"}`,
                       fontWeight: 500,
                       fontSize: "12px",
                       textTransform: "capitalize",
@@ -876,8 +712,8 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
             </Paper>
           )}
 
-           {/* Conversation Quality Metrics */}
-           {callDetails.conversation_quality && typeof callDetails.conversation_quality === 'object' && (
+          {/* Conversation Quality Metrics */}
+          {callDetails.conversation_quality && typeof callDetails.conversation_quality === 'object' && (
             <Paper
               sx={{
                 p: { xs: 2, sm: 3 },
@@ -896,7 +732,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
               >
                 Conversation Quality
               </Typography>
-              
+
               {callDetails.conversation_quality.overall_quality_score !== undefined && (
                 <Box sx={{ mb: 2 }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
@@ -921,8 +757,8 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                       borderRadius: 3,
                       bgcolor: "#e5e7eb",
                       "& .MuiLinearProgress-bar": {
-                        bgcolor: callDetails.conversation_quality.overall_quality_score >= 70 ? "#16a34a" : 
-                                 callDetails.conversation_quality.overall_quality_score >= 40 ? "#d97706" : "#dc2626",
+                        bgcolor: callDetails.conversation_quality.overall_quality_score >= 70 ? "#16a34a" :
+                          callDetails.conversation_quality.overall_quality_score >= 40 ? "#d97706" : "#dc2626",
                         borderRadius: 3,
                       },
                     }}
@@ -1306,3 +1142,10 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
     </Box>
   );
 };
+
+
+
+
+
+
+

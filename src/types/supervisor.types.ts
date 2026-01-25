@@ -198,7 +198,8 @@ export interface VoicemailsResponse {
   limit: number;
   results: Voicemail[];
 }
-
+// MISSED CALL
+//==================================
 export interface MissedCall {
   caller_id: string;
   call_count: number;
@@ -217,31 +218,39 @@ export interface MissedCallsResponse {
   results: MissedCall[];
 }
 
-// ============================================
-// CALL HISTORY TYPES
-// ============================================
 
-export interface CallHistoryItem {
-  call_id: string;
+// CALL TYPES
+//============================================
+export type RiskLevel= "low"| "medium"|'high'| 'critical';
+export type CallOutcome='resolved' | 'escalation';
+export type language= 'English' |'Luganda'
+
+
+export interface  CallHistoryItem{
+  call_id:string;
   caller_id: string;
   agent_name: string;
-  primary_topic: string | null;
-  risk_level: "low" | "medium" | "high" | "critical";
-  outcome: "resolved" | "escalated" | "pending" | "missed";
-  quality_score: string | null;
-  language: string | null;
+  primary_topic: string| null;
+  risk_level: RiskLevel;
+  outcome: CallOutcome;
+  quality_score:string | null;
+  language: language | null;
   call_start_time: string;
-  call_end_time: string;
+  call_end_time:string;
   created_at: string;
 }
 
-export interface CallHistoryResponse {
-  total_results: number;
-  page: number;
-  limit: number;
+
+export interface CallHistoryResponse{
+  total_results:number;
+  page:number;
+  limit:number;
   results: CallHistoryItem[];
 }
-
+export interface CallHistoryParams {
+  limit?: number;
+  offset?: number;
+}
 // ============================================
 // ANALYTICS TYPES
 // ============================================
@@ -585,4 +594,89 @@ export interface EscalationDetails {
 
   call_start_time: string;
   call_end_time?: string;
+}
+/**
+ * Represents a speaker segment in the call transcript
+ */
+export interface SpeakerSegment {
+  end_time: number;
+  speaker: "Agent" | "Caller";
+  start_time: number;
+  text: string;
+}
+
+/**
+ * Represents the call transcript
+ */
+export interface Transcript {
+  language: string;
+  processed_transcript: string;
+  speaker_segments: SpeakerSegment[];
+}
+
+/**
+ * Represents a detected keyword with its category
+ */
+export interface DetectedKeyword {
+  category: string;
+  keyword: string;
+}
+
+/**
+ * Represents a topic discussed during the call
+ */
+export interface TopicDiscussed {
+  is_primary: boolean;
+  relevance_score: number;
+  topic_name: string;
+}
+
+/**
+ * Represents the conversation quality metrics
+ */
+export interface ConversationQuality {
+  analyzing_score: number;
+  ending_score: number;
+  listening_score: number;
+  motivating_score: number;
+  overall_score: number;
+  rapport_score: number;
+}
+
+/**
+ * Represents the outcome of the call, including transfer information
+ */
+export interface Outcome {
+  date_of_transfer: string;
+  reason_of_transfer: string;
+  transfer_type: string;
+  transferred_from: string;
+}
+
+/**
+ * Main call record interface
+ */
+export interface CallRecord {
+  agent_sentiment: "Positive" | "Neutral" | "Negative";
+  audio_file_path: string;
+  call_duration_seconds: number;
+  call_end_time: string;
+  call_id: string;
+  call_notes: string;
+  call_start_time: string;
+  call_status: "completed" | "in_progress" | "failed" | "cancelled";
+  call_summary: string;
+  caller_gender: "Male" | "Female" | "Other" | "Unknown";
+  caller_id: string;
+  caller_sentiment: "Positive" | "Neutral" | "Negative";
+  caller_type: "Patient" | "Family" | "Healthcare Provider" | "Other";
+  conversation_quality: ConversationQuality;
+  detected_keywords: DetectedKeyword[];
+  language: string;
+  outcome: Outcome;
+  risk_level: "low" | "medium" | "high" | "critical";
+  speakers: SpeakerSegment[];
+  topics_discussed: TopicDiscussed[];
+  trajectory_of_care: "Already in care" | "New patient" | "Follow-up" | "Referral";
+  transcript: Transcript;
 }

@@ -22,6 +22,7 @@ import type {
   GenderBreakdown,
   LanguageUsage,
   CallerTypeBreakdown,
+  CallHistoryParams,
   TrajectoryOfCare,
   TopicBreakdown,
   CallOutcomes,
@@ -36,6 +37,13 @@ import type {
   ConversationQualityInsights,
   StaffPerformanceOverview,
   StaffDetailsBasic,
+  CallRecord,
+  SpeakerSegment,
+  Transcript,
+  DetectedKeyword,
+  TopicDiscussed,
+  ConversationQuality,
+  Outcome,
 } from "../../types/supervisor.types";
 //import type { EscalationDetails } from "../../types/user.types";
 import type { EscalationDetails } from "../../types/supervisor.types";   // ← same folder, or correct relative path
@@ -328,27 +336,22 @@ class SupervisorApi {
   // ============================================
   // CALL HISTORY
   // ============================================
+   async getCallHistory(params?: CallHistoryParams): Promise<CallHistoryResponse>{
+    const queryParams=new URLSearchParams({
+      limit:String(params?.limit ?? 10),
+      offset: String(params?.offset ?? 0)
+    })
+    const url =`${API_BASE_URL}/supervisor/call-history?${queryParams}`;
+    this.logRequest("GET",url,params);
 
-  async getCallHistory(
-    limit: number = 10,
-    offset: number = 0
-  ): Promise<CallHistoryResponse> {
-    const params = new URLSearchParams({
-      limit: String(limit),
-      offset: String(offset),
+    const response = await fetch(url,{
+      method : 'GET',
+      headers:this.getAuthHeaders(),
     });
-
-    const url = `${API_BASE_URL}/supervisor/call-history?${params}`;
-    this.logRequest("GET", url, { limit, offset });
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
     return this.handleResponse(response);
-  }
 
+   }
+  
   // ============================================
   // ANALYTICS - OVERVIEW & TRENDS
   // ============================================
@@ -691,6 +694,17 @@ class SupervisorApi {
 
   return this.handleResponse(response);
 }
+async getCallDetails(callId: string): Promise<CallRecord> {
+  const url = `${API_BASE_URL}/supervisor/call-details/${callId}`;
+  this.logRequest("GET", url);
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: this.getAuthHeaders(),
+  });
+
+  return this.handleResponse<CallRecord>(response);
+}
 
   async getNetworkAudioQualityTrends(): Promise<NetworkAudioQualityTrends> {
     const url = `${API_BASE_URL}/supervisor/analytics/network-audio-quality-trends`;
@@ -704,6 +718,7 @@ class SupervisorApi {
     return this.handleResponse(response);
   }
 }
+
 
 
 
