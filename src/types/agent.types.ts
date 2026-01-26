@@ -8,7 +8,7 @@
 export type CallStatus = 'answered' | 'not_answered' | 'voicemail' | 'missed';
 export type CallOutcome = 'resolved' | 'unresolved' | 'escalated' | 'not_escalated' | 'not_answered';
 export type AvailabilityStatus = 'available' | 'on_call' | 'on_break' | 'offline';
-export type PriorityLevel = 'low' | 'medium' | 'high';
+export type PriorityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type ResolutionStatus = 'pending' | 'in_progress' | 'resolved';
 export type EscalationType = 'manual' | 'automatic';
 export type CallerGender = 'male' | 'female' | 'unknown';
@@ -183,6 +183,15 @@ export interface TransferDetails {
   transfer_time: string;
 }
 
+export interface ConversationQuality {
+  overall_score: number;
+  rapport_score: number;
+  listening_score: number;
+  analyzing_score: number;
+  motivating_score: number;
+  ending_score: number;
+}
+
 export interface CallDetailsResponse {
   call_id: string;
   caller_id: string;
@@ -200,16 +209,15 @@ export interface CallDetailsResponse {
   call_summary: string | null;
   call_notes: string | null;
   audio_url: string;
-  agent_sentiment: Sentiment | null;
-  caller_sentiment: Sentiment | null;
-  conversation_quality: number | null;
+  agent_sentiment: string | null;  // Changed from Sentiment | null
+  caller_sentiment: string | null;  // Changed from Sentiment | null
+  conversation_quality: ConversationQuality | null;  // Changed from number | null
   detected_keywords: DetectedKeyword[];
   topics_discussed: TopicDiscussed[];
   transcript: Transcript;
   transfer_details: TransferDetails | null;
   outcome: CallOutcome;
 }
-
 // ============================================
 // SUPERVISORS
 // ============================================
@@ -257,19 +265,19 @@ export interface EscalationsSummary {
   resolved_today: number;
 }
 
+// Updated to match actual API response
 export interface EscalatedCall {
-  escalation_id: number;
-  call_id: string;
-  caller_id: string;
-  escalated_by: string;
-  escalated_to: string;
-  escalation_reason: string;
-  priority_level: PriorityLevel;
-  risk_level: RiskLevel;
-  escalation_time: string;
-  resolution_status: ResolutionStatus;
-  resolution_notes: string | null;
-  resolved_at: string | null;
+  escalation_id: string;           // API returns string UUID, not number
+  caller_id: string;                // Phone number of caller
+  primary_topic: string;            // Main topic of the call
+  language: string;                 // Language used in the call
+  escalation_reason: string;        // Reason for escalation
+  priority_level: PriorityLevel;    // Priority level (low, medium, high, critical)
+  risk_level: RiskLevel;            // Risk level (low, medium, high, critical)
+  escalation_type: string;          // Type of escalation (manual, automatic)
+  resolution_status: ResolutionStatus; // Status (pending, in_progress, resolved)
+  created_at: string;               // ISO timestamp when escalation was created
+  audio_url: string;                // Direct URL to call recording
 }
 
 export interface EscalatedCallsResponse {
@@ -279,6 +287,7 @@ export interface EscalatedCallsResponse {
   results: EscalatedCall[];
 }
 
+// Keep the old detailed version for when/if the API is updated to include these fields
 export interface EscalationDetailsResponse {
   escalation_id: number;
   call_id: string;

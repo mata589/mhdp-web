@@ -11,17 +11,29 @@ import {
   Alert,
   LinearProgress,
   Skeleton,
+  Snackbar,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
 import CustomChip from "./CustomChip/CustomChip";
-import AIAnalysisCard from "./AnalysisCard";
+
 
 import type { CallDetailsResponse } from "../../types/agent.types";
 import agentApi from "../../services/api/agentApi";
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
-import { CallInfoCard } from "./CallInfoCard/CallInfoCard";
+import {
+  CallInfoCard,
+  createChipValue,
+  getRiskLevelColors,
+  getStatusColors,
+  getCallerTypeColors,
+  createSpeakerChips
+} from "./CallInfoCard/CallInfoCard";
+import { EscalateCallModal } from "./EscalateCallModal/EscalateCallModal";
+import AIAnalysisCard from "./AIAnalysisCard/AIAnalysisCard";
+
+
 
 interface CallDetailsPageProps {
   callId?: string;
@@ -287,6 +299,10 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   const [callDetails, setCallDetails] = useState<CallDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Escalation Modal States
+  const [escalateModalOpen, setEscalateModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchCallDetails = async () => {
@@ -321,6 +337,20 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
     }
   };
 
+  const handleEscalate = () => {
+    setEscalateModalOpen(true);
+  };
+
+  const handleEscalationSuccess = (response: any) => {
+    setSuccessMessage(response.message || 'Call escalated successfully');
+
+    // Optionally refresh call details to show updated outcome
+    if (callId) {
+      agentApi.getCallDetails(callId)
+        .then(data => setCallDetails(data))
+        .catch(err => console.error('Error refreshing call details:', err));
+    }
+  };
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -337,34 +367,6 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
       minute: "2-digit",
       hour12: true,
     });
-  };
-
-  const getRiskLevelColor = (risk: string) => {
-    switch (risk?.toLowerCase()) {
-      case "high":
-      case "critical":
-        return { bg: "#fee2e2", color: "#dc2626", border: "#fecaca" };
-      case "medium":
-        return { bg: "#fef3c7", color: "#d97706", border: "#fde68a" };
-      case "low":
-        return { bg: "#d1fae5", color: "#059669", border: "#a7f3d0" };
-      default:
-        return { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb" };
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "answered":
-        return { bg: "#d1fae5", color: "#059669", border: "#a7f3d0" };
-      case "escalated":
-      case "voicemail":
-        return { bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" };
-      case "missed":
-        return { bg: "#fee2e2", color: "#dc2626", border: "#fecaca" };
-      default:
-        return { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb" };
-    }
   };
 
   if (loading) {
@@ -384,63 +386,22 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
     );
   }
 
-  const riskColors = getRiskLevelColor(callDetails.risk_level);
-  const statusColors = getStatusColor(callDetails.call_status);
+  const riskColors = getRiskLevelColors(callDetails.risk_level);
+  const statusColors = getStatusColors(callDetails.call_status);
+  const callerTypeColors = getCallerTypeColors(callDetails.caller_type || "Unknown");
+
+  // Calculate speaker percentages
+  const totalWords = callDetails.speakers?.reduce((sum, entry) => sum + entry.text.split(' ').length, 0) || 0;
+  const callerWords = callDetails.speakers?.filter(s => s.speaker === 'caller').reduce((sum, entry) => sum + entry.text.split(' ').length, 0) || 0;
+  const agentWords = totalWords - callerWords;
+  const callerPercentage = totalWords > 0 ? Math.round((callerWords / totalWords) * 100) : 0;
+  const agentPercentage = totalWords > 0 ? 100 - callerPercentage : 0;
+
+
+
 
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
-      {/* Header */}
-      <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: { xs: 2, sm: 0 },
-            mb: { xs: 2, sm: 0 },
-          }}
-        >
-          {/* Back + Date */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <IconButton
-              onClick={handleBack}
-              sx={{ color: "#6b7280", "&:hover": { bgcolor: "#f3f4f6" } }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#6b7280",
-                fontSize: { xs: "13px", sm: "14px" },
-                fontWeight: 400,
-              }}
-            >
-              {formatDateTime(callDetails.call_start_time)} – {formatDateTime(callDetails.call_end_time)}
-            </Typography>
-          </Box>
-
-          {/* Escalate button – only shown when not already escalated */}
-          {callDetails.outcome !== "escalated" && (
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "#dc2626",
-                color: "white",
-                borderRadius: 1,
-                textTransform: "none",
-                fontWeight: 500,
-                px: { xs: 3, sm: 2 },
-                "&:hover": { bgcolor: "#b91c1c" },
-              }}
-            >
-              Escalate call
-            </Button>
-          )}
-        </Box>
-      </Box>
 
       {/* Main Content */}
       <Box
@@ -454,24 +415,31 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
         <Box sx={{ flex: 1 }}>
           <CallInfoCard
             header={{
-              title: `Call ${callDetails.call_id.slice(0, 8)}`,
+              title: `Outgoing Call #${callDetails.call_id.slice(-4)}`,
               statusChip: {
                 label: callDetails.call_status,
                 bgcolor: statusColors.bg,
                 color: statusColors.color,
                 border: statusColors.border,
               },
-              subtitle: `${formatDateTime(callDetails.call_start_time)} – ${formatDateTime(callDetails.call_end_time)}`,
+              subtitle: `${formatDateTime(callDetails.call_start_time)} - ${formatDateTime(callDetails.call_end_time).split(', ')[1]}`,
+              onBack: handleBack,
+              actionButton: callDetails.outcome !== "escalated" ? {
+                label: "Escalate call",
+                icon: "escalate",
+                variant: "escalate",
+                onClick: handleEscalate,
+              } : undefined,
             }}
             fields={[
-              { label: "Caller ID", value: callDetails.caller_id },
+              { label: "Caller ID", value: `#${callDetails.call_id.slice(-4)}` },
               {
                 label: "Caller Type",
                 value: createChipValue(
                   callDetails.caller_type || "Unknown",
-                  "#dbeafe",
-                  "#1e40af",
-                  "#bfdbfe"
+                  callerTypeColors.bg,
+                  callerTypeColors.color,
+                  callerTypeColors.border
                 ),
               },
               {
@@ -484,21 +452,17 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                 ),
               },
               { label: "Language", value: callDetails.language },
-              { label: "Caller Gender", value: callDetails.caller_gender },
-              { label: "Caller Age", value: callDetails.caller_age || "Unknown" },
-              ...(callDetails.trajectory_of_care
-                ? [{ label: "Trajectory of Care", value: callDetails.trajectory_of_care }]
-                : []),
+              { label: "Caller Sex", value: callDetails.caller_gender },
+              { label: "Trajectory of care", value: callDetails.trajectory_of_care || "Unknown" },
               {
-                label: "Duration",
-                value: createChipValue(
-                  formatDuration(callDetails.call_duration_seconds),
-                  "#dbeafe",
-                  "#1e40af",
-                  "#bfdbfe"
-                ),
+                label: "Speakers",
+                value: createSpeakerChips([
+                  { label: "Caller", percentage: callerPercentage },
+                  { label: "Agent", percentage: agentPercentage },
+                ]),
               },
             ]}
+            gridColumns={{ xs: 1, sm: 2, md: 3 }}
           />
 
           {callDetails.call_summary && (
@@ -640,294 +604,30 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
         {/* Right Column */}
         <Box sx={{ width: { xs: "100%", md: 320 }, display: "flex", flexDirection: "column", gap: 3 }}>
           {/* Sentiment Analysis */}
-          {(callDetails.caller_sentiment || callDetails.agent_sentiment) && (
-            <Paper
-              sx={{
-                p: { xs: 2, sm: 3 },
-                borderRadius: 2,
-                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 600,
-                  color: "#111827",
-                  mb: 2,
-                  fontSize: { xs: "15px", sm: "16px" },
-                }}
-              >
-                Sentiment Analysis
-              </Typography>
-              {callDetails.caller_sentiment && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Caller Sentiment
-                  </Typography>
-                  <Chip
-                    label={callDetails.caller_sentiment}
-                    size="small"
-                    sx={{
-                      bgcolor: callDetails.caller_sentiment === "positive" ? "#d1fae5" :
-                        callDetails.caller_sentiment === "negative" ? "#fee2e2" : "#fef3c7",
-                      color: callDetails.caller_sentiment === "positive" ? "#059669" :
-                        callDetails.caller_sentiment === "negative" ? "#dc2626" : "#d97706",
-                      border: `1px solid ${callDetails.caller_sentiment === "positive" ? "#a7f3d0" :
-                        callDetails.caller_sentiment === "negative" ? "#fecaca" : "#fde68a"}`,
-                      fontWeight: 500,
-                      fontSize: "12px",
-                      textTransform: "capitalize",
-                    }}
-                  />
-                </Box>
-              )}
-              {callDetails.agent_sentiment && (
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#6b7280", fontSize: { xs: "11px", sm: "12px" }, mb: 0.5 }}
-                  >
-                    Agent Sentiment
-                  </Typography>
-                  <Chip
-                    label={callDetails.agent_sentiment}
-                    size="small"
-                    sx={{
-                      bgcolor: callDetails.agent_sentiment === "positive" ? "#d1fae5" :
-                        callDetails.agent_sentiment === "negative" ? "#fee2e2" : "#fef3c7",
-                      color: callDetails.agent_sentiment === "positive" ? "#059669" :
-                        callDetails.agent_sentiment === "negative" ? "#dc2626" : "#d97706",
-                      border: `1px solid ${callDetails.agent_sentiment === "positive" ? "#a7f3d0" :
-                        callDetails.agent_sentiment === "negative" ? "#fecaca" : "#fde68a"}`,
-                      fontWeight: 500,
-                      fontSize: "12px",
-                      textTransform: "capitalize",
-                    }}
-                  />
-                </Box>
-              )}
-            </Paper>
-          )}
-
-          {/* Conversation Quality Metrics */}
-          {callDetails.conversation_quality && typeof callDetails.conversation_quality === 'object' && (
-            <Paper
-              sx={{
-                p: { xs: 2, sm: 3 },
-                borderRadius: 2,
-                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 600,
-                  color: "#111827",
-                  mb: 2,
-                  fontSize: { xs: "15px", sm: "16px" },
-                }}
-              >
-                Conversation Quality
-              </Typography>
-
-              {callDetails.conversation_quality.overall_quality_score !== undefined && (
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" }, fontWeight: 500 }}
-                    >
-                      Overall Quality
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 600, fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      {callDetails.conversation_quality.overall_quality_score}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={callDetails.conversation_quality.overall_quality_score}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: callDetails.conversation_quality.overall_quality_score >= 70 ? "#16a34a" :
-                          callDetails.conversation_quality.overall_quality_score >= 40 ? "#d97706" : "#dc2626",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              {callDetails.conversation_quality.rapport_score !== undefined && (
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      Rapport
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      {callDetails.conversation_quality.rapport_score}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={callDetails.conversation_quality.rapport_score}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: "#10b981",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              {callDetails.conversation_quality.listening_score !== undefined && (
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      Listening
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      {callDetails.conversation_quality.listening_score}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={callDetails.conversation_quality.listening_score}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: "#3b82f6",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              {callDetails.conversation_quality.analyzing_score !== undefined && (
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      Analyzing
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      {callDetails.conversation_quality.analyzing_score}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={callDetails.conversation_quality.analyzing_score}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: "#14b8a6",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              {callDetails.conversation_quality.motivating_score !== undefined && (
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      Motivating
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      {callDetails.conversation_quality.motivating_score}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={callDetails.conversation_quality.motivating_score}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: "#f59e0b",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              {callDetails.conversation_quality.ending_score !== undefined && (
-                <Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#374151", fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      Ending
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 500, fontSize: { xs: "13px", sm: "14px" } }}
-                    >
-                      {callDetails.conversation_quality.ending_score}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={callDetails.conversation_quality.ending_score}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: "#e5e7eb",
-                      "& .MuiLinearProgress-bar": {
-                        bgcolor: "#8b5cf6",
-                        borderRadius: 3,
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-            </Paper>
-          )}
-
+  
+  {/* Debug logging */}
+  {(() => {
+    console.log('Conversation Quality Data:', {
+      raw: callDetails.conversation_quality,
+      mapped: callDetails.conversation_quality
+        ? {
+            overall_quality_score: callDetails.conversation_quality.overall_score,
+            rapport_score: callDetails.conversation_quality.rapport_score,
+            listening_score: callDetails.conversation_quality.listening_score,
+            analyzing_score: callDetails.conversation_quality.analyzing_score,
+            motivating_score: callDetails.conversation_quality.motivating_score,
+            ending_score: callDetails.conversation_quality.ending_score,
+          }
+        : undefined
+    });
+    return null;
+  })()}
+  
+  <AIAnalysisCard
+  agentSentiment={callDetails.agent_sentiment?.toLowerCase()}
+  callerSentiment={callDetails.caller_sentiment?.toLowerCase()}
+  conversationQuality={callDetails.conversation_quality || undefined}
+/>
           {/* Detected Keywords */}
           {callDetails.detected_keywords && callDetails.detected_keywords.length > 0 && (
             <Paper
@@ -1139,6 +839,47 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
           </Paper>
         </Box>
       </Box>
+      {/* Escalation Modal */}
+      <EscalateCallModal
+        open={escalateModalOpen}
+        onClose={() => setEscalateModalOpen(false)}
+        callId={callDetails.call_id}
+        onEscalationSuccess={handleEscalationSuccess}
+      />
+
+      {/* Success Notification */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSuccessMessage('')}
+          severity="success"
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      {/* Error Notification */}
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setErrorMessage('')}
+          severity="error"
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

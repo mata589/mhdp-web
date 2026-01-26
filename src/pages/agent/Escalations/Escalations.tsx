@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -20,22 +21,29 @@ import {
 import {
   Search,
   Phone,
-  Eye,
   ChevronLeft,
   ChevronRight,
   CheckCircle,
   X,
 } from 'lucide-react';
 
+// Import button components
+import { PlayButton } from '../../../components/common/PlayButton/PlayButton';
+import { ViewButton } from '../../../components/common/ViewButton/ViewButton';
+import { CallBackButton } from '../../../components/common/CallBackButton/CallBackButton';
+import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
+import { CallPopup } from '../../../components/common/CallPopupProps/CallPopupProps';
+
 // Import your API and types
 import type { 
-  EscalationsSummary, 
+  EscalationsSummary,
   EscalatedCall,
   RiskLevel,
   PriorityLevel,
   ResolutionStatus 
 } from '../../../types/agent.types';
 import agentApi from '../../../services/api/agentApi';
+import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
 
 // CustomChip component
 const CustomChip = ({ label, variant, size }: any) => {
@@ -146,24 +154,37 @@ const CallItemShimmer = () => (
           <ShimmerBox width="100px" height={14} />
           <ShimmerBox width="150px" height={14} />
           <ShimmerBox width="120px" height={14} />
-          <ShimmerBox width="130px" height={14} />
         </Box>
       </Box>
     </Box>
     <Box sx={{ display: 'flex', gap: 1.5 }}>
-      <ShimmerBox width="80px" height={36} borderRadius={4} />
-      <ShimmerBox width="80px" height={36} borderRadius={4} />
+      <ShimmerBox width="60px" height={32} borderRadius={4} />
+      <ShimmerBox width="60px" height={32} borderRadius={4} />
+      <ShimmerBox width="80px" height={32} borderRadius={4} />
     </Box>
   </Box>
 );
 
 export default function EscalatedCallsPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('All risk levels');
   const [reviewDialog, setReviewDialog] = useState(false);
   const [selectedCall, setSelectedCall] = useState<EscalatedCall | null>(null);
   const [resolution, setResolution] = useState('');
   const [status, setStatus] = useState<ResolutionStatus>('pending');
+  const [playingEscalationId, setPlayingEscalationId] = useState<string | null>(null);
+  const [selectedEscalationId, setSelectedEscalationId] = useState<string | null>(null);
+  
+  // Call popup state
+  const [showCallPopup, setShowCallPopup] = useState(false);
+  const [activeCall, setActiveCall] = useState<{
+    callId: string;
+    phoneNumber: string;
+    callerName?: string;
+  } | null>(null);
+  const [callDuration, setCallDuration] = useState(0);
+  const [isCallActive, setIsCallActive] = useState(false);
   
   // API state
   const [summary, setSummary] = useState<EscalationsSummary | null>(null);
@@ -206,8 +227,7 @@ export default function EscalatedCallsPage() {
           limit,
           offset,
           searchQuery || undefined,
-        
-          undefined,
+          riskLevel,
           undefined
         );
 
@@ -223,6 +243,16 @@ export default function EscalatedCallsPage() {
 
     fetchEscalatedCalls();
   }, [searchQuery, selectedLevel, currentPage]);
+
+  // Handle call duration timer
+  useEffect(() => {
+    if (isCallActive) {
+      const timer = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isCallActive]);
 
   const metrics = [
     {
@@ -247,11 +277,57 @@ export default function EscalatedCallsPage() {
     },
   ];
 
-  const handleViewCall = async (call: EscalatedCall) => {
+  const handlePlayRecording = (escalationId: string) => {
+    setPlayingEscalationId(escalationId);
+  };
+
+  const handleClosePlayer = () => {
+    setPlayingEscalationId(null);
+  };
+
+  const handleViewCall = (escalationId: string) => {
+    setSelectedEscalationId(escalationId);
+  };
+
+  const handleReviewCall = async (call: EscalatedCall) => {
     setSelectedCall(call);
     setStatus(call.resolution_status);
-    setResolution(call.resolution_notes || '');
+    setResolution('');
     setReviewDialog(true);
+  };
+
+  const handleCallBack = (call: EscalatedCall) => {
+    setActiveCall({
+      callId: extractCallIdFromUrl(call.audio_url),
+      phoneNumber: call.caller_id,
+    });
+    setShowCallPopup(true);
+    setCallDuration(0);
+    setIsCallActive(false);
+  };
+
+  const handleCallConnect = () => {
+    // Simulate call connecting - in real implementation, this would initiate the actual call
+    setIsCallActive(true);
+    console.log('Call connected to:', activeCall?.phoneNumber);
+    
+    // Navigate to live call interface after a short delay
+    setTimeout(() => {
+      navigate('/agent/live-call');
+    }, 1000);
+  };
+
+  const handleEndCall = () => {
+    setShowCallPopup(false);
+    setIsCallActive(false);
+    setCallDuration(0);
+    setActiveCall(null);
+  };
+
+  const handleMinimize = () => {
+    setShowCallPopup(false);
+    // Keep the call active in the background
+    // The popup can be reopened from a notification or status indicator
   };
 
   const handleCloseDialog = () => {
@@ -267,12 +343,6 @@ export default function EscalatedCallsPage() {
     handleCloseDialog();
   };
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -286,10 +356,58 @@ export default function EscalatedCallsPage() {
 
   const totalPages = Math.ceil(totalResults / limit);
 
+  // Find the call being played
+  const playingCall = escalatedCalls.find(call => call.escalation_id === playingEscalationId);
+
+  // Extract call_id from audio_url (last segment before extension)
+  const extractCallIdFromUrl = (audioUrl: string): string => {
+    const parts = audioUrl.split('/');
+    return parts[parts.length - 1] || '';
+  };
+
+  // If a call is selected for viewing, show the call details page
+  if (selectedEscalationId) {
+    const selectedCall = escalatedCalls.find(c => c.escalation_id === selectedEscalationId);
+    const callId = selectedCall ? extractCallIdFromUrl(selectedCall.audio_url) : '';
+    
+    return (
+      <CallDetailsPage
+        callId={callId}
+        onBack={() => setSelectedEscalationId(null)}
+      />
+    );
+  }
+
   return (
     <>
       <style>{shimmerKeyframes}</style>
       <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: 3 }}>
+        {/* Call Recording Player Popup */}
+        {playingEscalationId && playingCall && (
+          <CallRecordingPlayer
+            callId={extractCallIdFromUrl(playingCall.audio_url)}
+            duration="0:00" // Duration will be fetched from audio
+            recordingUrl={playingCall.audio_url}
+            isPopup={true}
+            open={true}
+            onClose={handleClosePlayer}
+          />
+        )}
+
+        {/* Call Popup */}
+        {activeCall && (
+          <CallPopup
+            callId={activeCall.callId}
+            phoneNumber={activeCall.phoneNumber}
+            callerName={activeCall.callerName}
+            mode={isCallActive ? "active" : "outgoing"}
+            duration={callDuration}
+            open={showCallPopup}
+            onEndCall={handleEndCall}
+            onMinimize={handleMinimize}
+          />
+        )}
+        
         {/* Metrics Cards */}
         <Box
           sx={{
@@ -364,7 +482,7 @@ export default function EscalatedCallsPage() {
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                 <TextField
-                  placeholder="Search by agent or call id..."
+                  placeholder="Search by caller or topic..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   size="small"
@@ -482,60 +600,39 @@ export default function EscalatedCallsPage() {
                             size="small"
                           />
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                           <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                            Call ID: {call.call_id}
+                            Caller: <span style={{ fontWeight: 500, color: '#374151' }}>{call.caller_id}</span>
                           </Typography>
                           <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                            Escalated by: <span style={{ fontWeight: 500, color: '#374151' }}>{call.escalated_by}</span>
+                            Topic: <span style={{ fontWeight: 500, color: '#374151' }}>{call.primary_topic}</span>
                           </Typography>
                           <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                            To: <span style={{ fontWeight: 500, color: '#374151' }}>{call.escalated_to}</span>
+                            Language: <span style={{ fontWeight: 500, color: '#374151' }}>{call.language}</span>
                           </Typography>
                           <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                            {formatDateTime(call.escalation_time)}
+                            {formatDateTime(call.created_at)}
                           </Typography>
                         </Box>
                       </Box>
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1.5 }}>
-                      <Button
-                        variant="outlined"
-                        startIcon={<Eye size={16} />}
-                        onClick={() => handleViewCall(call)}
-                        sx={{
-                          textTransform: 'none',
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          color: '#008080',
-                          borderColor: '#E5E7EB',
-                          px: 2,
-                          '&:hover': {
-                            borderColor: '#4682B4',
-                            bgcolor: '#F0F9FF',
-                          },
-                        }}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="contained"
-                        startIcon={<Phone size={16} />}
-                        sx={{
-                          textTransform: 'none',
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          bgcolor: '#00897b',
-                          color: 'white',
-                          px: 2,
-                          '&:hover': {
-                            bgcolor: '#00796b',
-                          },
-                        }}
-                      >
-                        Call
-                      </Button>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <PlayButton 
+                        onClick={() => handlePlayRecording(call.escalation_id)}
+                        size="small"
+                      />
+                      <ViewButton 
+                        onClick={() => handleViewCall(call.escalation_id)}
+                        size="small"
+                      />
+                      <CallBackButton 
+                        onClick={() => handleCallBack(call)}
+                        size="small"
+                        label="Call"
+                        bgcolor="#00897b"
+                        hoverBgColor="#00796b"
+                      />
                     </Box>
                   </Box>
                 ))}
@@ -605,7 +702,7 @@ export default function EscalatedCallsPage() {
           <DialogTitle>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography sx={{ fontSize: '18px', fontWeight: 600 }}>
-                Escalation Review - {selectedCall?.call_id}
+                Escalation Review - {selectedCall?.escalation_id}
               </Typography>
               <IconButton onClick={handleCloseDialog} size="small">
                 <X size={20} />
@@ -631,18 +728,18 @@ export default function EscalatedCallsPage() {
                     </Box>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                        Escalated By
+                        Primary Topic
                       </Typography>
                       <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                        {selectedCall.escalated_by}
+                        {selectedCall.primary_topic}
                       </Typography>
                     </Box>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                        Escalated To
+                        Language
                       </Typography>
                       <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                        {selectedCall.escalated_to}
+                        {selectedCall.language}
                       </Typography>
                     </Box>
                   </Box>
@@ -682,10 +779,18 @@ export default function EscalatedCallsPage() {
                     </Box>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                        Escalation Time
+                        Escalation Type
                       </Typography>
                       <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                        {formatDateTime(selectedCall.escalation_time)}
+                        {selectedCall.escalation_type}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Created At
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {formatDateTime(selectedCall.created_at)}
                       </Typography>
                     </Box>
                   </Box>
