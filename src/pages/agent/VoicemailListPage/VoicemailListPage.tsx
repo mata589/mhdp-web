@@ -31,6 +31,7 @@ import { CallRecordingPlayer } from '../../../components/common/CallRecordingPla
 import { DateRangeSelector } from '../../../components/common/DateRangeSelector/DateRangeSelector';
 import { CallBackButton } from '../../../components/common/CallBackButton/CallBackButton';
 import { CallPopup } from '../../../components/common/CallPopupProps/CallPopupProps';
+import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
 
 import type { Voicemail, RiskLevel, VoicemailStatus } from '../../../types/agent.types';
 import agentApi from '../../../services/api/agentApi';
@@ -271,6 +272,7 @@ export const VoicemailListPage: React.FC = () => {
   const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [playingVoicemailId, setPlayingVoicemailId] = useState<string | null>(null);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [voicemails, setVoicemails] = useState<Voicemail[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -371,7 +373,7 @@ export const VoicemailListPage: React.FC = () => {
   const startItem = startIndex + 1;
 
   const handleViewVoicemail = (voicemailId: string) => {
-    navigate(`/agent/voicemail/${voicemailId}`);
+    setSelectedCallId(voicemailId);
   };
 
   const handlePlayVoicemail = (voicemailId: string) => {
@@ -427,6 +429,16 @@ export const VoicemailListPage: React.FC = () => {
 
   // Find the voicemail being played
   const playingVoicemail = voicemails.find(vm => vm.call_id === playingVoicemailId);
+
+  // If a voicemail is selected, show the call details page
+  if (selectedCallId) {
+    return (
+      <CallDetailsPage
+        callId={selectedCallId}
+        onBack={() => setSelectedCallId(null)}
+      />
+    );
+  }
 
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>

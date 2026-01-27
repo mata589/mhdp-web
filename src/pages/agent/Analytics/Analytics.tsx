@@ -2,9 +2,6 @@
 import React, { useEffect, useState } from "react";
 import {
   GridLegacy as Grid,
-  IconButton,
-  InputAdornment,
-  TextField,
   CircularProgress,
 } from "@mui/material";
 import {
@@ -15,15 +12,14 @@ import {
   Avatar,
   Chip,
   LinearProgress,
+  Alert,
 } from "@mui/material";
 import {
   Star as StarIcon,
   FileDownload as FileDownloadIcon,
-  ChevronRight,
 } from "@mui/icons-material";
 import {
   AlertCircle,
-  Calendar,
   Phone,
   PhoneCall,
   PhoneMissed,
@@ -37,6 +33,8 @@ import type {
   AgentConversationQualityInsights,
 } from "../../../types/agent.types";
 import agentApi from "../../../services/api/agentApi";
+import { DateRangeSelector } from "../../../components/common/DateRangeSelector/DateRangeSelector";
+// import { DateRangeSelector } from '../../../components/common/DateRangeSelector/DateRangeSelector';
 
 interface MetricCardProps {
   title: string;
@@ -72,7 +70,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <h3 className="text-sm font-medium text-gray-700 sm:text-base">
             {title}
           </h3>
-          <ChevronRight className="h-4 w-4 flex-shrink-0 text-teal-600 sm:h-5 sm:w-5" />
         </div>
       </Box>
 
@@ -164,10 +161,62 @@ const AgentCard: React.FC<{
   </Box>
 );
 
+// Parse date range string to start and end dates
+const parseDateRange = (dateRange: string): { startDate: string; endDate: string } | null => {
+  if (!dateRange) return null;
+  
+  const parts = dateRange.split(' - ');
+  if (parts.length !== 2) return null;
+  
+  const [start, end] = parts;
+  
+  // Convert MM/DD/YYYY to YYYY-MM-DD format
+  const parseDate = (dateStr: string): string | null => {
+    try {
+      const trimmed = dateStr.trim();
+      const [month, day, year] = trimmed.split('/');
+      
+      if (!month || !day || !year) {
+        console.error('Invalid date format:', dateStr);
+        return null;
+      }
+      
+      const paddedMonth = month.padStart(2, '0');
+      const paddedDay = day.padStart(2, '0');
+      
+      // Validate date ranges
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      const y = parseInt(year, 10);
+      
+      if (m < 1 || m > 12 || d < 1 || d > 31 || y < 2000 || y > 2100) {
+        console.error('Date out of valid range:', dateStr);
+        return null;
+      }
+      
+      return `${year}-${paddedMonth}-${paddedDay}`;
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+      return null;
+    }
+  };
+  
+  const startDate = parseDate(start);
+  const endDate = parseDate(end);
+  
+  if (!startDate || !endDate) {
+    return null;
+  }
+  
+  return { startDate, endDate };
+};
+
 export const Analytics: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
   
   // State for API data
   const [overview, setOverview] = useState<AgentAnalyticsOverview | null>(null);
@@ -180,12 +229,24 @@ export const Analytics: React.FC = () => {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, []);
+  }, [dateRange]);
 
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Parse date range if provided
+      let dates = null;
+      if (dateRange) {
+        dates = parseDateRange(dateRange);
+        
+        if (!dates) {
+          setError('Invalid date range format. Please select a valid date range.');
+          setLoading(false);
+          return;
+        }
+      }
 
       const [
         overviewData,
@@ -194,11 +255,11 @@ export const Analytics: React.FC = () => {
         trendsData,
         insightsData,
       ] = await Promise.all([
-        agentApi.getAnalyticsOverview(),
-        agentApi.getAnalyticsCallVolumeTrends(),
-        agentApi.getAnalyticsLeaderboard(5),
-        agentApi.getConversationQualityTrends(),
-        agentApi.getConversationQualityInsights(),
+        agentApi.getAnalyticsOverview(dates?.startDate, dates?.endDate),
+        agentApi.getAnalyticsCallVolumeTrends(dates?.startDate, dates?.endDate),
+        agentApi.getAnalyticsLeaderboard(5, dates?.startDate, dates?.endDate),
+        agentApi.getConversationQualityTrends(dates?.startDate, dates?.endDate),
+        agentApi.getConversationQualityInsights(dates?.startDate, dates?.endDate),
       ]);
 
       setOverview(overviewData);
@@ -212,6 +273,140 @@ export const Analytics: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateRangeChange = (newDateRange: string) => {
+    setDateRange(newDateRange);
+  };
+
+  const handleExportReport = async () => {
+    try {
+      setExportLoading(true);
+      
+      // Parse date range if provided
+      let dates = null;
+      if (dateRange) {
+        dates = parseDateRange(dateRange);
+      }
+
+      // Prepare export data
+      const exportData = {
+        reportType: activeTab === 0 ? 'Overview' : 'Quality Metrics',
+        dateRange: dateRange || 'All Time',
+        generatedAt: new Date().toISOString(),
+        overview: overview,
+        callVolumeTrends: callVolumeTrends,
+        leaderboard: leaderboard,
+        qualityTrends: qualityTrends,
+        qualityInsights: qualityInsights,
+      };
+
+      // Convert to CSV format
+      const csvContent = generateCSV(exportData, activeTab);
+      
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `analytics_report_${activeTab === 0 ? 'overview' : 'quality'}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting report:', err);
+      setError('Failed to export report. Please try again.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const generateCSV = (data: any, tabIndex: number): string => {
+    let csv = '';
+    
+    if (tabIndex === 0) {
+      // Overview report
+      csv += 'Call Center Analytics Report - Overview\n';
+      csv += `Date Range: ${data.dateRange}\n`;
+      csv += `Generated: ${new Date(data.generatedAt).toLocaleString()}\n\n`;
+      
+      // Overview metrics
+      csv += 'Overview Metrics\n';
+      csv += 'Metric,Value,Change,Period\n';
+      if (data.overview) {
+        csv += `Total Calls,${data.overview.total_calls.value},${data.overview.total_calls.percentage_change}%,${data.overview.total_calls.comparison_period}\n`;
+        csv += `Calls Today,${data.overview.calls_today.value},${data.overview.calls_today.percentage_change}%,${data.overview.calls_today.comparison_period}\n`;
+        csv += `Escalated Calls,${data.overview.escalated_calls.value},${data.overview.escalated_calls.percentage_change}%,${data.overview.escalated_calls.comparison_period}\n`;
+        csv += `Avg Call Duration,${formatDuration(data.overview.average_call_duration.value)},${data.overview.average_call_duration.percentage_change}%,${data.overview.average_call_duration.comparison_period}\n`;
+        csv += `Quality Score,${data.overview.quality_score.value.toFixed(1)}%,${data.overview.quality_score.percentage_change}%,${data.overview.quality_score.comparison_period}\n`;
+      }
+      
+      csv += '\n';
+      
+      // Call volume trends
+      if (data.callVolumeTrends) {
+        csv += 'Call Volume Trends\n';
+        csv += 'Hour,Total Calls,Escalated Calls\n';
+        data.callVolumeTrends.volumes.forEach((vol: any) => {
+          csv += `${vol.hour},${vol.total_calls},${vol.escalated_calls}\n`;
+        });
+      }
+      
+      csv += '\n';
+      
+      // Leaderboard
+      if (data.leaderboard) {
+        csv += 'Agent Leaderboard\n';
+        csv += 'Rank,Agent Name,Total Calls,Quality Score,Escalation Rate\n';
+        data.leaderboard.leaderboard.forEach((agent: any, index: number) => {
+          csv += `${index + 1},${agent.agent_name},${agent.total_calls},${Math.round(agent.quality_score)}%,${Math.round(agent.escalation_rate * 100)}%\n`;
+        });
+      }
+    } else {
+      // Quality Metrics report
+      csv += 'Call Center Analytics Report - Quality Metrics\n';
+      csv += `Date Range: ${data.dateRange}\n`;
+      csv += `Generated: ${new Date(data.generatedAt).toLocaleString()}\n\n`;
+      
+      // Quality trends
+      if (data.qualityTrends) {
+        csv += 'Conversation Quality Trends\n';
+        csv += 'Month,Average Quality Score\n';
+        data.qualityTrends.data_points.forEach((point: any) => {
+          csv += `${point.month},${point.average_quality_score}%\n`;
+        });
+      }
+      
+      csv += '\n';
+      
+      // Quality breakdown
+      if (data.qualityInsights) {
+        csv += 'Quality Breakdown\n';
+        csv += 'Category,Score\n';
+        csv += `Overall Quality,${Math.round(data.qualityInsights.quality_breakdown.overall_quality)}%\n`;
+        csv += `Rapport,${Math.round(data.qualityInsights.quality_breakdown.rapport)}%\n`;
+        csv += `Listening,${Math.round(data.qualityInsights.quality_breakdown.listening)}%\n`;
+        csv += `Analyzing,${Math.round(data.qualityInsights.quality_breakdown.analyzing)}%\n`;
+        csv += `Motivating,${Math.round(data.qualityInsights.quality_breakdown.motivating)}%\n`;
+        csv += `Ending,${Math.round(data.qualityInsights.quality_breakdown.ending)}%\n`;
+        
+        csv += '\n';
+        
+        // Areas for improvement
+        csv += 'Areas for Improvement\n';
+        csv += 'Area,Priority Level\n';
+        data.qualityInsights.areas_for_improvement.forEach((area: any) => {
+          csv += `${area.area_name},${area.priority_level}\n`;
+        });
+      }
+    }
+    
+    return csv;
   };
 
   const formatDuration = (seconds: number): string => {
@@ -1055,70 +1250,42 @@ export const Analytics: React.FC = () => {
             width: { xs: "100%", sm: "auto" },
           }}
         >
-          <TextField
-            value="04/08/2025 - 04/09/2025"
-            variant="outlined"
-            size="small"
-            onClick={() => {
-              console.log("Open date range picker");
-            }}
+          <DateRangeSelector
+            value={dateRange}
+            onChange={handleDateRangeChange}
             sx={{
-              width: { xs: "100%", sm: "240px" },
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "9999px",
-                backgroundColor: "#f3f4f6",
-                fontSize: "0.875rem",
-                color: "#374151",
-                fontWeight: 500,
-                pr: 1,
-                "&:hover": { bgcolor: "#e5e7eb" },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#0d9488",
-                },
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#d1d5db",
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Calendar size={18} style={{ color: "#6b7280" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton size="small" edge="end">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#6b7280"
-                      strokeWidth="2"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </IconButton>
-                </InputAdornment>
-              ),
+              flex: { xs: '1 1 100%', sm: '0 0 auto' }
             }}
           />
+          
           <Button
             startIcon={<FileDownloadIcon />}
             variant="contained"
+            onClick={handleExportReport}
+            disabled={exportLoading || loading}
             sx={{
               bgcolor: "#0d9488",
               "&:hover": { bgcolor: "#0f766e" },
               textTransform: "none",
               fontWeight: 600,
               width: { xs: "100%", sm: "auto" },
+              "&:disabled": {
+                bgcolor: "#cbd5e1",
+                color: "#94a3b8",
+              },
             }}
           >
-            Export report
+            {exportLoading ? "Exporting..." : "Export report"}
           </Button>
         </Box>
       </Box>
+
+      {/* Error Alert */}
+      {error && !loading && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
       {/* Tab Content */}
       {activeTab === 0 && renderOverviewTab()}

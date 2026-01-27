@@ -1,350 +1,404 @@
 //api/agentApi.ts
 import type {
-    AgentOverview,
-    RecentCallActivityResponse,
-    AgentAvailabilityResponse,
-    UpdateAvailabilityRequest,
-    VoicemailsResponse,
-    MissedCallsResponse,
-    CallHistoryResponse,
-    CallDetailsResponse,
-    SupervisorListResponse,
-    EscalateCallRequest,
-    EscalateCallResponse,
-    EscalationsSummary,
-    EscalatedCallsResponse,
-    EscalationDetailsResponse,
-    AgentAnalyticsOverview,
-    AgentCallVolumeTrends,
-    AgentLeaderboard,
-    AgentConversationQualityTrends,
-    AgentConversationQualityInsights,
-    VoicemailStatus,
-    RiskLevel,
-  } from "../../types/agent.types";
+  AgentOverview,
+  RecentCallActivityResponse,
+  AgentAvailabilityResponse,
+  UpdateAvailabilityRequest,
+  VoicemailsResponse,
+  MissedCallsResponse,
+  CallHistoryResponse,
+  CallDetailsResponse,
+  SupervisorListResponse,
+  EscalateCallRequest,
+  EscalateCallResponse,
+  EscalationsSummary,
+  EscalatedCallsResponse,
+  EscalationDetailsResponse,
+  AgentAnalyticsOverview,
+  AgentCallVolumeTrends,
+  AgentLeaderboard,
+  AgentConversationQualityTrends,
+  AgentConversationQualityInsights,
+  VoicemailStatus,
+  RiskLevel,
+} from "../../types/agent.types";
 
 //import type { AgentOverview } from "../../types/agent.types";
 
-  
-  //const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staging-mhdp-backend.marconilab.org';
-  
-  class AgentApi {
-    private getAuthHeaders(): HeadersInit {
-      const token = localStorage.getItem('authToken');
-      return {
-        'Content-Type': 'application/json',
-        'accept': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      };
+
+//const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staging-mhdp-backend.marconilab.org';
+
+class AgentApi {
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem('authToken');
+    return {
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+  }
+
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'API request failed');
     }
-  
-    private async handleResponse<T>(response: Response): Promise<T> {
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'API request failed');
-      }
-      return response.json();
-    }
-  
-    // ============================================
-    // OVERVIEW & DASHBOARD
-    // ============================================
-  
-    async getOverview(): Promise<AgentOverview> {
-      const response = await fetch(`${API_BASE_URL}/agent/overview`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentOverview>(response);
-    }
-  
-    // ============================================
-    // CALL ACTIVITY
-    // ============================================
-  
-    async getRecentCallActivity(
-      limit: number = 10,
-      offset: number = 0,
-      riskLevel?: 'low' | 'medium' | 'high',
-      callStatus?: 'answered' | 'not_answered' | 'voicemail'
-    ): Promise<RecentCallActivityResponse> {
-      let url = `${API_BASE_URL}/agent/recent_call_activity?limit=${limit}&offset=${offset}`;
-      if (riskLevel) url += `&risk_level=${riskLevel}`;
-      if (callStatus) url += `&call_status=${callStatus}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<RecentCallActivityResponse>(response);
-    }
-  
-    // ============================================
-    // AVAILABILITY
-    // ============================================
-  
-    async getAvailability(): Promise<AgentAvailabilityResponse> {
-      const response = await fetch(`${API_BASE_URL}/agent/availability`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentAvailabilityResponse>(response);
-    }
-  
-    async updateAvailability(status: 'available' | 'on_call' | 'on_break' | 'offline'): Promise<AgentAvailabilityResponse> {
-      const response = await fetch(`${API_BASE_URL}/agent/availability?status=${status}`, {
-        method: 'PUT',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentAvailabilityResponse>(response);
-    }
-  
-    // ============================================
-    // VOICEMAILS & MISSED CALLS
-    // ============================================
-  
-    async getVoicemails(
-      limit: number = 10,
-      offset: number = 0,
-      search?: string,
-      startDate?: string,
-      endDate?: string,
-      statusFilter?: VoicemailStatus,
-      riskLevel?: RiskLevel
-    ): Promise<VoicemailsResponse> {
+    return response.json();
+  }
+
+  // ============================================
+  // OVERVIEW & DASHBOARD
+  // ============================================
+
+  async getOverview(): Promise<AgentOverview> {
+    const response = await fetch(`${API_BASE_URL}/agent/overview`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentOverview>(response);
+  }
+
+  // ============================================
+  // CALL ACTIVITY
+  // ============================================
+
+  async getRecentCallActivity(
+    limit: number = 10,
+    offset: number = 0,
+    riskLevel?: 'low' | 'medium' | 'high',
+    callStatus?: 'answered' | 'not_answered' | 'voicemail'
+  ): Promise<RecentCallActivityResponse> {
+    let url = `${API_BASE_URL}/agent/recent_call_activity?limit=${limit}&offset=${offset}`;
+    if (riskLevel) url += `&risk_level=${riskLevel}`;
+    if (callStatus) url += `&call_status=${callStatus}`;
     
-      const params = new URLSearchParams({
-        limit: String(limit),
-        offset: String(offset),
-      });
-    
-      if (search) params.append('search', search);
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
-      if (statusFilter) params.append('status_filter', statusFilter);
-      if (riskLevel) params.append('risk_level', riskLevel);
-    
-      const url = `${API_BASE_URL}/agent/voicemails?${params.toString()}`;
-    
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-    
-      return this.handleResponse<VoicemailsResponse>(response);
-    }
-    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<RecentCallActivityResponse>(response);
+  }
+
+  // ============================================
+  // AVAILABILITY
+  // ============================================
+
+  async getAvailability(): Promise<AgentAvailabilityResponse> {
+    const response = await fetch(`${API_BASE_URL}/agent/availability`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentAvailabilityResponse>(response);
+  }
+
+  async updateAvailability(status: 'available' | 'on_call' | 'on_break' | 'offline'): Promise<AgentAvailabilityResponse> {
+    const response = await fetch(`${API_BASE_URL}/agent/availability?status=${status}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentAvailabilityResponse>(response);
+  }
+
+  // ============================================
+  // VOICEMAILS & MISSED CALLS
+  // ============================================
+
+  async getVoicemails(
+    limit: number = 10,
+    offset: number = 0,
+    search?: string,
+    startDate?: string,
+    endDate?: string,
+    statusFilter?: VoicemailStatus,
+    riskLevel?: RiskLevel
+  ): Promise<VoicemailsResponse> {
   
-    async getMissedCalls(
-      limit: number = 10,
-      offset: number = 0,
-      search?: string,
-      startDate?: string, // ISO string e.g. 2025-12-25T19:52:00
-      endDate?: string,   // ISO string e.g. 2025-12-25T19:52:00
-      statusFilter?: 'missed' | 'returned',
-      riskLevel?: 'low' | 'medium' | 'high'
-    ): Promise<MissedCallsResponse> {
-      let url = `${API_BASE_URL}/agent/missedcalls?limit=${limit}&offset=${offset}`;
-    
-      if (search) {
-        url += `&search=${encodeURIComponent(search)}`;
-      }
-    
-      if (startDate) {
-        url += `&start_date=${encodeURIComponent(startDate)}`;
-      }
-    
-      if (endDate) {
-        url += `&end_date=${encodeURIComponent(endDate)}`;
-      }
-    
-      if (statusFilter) {
-        url += `&status_filter=${statusFilter}`;
-      }
-    
-      if (riskLevel) {
-        url += `&risk_level=${riskLevel}`;
-      }
-    
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-    
-      return this.handleResponse<MissedCallsResponse>(response);
-    }
-    
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
   
-    // ============================================
-    // CALL HISTORY & DETAILS
-    // ============================================
+    if (search) params.append('search', search);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (statusFilter) params.append('status_filter', statusFilter);
+    if (riskLevel) params.append('risk_level', riskLevel);
   
-    async getCallHistory(
-      limit: number = 10,
-      offset: number = 0,
-      search?: string,
-      startDate?: string,
-      endDate?: string,
-      riskLevel?: 'low' | 'medium' | 'high' | 'critical',
-      outcome?: 'unresolved' | 'resolved' | 'escalated' | 'transferred'
-    ): Promise<CallHistoryResponse> {
-    
-      const params = new URLSearchParams({
-        limit: String(limit),
-        offset: String(offset),
-      });
-    
-      if (search) params.append('search', search);
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
-      if (riskLevel) params.append('risk_level', riskLevel);
-      if (outcome) params.append('outcome', outcome);
-    
-      const url = `${API_BASE_URL}/agent/call-history?${params.toString()}`;
-    
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-    
-      return this.handleResponse<CallHistoryResponse>(response);
-    }
-    
+    const url = `${API_BASE_URL}/agent/voicemails?${params.toString()}`;
   
-    async getCallDetails(callId: string): Promise<CallDetailsResponse> {
-      const response = await fetch(`${API_BASE_URL}/agent/call-details/${callId}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<CallDetailsResponse>(response);
-    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
   
-    // ============================================
-    // CALL RECORDINGS
-    // ============================================
-  
- 
-    async downloadCallRecording(callId: string): Promise<Blob> {
-      const response = await fetch(`${API_BASE_URL}/agent/download_call_recording/${callId}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to download call recording');
-      }
-      return response.blob();
-    }
-  
-    // ============================================
-    // SUPERVISORS & ESCALATIONS
-    // ============================================
-  
-    async getSupervisors(limit: number = 10, offset: number = 0): Promise<SupervisorListResponse> {
-      const response = await fetch(
-        `${API_BASE_URL}/agent/supervisors?limit=${limit}&offset=${offset}`,
-        {
-          method: 'GET',
-          headers: this.getAuthHeaders(),
-        }
-      );
-      return this.handleResponse<SupervisorListResponse>(response);
-    }
-  
-    async escalateCall(data: EscalateCallRequest): Promise<EscalateCallResponse> {
-      const response = await fetch(`${API_BASE_URL}/agent/escalate-call`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-      });
-      return this.handleResponse<EscalateCallResponse>(response);
-    }
-  
-    async getEscalationsSummary(): Promise<EscalationsSummary> {
-      const response = await fetch(`${API_BASE_URL}/agent/escalations_summary`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<EscalationsSummary>(response);
-    }
-  
-    async listEscalatedCalls(
-      limit: number = 10,
-      offset: number = 0,
-      search?: string,
-      riskLevel?: 'low' | 'medium' | 'high',
-      priorityLevel?: 'low' | 'medium' | 'high',
-      resolutionStatus?: 'pending' | 'in_progress' | 'resolved'
-    ): Promise<EscalatedCallsResponse> {
-      let url = `${API_BASE_URL}/agent/list_escalated_calls?limit=${limit}&offset=${offset}`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (riskLevel) url += `&risk_level=${riskLevel}`;
-      if (priorityLevel) url += `&priority_level=${priorityLevel}`;
-      if (resolutionStatus) url += `&resolution_status=${resolutionStatus}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<EscalatedCallsResponse>(response);
-    }
-  
-    async getEscalationDetails(escalationId: number): Promise<EscalationDetailsResponse> {
-      const response = await fetch(`${API_BASE_URL}/agent/escalation_details/${escalationId}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<EscalationDetailsResponse>(response);
-    }
-  
-    // ============================================
-    // ANALYTICS
-    // ============================================
-  
-    async getAnalyticsOverview(): Promise<AgentAnalyticsOverview> {
-      const response = await fetch(`${API_BASE_URL}/agent/analytics/overview`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentAnalyticsOverview>(response);
-    }
-  
-    async getAnalyticsCallVolumeTrends(): Promise<AgentCallVolumeTrends> {
-      const response = await fetch(`${API_BASE_URL}/agent/analytics/call-volume-trends`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentCallVolumeTrends>(response);
-    }
-  
-    async getAnalyticsLeaderboard(limit: number = 5): Promise<AgentLeaderboard> {
-      const response = await fetch(
-        `${API_BASE_URL}/agent/analytics/leaderboard?limit=${limit}`,
-        {
-          method: 'GET',
-          headers: this.getAuthHeaders(),
-        }
-      );
-      return this.handleResponse<AgentLeaderboard>(response);
-    }
-  
-    async getConversationQualityTrends(): Promise<AgentConversationQualityTrends> {
-      const response = await fetch(`${API_BASE_URL}/agent/analytics/conversation-quality-trends`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentConversationQualityTrends>(response);
-    }
-  
-    async getConversationQualityInsights(): Promise<AgentConversationQualityInsights> {
-      const response = await fetch(`${API_BASE_URL}/agent/analytics/conversation-quality-insights`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<AgentConversationQualityInsights>(response);
-    }
+    return this.handleResponse<VoicemailsResponse>(response);
   }
   
-  export const agentApi = new AgentApi();
-  export default agentApi;
+
+  async getMissedCalls(
+    limit: number = 10,
+    offset: number = 0,
+    search?: string,
+    startDate?: string, // ISO string e.g. 2025-12-25T19:52:00
+    endDate?: string,   // ISO string e.g. 2025-12-25T19:52:00
+    statusFilter?: 'missed' | 'returned',
+    riskLevel?: 'low' | 'medium' | 'high'
+  ): Promise<MissedCallsResponse> {
+    let url = `${API_BASE_URL}/agent/missedcalls?limit=${limit}&offset=${offset}`;
+  
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+  
+    if (startDate) {
+      url += `&start_date=${encodeURIComponent(startDate)}`;
+    }
+  
+    if (endDate) {
+      url += `&end_date=${encodeURIComponent(endDate)}`;
+    }
+  
+    if (statusFilter) {
+      url += `&status_filter=${statusFilter}`;
+    }
+  
+    if (riskLevel) {
+      url += `&risk_level=${riskLevel}`;
+    }
+  
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+  
+    return this.handleResponse<MissedCallsResponse>(response);
+  }
+  
+
+  // ============================================
+  // CALL HISTORY & DETAILS
+  // ============================================
+
+  async getCallHistory(
+    limit: number = 10,
+    offset: number = 0,
+    search?: string,
+    startDate?: string,
+    endDate?: string,
+    riskLevel?: 'low' | 'medium' | 'high' | 'critical',
+    outcome?: 'unresolved' | 'resolved' | 'escalated' | 'transferred'
+  ): Promise<CallHistoryResponse> {
+  
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+  
+    if (search) params.append('search', search);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (riskLevel) params.append('risk_level', riskLevel);
+    if (outcome) params.append('outcome', outcome);
+  
+    const url = `${API_BASE_URL}/agent/call-history?${params.toString()}`;
+  
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+  
+    return this.handleResponse<CallHistoryResponse>(response);
+  }
+  
+
+  async getCallDetails(callId: string): Promise<CallDetailsResponse> {
+    const response = await fetch(`${API_BASE_URL}/agent/call-details/${callId}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<CallDetailsResponse>(response);
+  }
+
+  // ============================================
+  // CALL RECORDINGS
+  // ============================================
+
+
+  async downloadCallRecording(callId: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/agent/download_call_recording/${callId}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to download call recording');
+    }
+    return response.blob();
+  }
+
+  // ============================================
+  // SUPERVISORS & ESCALATIONS
+  // ============================================
+
+  async getSupervisors(limit: number = 10, offset: number = 0): Promise<SupervisorListResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/agent/supervisors?limit=${limit}&offset=${offset}`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return this.handleResponse<SupervisorListResponse>(response);
+  }
+
+  async escalateCall(data: EscalateCallRequest): Promise<EscalateCallResponse> {
+    const response = await fetch(`${API_BASE_URL}/agent/escalate-call`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse<EscalateCallResponse>(response);
+  }
+
+  async getEscalationsSummary(): Promise<EscalationsSummary> {
+    const response = await fetch(`${API_BASE_URL}/agent/escalations_summary`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<EscalationsSummary>(response);
+  }
+
+  async listEscalatedCalls(
+    limit: number = 10,
+    offset: number = 0,
+    search?: string,
+    riskLevel?: 'low' | 'medium' | 'high',
+    priorityLevel?: 'low' | 'medium' | 'high',
+    resolutionStatus?: 'pending' | 'in_progress' | 'resolved'
+  ): Promise<EscalatedCallsResponse> {
+    let url = `${API_BASE_URL}/agent/list_escalated_calls?limit=${limit}&offset=${offset}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (riskLevel) url += `&risk_level=${riskLevel}`;
+    if (priorityLevel) url += `&priority_level=${priorityLevel}`;
+    if (resolutionStatus) url += `&resolution_status=${resolutionStatus}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<EscalatedCallsResponse>(response);
+  }
+
+  async getEscalationDetails(escalationId: number): Promise<EscalationDetailsResponse> {
+    const response = await fetch(`${API_BASE_URL}/agent/escalation_details/${escalationId}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<EscalationDetailsResponse>(response);
+  }
+
+  // ============================================
+  // ANALYTICS
+  // ============================================
+
+  async getAnalyticsOverview(
+    startDate?: string,
+    endDate?: string
+  ): Promise<AgentAnalyticsOverview> {
+    const params = new URLSearchParams();
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/agent/analytics/overview${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentAnalyticsOverview>(response);
+  }
+
+  async getAnalyticsCallVolumeTrends(
+    startDate?: string,
+    endDate?: string
+  ): Promise<AgentCallVolumeTrends> {
+    const params = new URLSearchParams();
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/agent/analytics/call-volume-trends${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentCallVolumeTrends>(response);
+  }
+
+  async getAnalyticsLeaderboard(
+    limit: number = 5,
+    startDate?: string,
+    endDate?: string
+  ): Promise<AgentLeaderboard> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+    });
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    const url = `${API_BASE_URL}/agent/analytics/leaderboard?${params.toString()}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentLeaderboard>(response);
+  }
+
+  async getConversationQualityTrends(
+    startDate?: string,
+    endDate?: string
+  ): Promise<AgentConversationQualityTrends> {
+    const params = new URLSearchParams();
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/agent/analytics/conversation-quality-trends${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentConversationQualityTrends>(response);
+  }
+
+  async getConversationQualityInsights(
+    startDate?: string,
+    endDate?: string
+  ): Promise<AgentConversationQualityInsights> {
+    const params = new URLSearchParams();
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/agent/analytics/conversation-quality-insights${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<AgentConversationQualityInsights>(response);
+  }
+}
+
+export const agentApi = new AgentApi();
+export default agentApi;
