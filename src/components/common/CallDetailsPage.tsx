@@ -21,6 +21,7 @@ import CustomChip from "./CustomChip/CustomChip";
 
 import type { CallDetailsResponse } from "../../types/agent.types";
 import agentApi from "../../services/api/agentApi";
+import supervisorApi from "../../services/api/supervisorApi";
 import { CallRecordingPlayer } from "./CallRecordingPlayer";
 import {
   CallInfoCard,
@@ -39,6 +40,8 @@ interface CallDetailsPageProps {
   callId?: string;
   onBack?: () => void;
   backPath?: string;
+  /** Set to true when called from supervisor context (EscalationsTab, etc.) */
+  isSupervisor?: boolean;
 }
 
 // Shimmer Loading Component
@@ -291,6 +294,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   callId: propCallId,
   onBack,
   backPath,
+  isSupervisor = false,
 }) => {
   const navigate = useNavigate();
   const { callId: paramCallId } = useParams<{ callId: string }>();
@@ -315,9 +319,18 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
       try {
         setLoading(true);
         setError(null);
-        const data = await agentApi.getCallDetails(callId);
-        setCallDetails(data);
+        
+        console.log('[CallDetailsPage] Fetching call details:', { callId, isSupervisor });
+        
+        // Use appropriate API based on context
+        const data = isSupervisor 
+          ? await supervisorApi.getEscalationDetails(callId)
+          : await agentApi.getCallDetails(callId);
+        
+        console.log('[CallDetailsPage] Call details received:', data);
+        setCallDetails(data as any);
       } catch (err) {
+        console.error('[CallDetailsPage] Error fetching call details:', err);
         setError(err instanceof Error ? err.message : "Failed to load call details");
       } finally {
         setLoading(false);
@@ -325,7 +338,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
     };
 
     fetchCallDetails();
-  }, [callId]);
+  }, [callId, isSupervisor]);
 
   const handleBack = () => {
     if (onBack) {
@@ -346,11 +359,13 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
 
     // Optionally refresh call details to show updated outcome
     if (callId) {
-      agentApi.getCallDetails(callId)
-        .then(data => setCallDetails(data))
-        .catch(err => console.error('Error refreshing call details:', err));
+      const refreshApi = isSupervisor ? supervisorApi.getEscalationDetails : agentApi.getCallDetails;
+      refreshApi(callId)
+        .then((data: any) => setCallDetails(data))
+        .catch((err: any) => console.error('Error refreshing call details:', err));
     }
   };
+
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -387,7 +402,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   }
 
   const riskColors = getRiskLevelColors(callDetails.risk_level);
-  const statusColors = getStatusColors(callDetails.call_status);
+  const statusColors = getStatusColors(callDetails.call_status || "completed");
   const callerTypeColors = getCallerTypeColors(callDetails.caller_type || "Unknown");
 
   // Calculate speaker percentages
@@ -397,8 +412,11 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   const callerPercentage = totalWords > 0 ? Math.round((callerWords / totalWords) * 100) : 0;
   const agentPercentage = totalWords > 0 ? 100 - callerPercentage : 0;
 
-
-
+  // Calculate duration for supervisor context (which doesn't have call_duration_seconds)
+  const callDuration = callDetails.call_duration_seconds || 
+    (callDetails.call_start_time && callDetails.call_end_time 
+      ? Math.floor((new Date(callDetails.call_end_time).getTime() - new Date(callDetails.call_start_time).getTime()) / 1000)
+      : 0);
 
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
@@ -415,16 +433,18 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
         <Box sx={{ flex: 1 }}>
           <CallInfoCard
             header={{
-              title: `Outgoing Call #${callDetails.call_id.slice(-4)}`,
+              title: isSupervisor 
+                ? `Escalation #${callId.slice(-4)}`
+                : `Outgoing Call #${callDetails.call_id?.slice(-4) || callId.slice(-4)}`,
               statusChip: {
-                label: callDetails.call_status,
+                label: callDetails.call_status || "completed",
                 bgcolor: statusColors.bg,
                 color: statusColors.color,
                 border: statusColors.border,
               },
               subtitle: `${formatDateTime(callDetails.call_start_time)} - ${formatDateTime(callDetails.call_end_time).split(', ')[1]}`,
               onBack: handleBack,
-              actionButton: callDetails.outcome !== "escalated" ? {
+              actionButton: !isSupervisor && callDetails.outcome !== "escalated" ? {
                 label: "Escalate call",
                 icon: "escalate",
                 variant: "escalate",
@@ -432,7 +452,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
               } : undefined,
             }}
             fields={[
-              { label: "Caller ID", value: `#${callDetails.call_id.slice(-4)}` },
+              { label: "Caller ID", value: callDetails.caller_id },
               {
                 label: "Caller Type",
                 value: createChipValue(
@@ -451,7 +471,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                   riskColors.border
                 ),
               },
-              { label: "Language", value: callDetails.language },
+              { label: "Language", value: callDetails.language || "English" },
               { label: "Caller Sex", value: callDetails.caller_gender },
               { label: "Trajectory of care", value: callDetails.trajectory_of_care || "Unknown" },
               {
@@ -476,14 +496,15 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
             </Paper>
           )}
 
-          {callDetails.audio_url && (
+          {(callDetails.audio_url || callId) && (
             <Box sx={{ mb: 3 }}>
               <CallRecordingPlayer
-                callId={callId}
-                duration={formatDuration(callDetails.call_duration_seconds)}
+                callId={isSupervisor ? callId : (callDetails.call_id || callId)}
+                duration={formatDuration(callDuration)}
                 recordingUrl={callDetails.audio_url}
                 isPopup={false}
                 open={true}
+                isSupervisor={isSupervisor}
               />
             </Box>
           )}
@@ -603,31 +624,13 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
 
         {/* Right Column */}
         <Box sx={{ width: { xs: "100%", md: 320 }, display: "flex", flexDirection: "column", gap: 3 }}>
-          {/* Sentiment Analysis */}
-  
-  {/* Debug logging */}
-  {(() => {
-    console.log('Conversation Quality Data:', {
-      raw: callDetails.conversation_quality,
-      mapped: callDetails.conversation_quality
-        ? {
-            overall_quality_score: callDetails.conversation_quality.overall_score,
-            rapport_score: callDetails.conversation_quality.rapport_score,
-            listening_score: callDetails.conversation_quality.listening_score,
-            analyzing_score: callDetails.conversation_quality.analyzing_score,
-            motivating_score: callDetails.conversation_quality.motivating_score,
-            ending_score: callDetails.conversation_quality.ending_score,
-          }
-        : undefined
-    });
-    return null;
-  })()}
-  
-  <AIAnalysisCard
-  agentSentiment={callDetails.agent_sentiment?.toLowerCase()}
-  callerSentiment={callDetails.caller_sentiment?.toLowerCase()}
-  conversationQuality={callDetails.conversation_quality || undefined}
-/>
+          {/* AI Analysis Card */}
+          <AIAnalysisCard
+            agentSentiment={callDetails.agent_sentiment?.toLowerCase()}
+            callerSentiment={callDetails.caller_sentiment?.toLowerCase()}
+            conversationQuality={callDetails.conversation_quality || undefined}
+          />
+
           {/* Detected Keywords */}
           {callDetails.detected_keywords && callDetails.detected_keywords.length > 0 && (
             <Paper
@@ -652,7 +655,10 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
                 {callDetails.detected_keywords.map((item, index) => (
                   <Chip
                     key={index}
-                    label={`${item.keyword} (${item.confidence_score}%)`}
+                    label={item.confidence_score 
+                      ? `${item.keyword} (${item.confidence_score}%)`
+                      : item.keyword
+                    }
                     size="small"
                     sx={{
                       bgcolor: "#f3f4f6",
@@ -806,46 +812,51 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
             </Paper>
           )}
 
-          {/* Outcome */}
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              borderRadius: 2,
-              boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-            }}
-          >
-            <Typography
-              variant="h6"
+          {/* Outcome - Only show for agent context */}
+          {!isSupervisor && (
+            <Paper
               sx={{
-                fontWeight: 600,
-                color: "#111827",
-                mb: 2,
-                fontSize: { xs: "15px", sm: "16px" },
+                p: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
               }}
             >
-              Outcome
-            </Typography>
-            <Chip
-              label={callDetails.outcome === "escalated" ? "Escalated" : "Not Escalated"}
-              size="small"
-              sx={{
-                bgcolor: callDetails.outcome === "escalated" ? "#fee2e2" : "#d1fae5",
-                color: callDetails.outcome === "escalated" ? "#dc2626" : "#059669",
-                border: `1px solid ${callDetails.outcome === "escalated" ? "#fecaca" : "#a7f3d0"}`,
-                fontWeight: 500,
-                fontSize: "12px",
-              }}
-            />
-          </Paper>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 600,
+                  color: "#111827",
+                  mb: 2,
+                  fontSize: { xs: "15px", sm: "16px" },
+                }}
+              >
+                Outcome
+              </Typography>
+              <Chip
+                label={callDetails.outcome === "escalated" ? "Escalated" : "Not Escalated"}
+                size="small"
+                sx={{
+                  bgcolor: callDetails.outcome === "escalated" ? "#fee2e2" : "#d1fae5",
+                  color: callDetails.outcome === "escalated" ? "#dc2626" : "#059669",
+                  border: `1px solid ${callDetails.outcome === "escalated" ? "#fecaca" : "#a7f3d0"}`,
+                  fontWeight: 500,
+                  fontSize: "12px",
+                }}
+              />
+            </Paper>
+          )}
         </Box>
       </Box>
-      {/* Escalation Modal */}
-      <EscalateCallModal
-        open={escalateModalOpen}
-        onClose={() => setEscalateModalOpen(false)}
-        callId={callDetails.call_id}
-        onEscalationSuccess={handleEscalationSuccess}
-      />
+      
+      {/* Escalation Modal - Only show for agent context */}
+      {!isSupervisor && (
+        <EscalateCallModal
+          open={escalateModalOpen}
+          onClose={() => setEscalateModalOpen(false)}
+          callId={callDetails.call_id || callId}
+          onEscalationSuccess={handleEscalationSuccess}
+        />
+      )}
 
       {/* Success Notification */}
       <Snackbar
@@ -883,10 +894,3 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
     </Box>
   );
 };
-
-
-
-
-
-
-

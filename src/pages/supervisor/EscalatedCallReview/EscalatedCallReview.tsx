@@ -23,14 +23,18 @@ import {
 import {
   Search,
   Phone,
-  Eye,
-  Play,
   ChevronLeft,
   ChevronRight,
   CheckCircle,
   X,
 } from 'lucide-react';
 import CustomChip, { type RiskLevel } from '../../../components/common/CustomChip/CustomChip';
+import { PlayButton } from '../../../components/common/PlayButton/PlayButton';
+import { ViewButton } from '../../../components/common/ViewButton/ViewButton';
+import { CallBackButton } from '../../../components/common/CallBackButton/CallBackButton';
+import { CallDetailsPage } from '../../../components/common/CallDetailsPage';
+import { CallPopup } from '../../../components/common/CallPopupProps/CallPopupProps';
+import { CallRecordingPlayer } from '../../../components/common/CallRecordingPlayer';
 
 import type { 
   EscalationsSummary, 
@@ -97,6 +101,62 @@ export default function EscalatedCallsPage() {
   const [updating, setUpdating] = useState(false);
   const limit = 10;
 
+  // State for call recording player
+  const [playingEscalationId, setPlayingEscalationId] = useState<string | null>(null);
+  
+  // State for call details view
+  const [selectedEscalationId, setSelectedEscalationId] = useState<string | null>(null);
+  
+  // State for call popup
+  const [showCallPopup, setShowCallPopup] = useState(false);
+  const [activeCall, setActiveCall] = useState<{
+    callId: string;
+    phoneNumber: string;
+    callerName?: string;
+  } | null>(null);
+  const [callDuration, setCallDuration] = useState(0);
+  const [isCallActive, setIsCallActive] = useState(false);
+
+  // Handle play recording - use escalation_id directly
+  const handlePlayRecording = (escalationId: string) => {
+    setPlayingEscalationId(escalationId);
+  };
+
+  // Handle close player
+  const handleClosePlayer = () => {
+    setPlayingEscalationId(null);
+  };
+
+  // Handle view call details - use escalation_id directly
+  const handleViewCall = (escalationId: string) => {
+    setSelectedEscalationId(escalationId);
+  };
+
+  // Handle callback - use escalation_id directly
+  const handleCallBack = (call: EscalationItem) => {
+    setActiveCall({
+      callId: call.escalation_id,
+      phoneNumber: call.caller_id,
+      callerName: call.agent_name,
+    });
+    setShowCallPopup(true);
+    setCallDuration(0);
+    setIsCallActive(false);
+  };
+
+  // Handle end call
+  const handleEndCall = () => {
+    setShowCallPopup(false);
+    setIsCallActive(false);
+    setCallDuration(0);
+    setActiveCall(null);
+  };
+
+  // Handle minimize call
+  const handleMinimize = () => {
+    setShowCallPopup(false);
+  };
+
   // Fetch Escalations Summary
   const fetchSummary = async () => {
     try {
@@ -159,7 +219,7 @@ export default function EscalatedCallsPage() {
     },
   ];
 
-  const handleViewCall = (call: EscalationItem) => {
+  const handleViewCallReview = (call: EscalationItem) => {
     setSelectedCall(call);
     setReviewDialog(true);
     setStatus('pending');
@@ -227,508 +287,549 @@ export default function EscalatedCallsPage() {
 
   const totalPages = Math.ceil(totalResults / limit);
 
+  // Find the escalation being played
+  const playingEscalation = escalatedCalls.find(
+    (esc) => esc.escalation_id === playingEscalationId
+  );
+
+  // If viewing call details, show the call details page using escalation_id
+  if (selectedEscalationId) {
+    return (
+      <CallDetailsPage
+        callId={selectedEscalationId}
+        onBack={() => setSelectedEscalationId(null)}
+        isSupervisor={true}
+      />
+    );
+  }
+
   return (
-    <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: 3 }}>
-      {/* Metrics Cards */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(4, 1fr)',
-          },
-          gap: 2,
-          mb: 3,
-        }}
-      >
-        {summaryLoading ? (
-          <>
-            {[1, 2, 3, 4].map((i) => <MetricCardSkeleton key={i} />)}
-          </>
-        ) : (
-          metrics.map((metric, index) => (
-            <Card
-              key={index}
-              sx={{
-                boxShadow: 'none',
-                border: '1px solid #E5E7EB',
-                borderRadius: '8px',
-              }}
-            >
-              <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={metric.icon}
-                      alt={metric.title}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        objectFit: 'contain',
-                      }}
-                    />
-                  </Box>
-                  <Typography
-                    sx={{
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      color: '#6B7280',
-                    }}
-                  >
-                    {metric.title}
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: '32px',
-                    fontWeight: 700,
-                    color: '#111827',
-                    lineHeight: 1,
-                  }}
-                >
-                  {metric.value}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </Box>
+    <>
+      {/* Call Recording Player Popup - Note: This will use the escalation details endpoint */}
+      {playingEscalationId && playingEscalation && (
+        <CallRecordingPlayer
+          callId={playingEscalationId}
+          duration="0:00"
+          recordingUrl="" // Will be fetched from escalation details API
+          isPopup={true}
+          open={true}
+          onClose={handleClosePlayer}
+          isSupervisor={true}
+        />
+      )}
 
-      {/* Main Content Card */}
-      <Card sx={{ boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
-        <CardContent sx={{ p: 3 }}>
-          {/* Header */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 3,
-              flexWrap: 'wrap',
-              gap: 2,
-            }}
-          >
-            <Typography sx={{ fontSize: '18px', fontWeight: 600, color: '#111827' }}>
-              Escalated calls
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-              <TextField
-                placeholder="Search by caller ID or escalation ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                size="small"
-                sx={{
-                  width: { xs: '100%', sm: '280px' },
-                  '& .MuiOutlinedInput-root': {
-                    fontSize: '14px',
-                    bgcolor: 'white',
-                    '& fieldset': {
-                      borderColor: '#E5E7EB',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#D1D5DB',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#4682B4',
-                      borderWidth: '1px',
-                    },
-                  },
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search size={18} color="#9CA3AF" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <Select
-                  value={selectedLevel}
-                  onChange={(e) => setSelectedLevel(e.target.value)}
-                  sx={{
-                    fontSize: '14px',
-                    bgcolor: 'white',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#E5E7EB',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#D1D5DB',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#4682B4',
-                      borderWidth: '1px',
-                    },
-                  }}
-                >
-                  <MenuItem value="All risk levels">All risk levels</MenuItem>
-                  <MenuItem value="critical">Critical</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="low">Low</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
+      {/* Call Popup */}
+      {activeCall && (
+        <CallPopup
+          callId={activeCall.callId}
+          phoneNumber={activeCall.phoneNumber}
+          callerName={activeCall.callerName}
+          mode={isCallActive ? "active" : "outgoing"}
+          duration={callDuration}
+          open={showCallPopup}
+          onEndCall={handleEndCall}
+          onMinimize={handleMinimize}
+        />
+      )}
 
-          {/* Error State */}
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }} action={
-              <Button size="small" onClick={fetchEscalatedCalls}>
-                Retry
-              </Button>
-            }>
-              {error}
-            </Alert>
-          )}
-
-          {/* Call List */}
-          {loading ? (
-            <Box>
-              {[1, 2, 3].map((i) => <CallItemSkeleton key={i} />)}
-            </Box>
-          ) : filteredCalls.length === 0 ? (
-            <Box sx={{ py: 8, textAlign: 'center' }}>
-              <Typography sx={{ color: '#6B7280', fontSize: '14px' }}>
-                {searchQuery || selectedLevel !== 'All risk levels' 
-                  ? 'No escalated calls match your filters' 
-                  : 'No escalated calls found'}
-              </Typography>
-            </Box>
+      <Box sx={{ bgcolor: '#F9FAFB', minHeight: '100vh', p: 3 }}>
+        {/* Metrics Cards */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(4, 1fr)',
+            },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          {summaryLoading ? (
+            <>
+              {[1, 2, 3, 4].map((i) => <MetricCardSkeleton key={i} />)}
+            </>
           ) : (
-            <Box>
-              {filteredCalls.map((call, index) => (
-                <Box
-                  key={call.escalation_id}
-                  sx={{
-                    py: 2.5,
-                    borderTop: index === 0 ? 'none' : '1px solid #F3F4F6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            metrics.map((metric, index) => (
+              <Card
+                key={index}
+                sx={{
+                  boxShadow: 'none',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '8px',
+                }}
+              >
+                <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                     <Box
                       sx={{
                         width: 40,
                         height: 40,
-                        borderRadius: '20px',
-                        bgcolor: '#CCE5E5',
+                        borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
-                      <Phone size={20} color="#6B7280" />
+                      <Box
+                        component="img"
+                        src={metric.icon}
+                        alt={metric.title}
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          objectFit: 'contain',
+                        }}
+                      />
                     </Box>
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5, flexWrap: 'wrap' }}>
-                        <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
-                          {call.escalation_reason || 'Unknown Reason'}
-                        </Typography>
-                        <CustomChip 
-                          label={mapRiskLevel(call.risk_level)} 
-                          variant="risk" 
-                          size="small"
-                        />
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                          Caller ID: {call.caller_id}
-                        </Typography>
-                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                          Priority: <span style={{ fontWeight: 500, color: '#374151' }}>{call.priority_level}</span>
-                        </Typography>
-                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                          Status: <span style={{ fontWeight: 500, color: '#374151' }}>{call.resolution_status}</span>
-                        </Typography>
-                        <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
-                          {formatDateTime(call.sent_at)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<Eye size={16} />}
-                      onClick={() => handleViewCall(call)}
+                    <Typography
                       sx={{
-                        textTransform: 'none',
                         fontSize: '14px',
                         fontWeight: 500,
-                        color: '#008080',
-                        borderColor: '#E5E7EB',
-                        px: 2,
-                        '&:hover': {
-                          borderColor: '#4682B4',
-                          bgcolor: '#F0F9FF',
-                        },
+                        color: '#6B7280',
                       }}
                     >
-                      View
-                    </Button>
+                      {metric.title}
+                    </Typography>
                   </Box>
-                </Box>
-              ))}
-            </Box>
+                  <Typography
+                    sx={{
+                      fontSize: '32px',
+                      fontWeight: 700,
+                      color: '#111827',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {metric.value}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))
           )}
+        </Box>
 
-          {/* Pagination */}
-          {!loading && escalatedCalls.length > 0 && (
+        {/* Main Content Card */}
+        <Card sx={{ boxShadow: 'none', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
+          <CardContent sx={{ p: 3 }}>
+            {/* Header */}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                mt: 3,
-                pt: 3,
-                borderTop: '1px solid #F3F4F6',
+                mb: 3,
+                flexWrap: 'wrap',
+                gap: 2,
               }}
             >
-              <Typography sx={{ fontSize: '14px', color: '#6B7280' }}>
-                Page {page} of {totalPages} ({totalResults} results)
+              <Typography sx={{ fontSize: '18px', fontWeight: 600, color: '#111827' }}>
+                Escalated calls
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                  sx={{
-                    minWidth: 'auto',
-                    px: 1.5,
-                    py: 0.75,
-                    borderColor: '#E5E7EB',
-                    color: '#6B7280',
-                    '&:hover': {
-                      borderColor: '#D1D5DB',
-                      bgcolor: '#F9FAFB',
-                    },
-                    '&.Mui-disabled': {
-                      borderColor: '#E5E7EB',
-                      color: '#D1D5DB',
-                    },
-                  }}
-                >
-                  <ChevronLeft size={18} />
-                </Button>
-                <Button
-                  variant="outlined"
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                  sx={{
-                    minWidth: 'auto',
-                    px: 1.5,
-                    py: 0.75,
-                    borderColor: '#E5E7EB',
-                    color: '#6B7280',
-                    '&:hover': {
-                      borderColor: '#D1D5DB',
-                      bgcolor: '#F9FAFB',
-                    },
-                    '&.Mui-disabled': {
-                      borderColor: '#E5E7EB',
-                      color: '#D1D5DB',
-                    },
-                  }}
-                >
-                  <ChevronRight size={18} />
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Review Dialog */}
-      <Dialog open={reviewDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography sx={{ fontSize: '18px', fontWeight: 600 }}>
-              Call Review - {selectedCall?.escalation_id}
-            </Typography>
-            <IconButton onClick={handleCloseDialog} size="small">
-              <X size={20} />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {selectedCall && (
-            <Box>
-              <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
-                {/* Left Side - Call Details */}
-                <Box sx={{ flex: 1, minWidth: 250 }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
-                    Call Details
-                  </Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Caller ID
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.caller_id}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Agent Name
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.agent_name || 'N/A'}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Escalation ID
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px', fontFamily: 'monospace' }}>
-                      {selectedCall.escalation_id}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Right Side - Escalation Info */}
-                <Box sx={{ flex: 1, minWidth: 250 }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
-                    Escalation Info
-                  </Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Reason
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.escalation_reason}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Type
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      Escalation
-                    </Typography>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Risk Level
-                    </Typography>
-                    <CustomChip 
-                      label={mapRiskLevel(selectedCall.risk_level)} 
-                      variant="risk" 
-                      size="small"
-                    />
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Priority Level
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {selectedCall.priority_level}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Current Status
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px', fontWeight: 500 }}>
-                      {selectedCall.resolution_status}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
-                      Escalation Time
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontSize: '14px' }}>
-                      {formatDateTime(selectedCall.sent_at)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              {/* Resolution Section */}
-              <Box>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
-                  Resolution & Follow-up
-                </Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                 <TextField
-                  multiline
-                  rows={4}
-                  fullWidth
-                  placeholder="Enter resolution details, trajectory of care, or follow-up notes..."
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
+                  placeholder="Search by caller ID or escalation ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  size="small"
                   sx={{
-                    mb: 2,
+                    width: { xs: '100%', sm: '280px' },
                     '& .MuiOutlinedInput-root': {
                       fontSize: '14px',
+                      bgcolor: 'white',
+                      '& fieldset': {
+                        borderColor: '#E5E7EB',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#D1D5DB',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#4682B4',
+                        borderWidth: '1px',
+                      },
                     },
                   }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search size={18} color="#9CA3AF" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
-                <FormControl fullWidth size="small">
+                <FormControl size="small" sx={{ minWidth: 160 }}>
                   <Select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
-                    sx={{ fontSize: '14px' }}
+                    value={selectedLevel}
+                    onChange={(e) => setSelectedLevel(e.target.value)}
+                    sx={{
+                      fontSize: '14px',
+                      bgcolor: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#E5E7EB',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#D1D5DB',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#4682B4',
+                        borderWidth: '1px',
+                      },
+                    }}
                   >
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="in_progress">In Progress</MenuItem>
-                    <MenuItem value="resolved">Resolved</MenuItem>
+                    <MenuItem value="All risk levels">All risk levels</MenuItem>
+                    <MenuItem value="critical">Critical</MenuItem>
+                    <MenuItem value="high">High</MenuItem>
+                    <MenuItem value="medium">Medium</MenuItem>
+                    <MenuItem value="low">Low</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
             </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            onClick={handleCloseDialog}
-            disabled={updating}
-            sx={{
-              textTransform: 'none',
-              fontSize: '14px',
-              color: '#6B7280',
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleResolveCall}
-            disabled={updating || !resolution.trim()}
-            startIcon={<CheckCircle size={16} />}
-            sx={{
-              textTransform: 'none',
-              fontSize: '14px',
-              bgcolor: '#00897b',
-              '&:hover': {
-                bgcolor: '#00796b',
-              },
-              '&.Mui-disabled': {
-                bgcolor: '#D1D5DB',
-                color: '#9CA3AF',
-              },
-            }}
-          >
-            {updating ? 'Updating...' : 'Update Call'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+
+            {/* Error State */}
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }} action={
+                <Button size="small" onClick={fetchEscalatedCalls}>
+                  Retry
+                </Button>
+              }>
+                {error}
+              </Alert>
+            )}
+
+            {/* Call List */}
+            {loading ? (
+              <Box>
+                {[1, 2, 3].map((i) => <CallItemSkeleton key={i} />)}
+              </Box>
+            ) : filteredCalls.length === 0 ? (
+              <Box sx={{ py: 8, textAlign: 'center' }}>
+                <Typography sx={{ color: '#6B7280', fontSize: '14px' }}>
+                  {searchQuery || selectedLevel !== 'All risk levels' 
+                    ? 'No escalated calls match your filters' 
+                    : 'No escalated calls found'}
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                {filteredCalls.map((call, index) => (
+                  <Box
+                    key={call.escalation_id}
+                    sx={{
+                      py: 2.5,
+                      borderTop: index === 0 ? 'none' : '1px solid #F3F4F6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 2,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '20px',
+                          bgcolor: '#CCE5E5',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Phone size={20} color="#6B7280" />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5, flexWrap: 'wrap' }}>
+                          <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
+                            {call.escalation_reason || 'Unknown Reason'}
+                          </Typography>
+                          <CustomChip 
+                            label={mapRiskLevel(call.risk_level)} 
+                            variant="risk" 
+                            size="small"
+                          />
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                          <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                            Caller ID: {call.caller_id}
+                          </Typography>
+                          <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                            Priority: <span style={{ fontWeight: 500, color: '#374151' }}>{call.priority_level}</span>
+                          </Typography>
+                          <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                            Status: <span style={{ fontWeight: 500, color: '#374151' }}>{call.resolution_status}</span>
+                          </Typography>
+                          <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                            {formatDateTime(call.sent_at)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <PlayButton
+                        onClick={() => handlePlayRecording(call.escalation_id)}
+                        size="small"
+                      />
+                      <ViewButton
+                        onClick={() => handleViewCall(call.escalation_id)}
+                        size="small"
+                      />
+                      <CallBackButton
+                        onClick={() => handleCallBack(call)}
+                        size="small"
+                        label="Call"
+                        bgcolor="#14b8a6"
+                        hoverBgColor="#0d9488"
+                      />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            {/* Pagination */}
+            {!loading && escalatedCalls.length > 0 && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mt: 3,
+                  pt: 3,
+                  borderTop: '1px solid #F3F4F6',
+                }}
+              >
+                <Typography sx={{ fontSize: '14px', color: '#6B7280' }}>
+                  Page {page} of {totalPages} ({totalResults} results)
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                    sx={{
+                      minWidth: 'auto',
+                      px: 1.5,
+                      py: 0.75,
+                      borderColor: '#E5E7EB',
+                      color: '#6B7280',
+                      '&:hover': {
+                        borderColor: '#D1D5DB',
+                        bgcolor: '#F9FAFB',
+                      },
+                      '&.Mui-disabled': {
+                        borderColor: '#E5E7EB',
+                        color: '#D1D5DB',
+                      },
+                    }}
+                  >
+                    <ChevronLeft size={18} />
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                    sx={{
+                      minWidth: 'auto',
+                      px: 1.5,
+                      py: 0.75,
+                      borderColor: '#E5E7EB',
+                      color: '#6B7280',
+                      '&:hover': {
+                        borderColor: '#D1D5DB',
+                        bgcolor: '#F9FAFB',
+                      },
+                      '&.Mui-disabled': {
+                        borderColor: '#E5E7EB',
+                        color: '#D1D5DB',
+                      },
+                    }}
+                  >
+                    <ChevronRight size={18} />
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Review Dialog */}
+        <Dialog open={reviewDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography sx={{ fontSize: '18px', fontWeight: 600 }}>
+                Call Review - {selectedCall?.escalation_id}
+              </Typography>
+              <IconButton onClick={handleCloseDialog} size="small">
+                <X size={20} />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            {selectedCall && (
+              <Box>
+                <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
+                  {/* Left Side - Call Details */}
+                  <Box sx={{ flex: 1, minWidth: 250 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
+                      Call Details
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Caller ID
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {selectedCall.caller_id}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Agent Name
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {selectedCall.agent_name || 'N/A'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Escalation ID
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px', fontFamily: 'monospace' }}>
+                        {selectedCall.escalation_id}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Right Side - Escalation Info */}
+                  <Box sx={{ flex: 1, minWidth: 250 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
+                      Escalation Info
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Reason
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {selectedCall.escalation_reason}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Type
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        Escalation
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Risk Level
+                      </Typography>
+                      <CustomChip 
+                        label={mapRiskLevel(selectedCall.risk_level)} 
+                        variant="risk" 
+                        size="small"
+                      />
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Priority Level
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {selectedCall.priority_level}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Current Status
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px', fontWeight: 500 }}>
+                        {selectedCall.resolution_status}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px', mb: 0.5 }}>
+                        Escalation Time
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontSize: '14px' }}>
+                        {formatDateTime(selectedCall.sent_at)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Resolution Section */}
+                <Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="h6" gutterBottom sx={{ fontSize: '16px', fontWeight: 600 }}>
+                    Resolution & Follow-up
+                  </Typography>
+                  <TextField
+                    multiline
+                    rows={4}
+                    fullWidth
+                    placeholder="Enter resolution details, trajectory of care, or follow-up notes..."
+                    value={resolution}
+                    onChange={(e) => setResolution(e.target.value)}
+                    sx={{
+                      mb: 2,
+                      '& .MuiOutlinedInput-root': {
+                        fontSize: '14px',
+                      },
+                    }}
+                  />
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as any)}
+                      sx={{ fontSize: '14px' }}
+                    >
+                      <MenuItem value="pending">Pending</MenuItem>
+                      <MenuItem value="in_progress">In Progress</MenuItem>
+                      <MenuItem value="resolved">Resolved</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={handleCloseDialog}
+              disabled={updating}
+              sx={{
+                textTransform: 'none',
+                fontSize: '14px',
+                color: '#6B7280',
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleResolveCall}
+              disabled={updating || !resolution.trim()}
+              startIcon={<CheckCircle size={16} />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '14px',
+                bgcolor: '#00897b',
+                '&:hover': {
+                  bgcolor: '#00796b',
+                },
+                '&.Mui-disabled': {
+                  bgcolor: '#D1D5DB',
+                  color: '#9CA3AF',
+                },
+              }}
+            >
+              {updating ? 'Updating...' : 'Update Call'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 }

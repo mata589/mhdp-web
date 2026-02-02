@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import type { TransitionProps } from '@mui/material/transitions';
 import agentApi from '../../services/api/agentApi';
+import supervisorApi from '../../services/api/supervisorApi';
 
 
 const Transition = React.forwardRef(function Transition(
@@ -39,6 +40,8 @@ interface CallRecordingPlayerProps {
   isPopup?: boolean;
   onClose?: () => void;
   open?: boolean;
+  /** Set to true when called from supervisor context (EscalationsTab, etc.) */
+  isSupervisor?: boolean;
 }
 
 export const CallRecordingPlayer: React.FC<CallRecordingPlayerProps> = ({
@@ -48,6 +51,7 @@ export const CallRecordingPlayer: React.FC<CallRecordingPlayerProps> = ({
   isPopup = false,
   onClose,
   open = false,
+  isSupervisor = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -62,7 +66,10 @@ export const CallRecordingPlayer: React.FC<CallRecordingPlayerProps> = ({
   // Download audio file when component opens
   useEffect(() => {
     if (open && !audioBlob) {
-      console.log('[CallRecordingPlayer] Component opened, initiating download...');
+      console.log('[CallRecordingPlayer] Component opened, initiating download...', {
+        callId,
+        isSupervisor
+      });
       downloadAudio();
     }
     
@@ -103,9 +110,11 @@ export const CallRecordingPlayer: React.FC<CallRecordingPlayerProps> = ({
     setError(null);
 
     try {
-      // Use the agentApi to download the recording
-      console.log('[CallRecordingPlayer] Calling agentApi.downloadCallRecording...');
-      const blob = await agentApi.downloadCallRecording(callId);
+      // Use the appropriate API based on context
+      console.log(`[CallRecordingPlayer] Calling ${isSupervisor ? 'supervisorApi' : 'agentApi'}.downloadCallRecording...`);
+      const blob = isSupervisor 
+        ? await supervisorApi.downloadCallRecording(callId)
+        : await agentApi.downloadCallRecording(callId);
       
       console.log('[CallRecordingPlayer] Audio blob received:', {
         size: blob.size,

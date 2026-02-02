@@ -717,6 +717,38 @@ async getCallDetails(callId: string): Promise<CallRecord> {
 
     return this.handleResponse(response);
   }
+
+  // ============================================
+  // CALL RECORDING DOWNLOAD
+  // ============================================
+
+  async downloadCallRecording(escalationId: string): Promise<Blob> {
+    const url = `${API_BASE_URL}/supervisor/download_call_recording/${escalationId}`;
+    this.logRequest("GET", url);
+
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    console.debug("[Supervisor API → DOWNLOAD RESPONSE]", {
+      url: response.url,
+      status: response.status,
+      contentType: response.headers.get("content-type"),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error("[Supervisor API → DOWNLOAD ERROR]", error);
+      throw new Error(error.detail || "Failed to download call recording");
+    }
+
+    return response.blob();
+  }
 }
 
 
