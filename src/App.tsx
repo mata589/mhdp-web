@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/App.tsx - Updated with Supervisor Voicemail and Missed Calls routes
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -22,7 +22,6 @@ import { AdminLayout } from './components/layouts/AdminLayout/AdminLayout';
 import { ProtectedRoute } from './components/common/ProtectedRoute/ProtectedRoute';
 
 // Pages
-
 import { LiveCallInterface } from './pages/agent/LiveCallInterface/LiveCallInterface';
 import { CallSummaryScreen } from './pages/agent/CallSummaryScreen/CallSummaryScreen';
 import { SupervisorDashboard } from './pages/supervisor/SupervisorDashboard/SupervisorDashboard';
@@ -38,6 +37,8 @@ import EscalatedCallReview from './pages/supervisor/EscalatedCallReview/Escalate
 import StaffDetailsPage from './pages/supervisor/StaffDetailsPage/StaffDetailsPage';
 import { CallHistory as SupervisorCallHistory } from './pages/supervisor/CallHistory/CallHistory';
 import { CallDetails as SupervisorCallDetails } from './pages/supervisor/CallDetails/CallDetails';
+import { VoicemailPage as SupervisorVoicemailPage } from './pages/supervisor/VoicemailPage/VoicemailPage';
+import { MissedCallsPage as SupervisorMissedCallsPage } from './pages/supervisor/MissedCallsPage/MissedCallsPage';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import FacilityUsersPage from './pages/admin/FacilityUsersPage/FacilityUsersPage';
 import DashboardOverviewPage from './pages/admin/DashboardOverviewPage/DashboardOverviewPage';
@@ -103,6 +104,8 @@ const SupervisorRoutes: React.FC = () => {
       <Route path="live-monitoring" element={<LiveMonitoring />} />
       <Route path="escalations" element={<EscalatedCallReview />} />
       <Route path="escalated-reviews" element={<EscalatedCallReview />} />
+      <Route path="voicemail" element={<SupervisorVoicemailPage />} />
+      <Route path="missed-calls" element={<SupervisorMissedCallsPage />} />
       <Route path="call-history" element={<SupervisorCallHistory />} />
       <Route path="call-detail" element={<SupervisorCallDetails />} />
       <Route path="staff-performance" element={<StaffPerformance />} />

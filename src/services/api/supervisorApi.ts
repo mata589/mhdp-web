@@ -294,44 +294,71 @@ class SupervisorApi {
   // ============================================
 
   async getVoicemails(
-    limit: number = 10,
-    offset: number = 0
+    options: {
+      search?: string;
+      start_date?: string; // ISO string
+      end_date?: string;   // ISO string
+      status_filter?: string;
+      risk_level?: string;
+      limit?: number;
+      offset?: number;
+    } = {}
   ): Promise<VoicemailsResponse> {
     const params = new URLSearchParams({
-      limit: String(limit),
-      offset: String(offset),
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0),
     });
-
-    const url = `${API_BASE_URL}/supervisor/voicemails?${params}`;
-    this.logRequest("GET", url, { limit, offset });
-
+  
+    if (options.search) params.append("search", options.search);
+    if (options.start_date) params.append("start_date", options.start_date);
+    if (options.end_date) params.append("end_date", options.end_date);
+    if (options.status_filter) params.append("status_filter", options.status_filter);
+    if (options.risk_level) params.append("risk_level", options.risk_level);
+  
+    const url = `${API_BASE_URL}/supervisor/voicemails?${params.toString()}`;
+    this.logRequest("GET", url, options);
+  
     const response = await fetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
-
+  
     return this.handleResponse(response);
   }
-
+  
   async getMissedCalls(
-    limit: number = 10,
-    offset: number = 0
+    options: {
+      search?: string;
+      start_date?: string; // ISO string
+      end_date?: string;   // ISO string
+      status_filter?: string;
+      risk_level?: string;
+      limit?: number;
+      offset?: number;
+    } = {}
   ): Promise<MissedCallsResponse> {
     const params = new URLSearchParams({
-      limit: String(limit),
-      offset: String(offset),
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0),
     });
-
-    const url = `${API_BASE_URL}/supervisor/missedcalls?${params}`;
-    this.logRequest("GET", url, { limit, offset });
-
+  
+    if (options.search) params.append("search", options.search);
+    if (options.start_date) params.append("start_date", options.start_date);
+    if (options.end_date) params.append("end_date", options.end_date);
+    if (options.status_filter) params.append("status_filter", options.status_filter);
+    if (options.risk_level) params.append("risk_level", options.risk_level);
+  
+    const url = `${API_BASE_URL}/supervisor/missedcalls?${params.toString()}`;
+    this.logRequest("GET", url, options);
+  
     const response = await fetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
-
+  
     return this.handleResponse(response);
   }
+  
 
   // ============================================
   // CALL HISTORY

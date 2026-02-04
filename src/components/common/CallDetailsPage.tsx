@@ -40,8 +40,10 @@ interface CallDetailsPageProps {
   callId?: string;
   onBack?: () => void;
   backPath?: string;
-  /** Set to true when called from supervisor context (EscalationsTab, etc.) */
+  /** Set to true when called from supervisor context */
   isSupervisor?: boolean;
+  /** Set to true when viewing escalation details (uses different API endpoint) */
+  isEscalation?: boolean;
 }
 
 // Shimmer Loading Component
@@ -295,6 +297,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   onBack,
   backPath,
   isSupervisor = false,
+  isEscalation = false,
 }) => {
   const navigate = useNavigate();
   const { callId: paramCallId } = useParams<{ callId: string }>();
@@ -320,12 +323,23 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
         setLoading(true);
         setError(null);
         
-        console.log('[CallDetailsPage] Fetching call details:', { callId, isSupervisor });
+        console.log('[CallDetailsPage] Fetching call details:', { 
+          callId, 
+          isSupervisor, 
+          isEscalation 
+        });
         
         // Use appropriate API based on context
-        const data = isSupervisor 
-          ? await supervisorApi.getEscalationDetails(callId)
-          : await agentApi.getCallDetails(callId);
+        let data;
+        if (isSupervisor) {
+          // For supervisor: use escalation endpoint if it's an escalation, otherwise use call details
+          data = isEscalation 
+            ? await supervisorApi.getEscalationDetails(callId)
+            : await supervisorApi.getCallDetails(callId);
+        } else {
+          // For agent: always use agent call details
+          data = await agentApi.getCallDetails(callId);
+        }
         
         console.log('[CallDetailsPage] Call details received:', data);
         setCallDetails(data as any);
@@ -338,7 +352,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
     };
 
     fetchCallDetails();
-  }, [callId, isSupervisor]);
+  }, [callId, isSupervisor, isEscalation]);
 
   const handleBack = () => {
     if (onBack) {
@@ -359,7 +373,9 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
 
     // Optionally refresh call details to show updated outcome
     if (callId) {
-      const refreshApi = isSupervisor ? supervisorApi.getEscalationDetails : agentApi.getCallDetails;
+      const refreshApi = isSupervisor 
+        ? (isEscalation ? supervisorApi.getEscalationDetails : supervisorApi.getCallDetails)
+        : agentApi.getCallDetails;
       refreshApi(callId)
         .then((data: any) => setCallDetails(data))
         .catch((err: any) => console.error('Error refreshing call details:', err));
@@ -412,15 +428,31 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
   const callerPercentage = totalWords > 0 ? Math.round((callerWords / totalWords) * 100) : 0;
   const agentPercentage = totalWords > 0 ? 100 - callerPercentage : 0;
 
-  // Calculate duration for supervisor context (which doesn't have call_duration_seconds)
-  const callDuration = callDetails.call_duration_seconds || 
+  // Calculate duration
+  const callDurationSeconds = callDetails.call_duration_seconds || 
     (callDetails.call_start_time && callDetails.call_end_time 
       ? Math.floor((new Date(callDetails.call_end_time).getTime() - new Date(callDetails.call_start_time).getTime()) / 1000)
       : 0);
 
+  // Determine the title based on context
+  const pageTitle = isSupervisor && isEscalation
+    ? `Escalation #${callId.slice(-4)}`
+    : `${isSupervisor ? 'Call' : 'Outgoing Call'} #${callDetails.call_id?.slice(-4) || callId.slice(-4)}`;
+
+  // Determine action button based on context
+  let actionButton;
+  if (!isSupervisor && callDetails.outcome !== "escalated") {
+    // Agent viewing call that's not escalated - show escalate button
+    actionButton = {
+      label: "Escalate call",
+      icon: "escalate" as const,
+      variant: "escalate" as const,
+      onClick: handleEscalate,
+    };
+  }
+
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
-
       {/* Main Content */}
       <Box
         sx={{
@@ -433,9 +465,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
         <Box sx={{ flex: 1 }}>
           <CallInfoCard
             header={{
-              title: isSupervisor 
-                ? `Escalation #${callId.slice(-4)}`
-                : `Outgoing Call #${callDetails.call_id?.slice(-4) || callId.slice(-4)}`,
+              title: pageTitle,
               statusChip: {
                 label: callDetails.call_status || "completed",
                 bgcolor: statusColors.bg,
@@ -444,12 +474,7 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
               },
               subtitle: `${formatDateTime(callDetails.call_start_time)} - ${formatDateTime(callDetails.call_end_time).split(', ')[1]}`,
               onBack: handleBack,
-              actionButton: !isSupervisor && callDetails.outcome !== "escalated" ? {
-                label: "Escalate call",
-                icon: "escalate",
-                variant: "escalate",
-                onClick: handleEscalate,
-              } : undefined,
+              actionButton: actionButton,
             }}
             fields={[
               { label: "Caller ID", value: callDetails.caller_id },
@@ -499,8 +524,8 @@ export const CallDetailsPage: React.FC<CallDetailsPageProps> = ({
           {(callDetails.audio_url || callId) && (
             <Box sx={{ mb: 3 }}>
               <CallRecordingPlayer
-                callId={isSupervisor ? callId : (callDetails.call_id || callId)}
-                duration={formatDuration(callDuration)}
+                callId={callDetails.call_id || callId}
+                duration={formatDuration(callDurationSeconds)}
                 recordingUrl={callDetails.audio_url}
                 isPopup={false}
                 open={true}
