@@ -299,6 +299,7 @@ export default function EscalatedCallsPage() {
         callId={selectedEscalationId}
         onBack={() => setSelectedEscalationId(null)}
         isSupervisor={true}
+        isEscalation={true}
       />
     );
   }

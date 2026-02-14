@@ -157,7 +157,7 @@ export const AdminHeader: React.FC = () => {
               fontWeight: 600,
             }}
           >
-            {user?.name?.charAt(0) || 'A'}
+            {user?.first_name?.charAt(0) || 'A'}
           </Avatar>
         </Box>
       </Toolbar>

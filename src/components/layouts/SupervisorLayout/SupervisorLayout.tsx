@@ -105,7 +105,7 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({ children }) 
           sx={{
             width: 40,
             height: 40,
-            bgcolor: "#14b8a6",
+            bgcolor: "#0d9488",
             fontSize: "1rem",
             fontWeight: 700,
             color: "white",
@@ -147,10 +147,10 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({ children }) 
                   borderRadius: "8px",
                   py: "10px",
                   px: desktopSidebarCollapsed && !isMobile ? "8px" : "12px",
-                  bgcolor: isActive ? "#14b8a6" : "transparent",
+                  bgcolor: isActive ? "#0d9488" : "transparent",
                   color: isActive ? "white" : "#6b7280",
                   "&:hover": {
-                    bgcolor: isActive ? "#14b8a6" : "#f9fafb",
+                    bgcolor: isActive ? "#0d9488" : "#f9fafb",
                   },
                   transition: "all 0.2s ease-in-out",
                   minHeight: "44px",
@@ -516,13 +516,13 @@ export const SupervisorLayout: React.FC<SupervisorLayoutProps> = ({ children }) 
                 sx={{
                   width: { xs: 40, md: 44 },
                   height: { xs: 40, md: 44 },
-                  bgcolor: "#14b8a6",
+                  bgcolor: "#0d9488",
                   fontSize: { xs: "0.875rem", md: "1rem" },
                   fontWeight: 600,
                   color: "white",
                 }}
               >
-                {user?.name?.charAt(0) || "U"}
+                {`${user?.first_name?.charAt(0) || 'U'}${user?.last_name?.charAt(0) || ''}`}
               </Avatar>
 
               {/* Desktop Sidebar Collapse Button */}

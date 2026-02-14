@@ -25,8 +25,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 const adminNavItems = [
   { path: '/admin/admin', label: 'Dashboard', icon: DashboardIcon },
-  { path: '/admin/admin/FacilitiesManagement2', label: 'Facility management', icon: FacilityIcon },
-  { path: '/admin/admin/FacilityUsersPage', label: 'User management', icon: UsersIcon },
+  { path: '/admin/FacilitiesManagement2', label: 'Facility management', icon: FacilityIcon },
+  { path: '/admin/FacilityUsersPage', label: 'User management', icon: UsersIcon },
   { path: '/admin/DashboardOverviewPage', label: 'System health', icon: SystemHealthIcon },
   { path: '/admin/admin/DashboardOverviewPage', label: 'Analytics', icon: AnalyticsIcon },
 ];

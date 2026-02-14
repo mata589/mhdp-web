@@ -1,30 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
   Menu,
   MenuItem,
   Avatar,
-  InputAdornment,
-  Select,
-  FormControl,
-  InputLabel,
+  Typography,
+  Alert,
+  Skeleton,
 } from '@mui/material';
 import {
-  Search,
   MoreVert,
   Visibility,
   Edit,
@@ -33,22 +20,32 @@ import {
   Delete,
   FilterList,
   Add,
-  ChevronRight,
-  ChevronLeft,
 } from '@mui/icons-material';
+import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
 import CustomChip from '../../../components/common/CustomChip/CustomChip';
+import { DataTable } from '../../../components/common/DataTable/DataTable';
+
 import { SlideDialog, type FormField } from '../../../components/forms/SlideDialogform/SlideDialog';
+import systemAdminApi from '../../../services/api/systemAdminApi';
+import type { 
+  FacilitiesOverview, 
+  FacilitiesListResponse,
+  CreateFacilityRequest 
+} from '../../../types/systemAdmin.types';
+import { SearchFilterBar } from '../../../components/common/SearchBar/SearchFilterBar';
 
 interface Facility {
-  id: number;
+  id: string;
   name: string;
-  status: 'Available' | 'Busy' | 'Break';
+  status: 'Active' | 'Inactive';
   level: string;
   location: string;
   hsd: string;
   dateCreated: string;
+  time: string;
   avatar: string;
   avatarColor: string;
+  avatarText: string;
 }
 
 export default function FacilitiesManagement() {
@@ -57,10 +54,101 @@ export default function FacilitiesManagement() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [addFacilityDialogOpen, setAddFacilityDialogOpen] = useState(false);
 
+  // Pagination and filters
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | undefined>(undefined);
+
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Data states
+  const [overview, setOverview] = useState<FacilitiesOverview | null>(null);
+  const [facilitiesData, setFacilitiesData] = useState<FacilitiesListResponse | null>(null);
+
+  // Fetch facilities overview
+  const fetchOverview = async () => {
+    try {
+      const data = await systemAdminApi.getFacilitiesOverview();
+      setOverview(data);
+    } catch (err) {
+      console.error('Error fetching overview:', err);
+      throw err;
+    }
+  };
+
+  // Fetch facilities list
+  const fetchFacilities = async () => {
+    try {
+      const data = await systemAdminApi.getFacilities(
+        searchQuery || undefined,
+        statusFilter,
+        rowsPerPage,
+        page * rowsPerPage
+      );
+      setFacilitiesData(data);
+    } catch (err) {
+      console.error('Error fetching facilities:', err);
+      throw err;
+    }
+  };
+
+  // Initial data load
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        await Promise.all([
+          fetchOverview(),
+          fetchFacilities(),
+        ]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  // Reload facilities when pagination or filters change
+  useEffect(() => {
+    if (!loading) {
+      fetchFacilities();
+    }
+  }, [page, rowsPerPage, statusFilter, searchQuery]);
+
+  // Format facilities data for DataTable
+  const facilities: Facility[] = facilitiesData?.results.map((facility) => ({
+    id: facility.facility_id,
+    name: facility.facility_name,
+    status: facility.is_active ? 'Active' : 'Inactive',
+    level: facility.level,
+    location: `${facility.district}, ${facility.country}`,
+    hsd: facility.HSD,
+    dateCreated: new Date(facility.date_created).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }),
+    time: new Date(facility.date_created).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    avatar: facility.facility_name.charAt(0).toUpperCase(),
+    avatarColor: facility.is_active ? '#E8F5E9' : '#FFEBEE',
+    avatarText: facility.is_active ? '#2E7D32' : '#C62828',
+  })) || [];
+
   // Define fields for the Add Facility dialog
   const facilityFields: FormField[] = [
     { 
-      name: 'facilityName', 
+      name: 'facility_name', 
       label: 'Facility Name', 
       type: 'text', 
       placeholder: 'Hospital', 
@@ -68,111 +156,161 @@ export default function FacilitiesManagement() {
       required: true 
     },
     { 
-      name: 'facilityCode', 
+      name: 'code', 
       label: 'Facility Code', 
       type: 'text', 
       placeholder: 'Code',
-      gridColumn: '1 / -1'
+      gridColumn: '1 / -1',
+      required: true
     },
     {
-      name: 'facilityLevel',
+      name: 'level',
       label: 'Facility Level',
       type: 'select',
       placeholder: 'Select level',
       options: [
-        { value: 'referral', label: 'Referral Hospital' },
-        { value: 'hc4', label: 'Health Center IV' },
-        { value: 'hc3', label: 'Health Center III' },
-        { value: 'hc2', label: 'Health Center II' },
+        { value: 'Referral Hospital', label: 'Referral Hospital' },
+        { value: 'Health Center IV', label: 'Health Center IV' },
+        { value: 'Health Center III', label: 'Health Center III' },
+        { value: 'Health Center II', label: 'Health Center II' },
       ],
       required: true
     },
     {
-      name: 'hsd',
+      name: 'HSD',
       label: 'Health Sub-District (HSD)',
-      type: 'select',
-      placeholder: 'Select HSD',
-      options: [
-        { value: 'nakawa', label: 'Nakawa' },
-        { value: 'kawempe', label: 'Kawempe' },
-        { value: 'makindye', label: 'Makindye' },
-        { value: 'rubaga', label: 'Rubaga' },
-        { value: 'central', label: 'Central' },
-      ],
+      type: 'text',
+      placeholder: 'Enter HSD',
       required: true
     },
     {
       name: 'country',
       label: 'Country',
-      type: 'select',
-      placeholder: 'Select country',
+      type: 'text',
+      placeholder: 'Country',
       gridColumn: '1 / -1',
-      options: [
-        { value: 'uganda', label: 'Uganda' },
-        { value: 'kenya', label: 'Kenya' },
-        { value: 'tanzania', label: 'Tanzania' },
-        { value: 'rwanda', label: 'Rwanda' },
-      ],
       required: true
     },
     {
       name: 'district',
       label: 'District',
-      type: 'select',
-      placeholder: 'Select district',
+      type: 'text',
+      placeholder: 'District',
       gridColumn: '1 / -1',
-      options: [
-        { value: 'kampala', label: 'Kampala' },
-        { value: 'wakiso', label: 'Wakiso' },
-        { value: 'mukono', label: 'Mukono' },
-        { value: 'jinja', label: 'Jinja' },
-      ],
       required: true
     },
     {
-      name: 'subcounty',
+      name: 'sub_county',
       label: 'Subcounty',
-      type: 'select',
-      placeholder: 'Select subcounty',
-      options: [
-        { value: 'central', label: 'Central' },
-        { value: 'kawempe', label: 'Kawempe' },
-        { value: 'makindye', label: 'Makindye' },
-        { value: 'nakawa', label: 'Nakawa' },
-      ],
+      type: 'text',
+      placeholder: 'Subcounty',
     },
     {
       name: 'county',
       label: 'County',
-      type: 'select',
-      placeholder: 'Select county',
-      options: [
-        { value: 'kampala', label: 'Kampala' },
-        { value: 'busiro', label: 'Busiro' },
-        { value: 'kyaddondo', label: 'Kyaddondo' },
-      ],
+      type: 'text',
+      placeholder: 'County',
     },
     {
       name: 'parish',
       label: 'Parish',
-      type: 'select',
-      placeholder: 'Select parish',
-      options: [
-        { value: 'parish1', label: 'Parish 1' },
-        { value: 'parish2', label: 'Parish 2' },
-        { value: 'parish3', label: 'Parish 3' },
-      ],
+      type: 'text',
+      placeholder: 'Parish',
     },
     {
       name: 'village',
       label: 'Village',
-      type: 'select',
-      placeholder: 'Select village',
-      options: [
-        { value: 'village1', label: 'Village 1' },
-        { value: 'village2', label: 'Village 2' },
-        { value: 'village3', label: 'Village 3' },
-      ],
+      type: 'text',
+      placeholder: 'Village',
+    },
+  ];
+
+  const columns = [
+    {
+      id: 'name',
+      label: 'Name',
+      minWidth: 200,
+      renderCell: (value: string, row: Facility) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Avatar
+            sx={{
+              bgcolor: row.avatarColor,
+              color: row.avatarText,
+              width: 36,
+              height: 36,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            {row.avatar}
+          </Avatar>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#1F2937' }}>
+            {value}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 120,
+      renderCell: (value: string) => (
+        <CustomChip
+          label={value}
+          variant="status"
+          size="small"
+          showDot={true}
+        />
+      ),
+    },
+    {
+      id: 'level',
+      label: 'Level',
+      minWidth: 150,
+    },
+    {
+      id: 'location',
+      label: 'Location',
+      minWidth: 150,
+    },
+    {
+      id: 'hsd',
+      label: 'HSD',
+      minWidth: 100,
+    },
+    {
+      id: 'dateCreated',
+      label: 'Date Created',
+      minWidth: 150,
+      renderCell: (value: string, row: Facility) => (
+        <Box>
+          <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
+            {value}
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.75rem' }}>
+            {row.time}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'action',
+      label: 'Action',
+      minWidth: 80,
+      align: 'center' as const,
+      renderCell: (_value: any, row: Facility) => (
+        <IconButton 
+          size="small" 
+          onClick={(e) => handleMenuOpen(e, row)}
+          sx={{
+            '&:hover': {
+              bgcolor: '#F3F4F6',
+            }
+          }}
+        >
+          <MoreVert sx={{ fontSize: 20 }} />
+        </IconButton>
+      ),
     },
   ];
 
@@ -188,7 +326,7 @@ export default function FacilitiesManagement() {
 
   const handleViewDetails = () => {
     if (selectedFacility) {
-      navigate('/admin/admin/FacilityUserManagement');
+      navigate(`/admin/admin/FacilityUserManagement/${selectedFacility.id}`);
       handleMenuClose();
     }
   };
@@ -203,160 +341,145 @@ export default function FacilitiesManagement() {
     handleMenuClose();
   };
 
-  const handleArchive = () => {
-    // Handle archive logic
+  const handleArchive = async () => {
+    if (selectedFacility) {
+      try {
+        await systemAdminApi.archiveFacility(selectedFacility.id);
+        await fetchFacilities();
+        await fetchOverview();
+      } catch (err) {
+        console.error('Error archiving facility:', err);
+      }
+    }
     handleMenuClose();
   };
 
-  const handleDelete = () => {
-    // Handle delete logic
+  const handleDelete = async () => {
+    if (selectedFacility) {
+      try {
+        await systemAdminApi.deleteFacility(selectedFacility.id);
+        await fetchFacilities();
+        await fetchOverview();
+      } catch (err) {
+        console.error('Error deleting facility:', err);
+      }
+    }
     handleMenuClose();
   };
 
-  const handleSaveFacility = (data: Record<string, any>) => {
-    console.log('Facility saved:', data);
-    setAddFacilityDialogOpen(false);
-    // Here you would typically make an API call to save the facility
+  const handleSaveFacility = async (data: Record<string, any>) => {
+    try {
+      const facilityData: CreateFacilityRequest = {
+        facility_name: data.facility_name,
+        code: data.code,
+        level: data.level,
+        HSD: data.HSD,
+        sub_county: data.sub_county || '',
+        district: data.district,
+        county: data.county || '',
+        parish: data.parish || '',
+        village: data.village || '',
+        country: data.country,
+      };
+
+      await systemAdminApi.createFacility(facilityData);
+      setAddFacilityDialogOpen(false);
+      
+      // Refresh data
+      await fetchFacilities();
+      await fetchOverview();
+    } catch (err) {
+      console.error('Error creating facility:', err);
+    }
   };
 
-  const facilities: Facility[] = [
-    {
-      id: 1,
-      name: 'Butabika Hospital',
-      status: 'Available',
-      level: 'Referral Hospital',
-      location: 'Kampala, Uganda',
-      hsd: 'Nakawa',
-      dateCreated: 'Mon, July 13, 2025\n10:43 AM',
-      avatar: 'B',
-      avatarColor: '#0D9488',
-    },
-    {
-      id: 2,
-      name: 'Mirembe Hospital',
-      status: 'Break',
-      level: 'Health Center IV',
-      location: 'Dodoma, Tanzania',
-      hsd: 'Dodoma',
-      dateCreated: 'Mon, July 13, 2025\n10:43 AM',
-      avatar: 'M',
-      avatarColor: '#ffa726',
-    },
+  const handleStatusFilterChange = (value: string) => {
+    if (value === 'all') {
+      setStatusFilter(undefined);
+    } else {
+      setStatusFilter(value as 'active' | 'inactive');
+    }
+    setPage(0);
+  };
+
+  const filterOptions = [
+    { value: 'all', label: 'All status' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
   ];
 
-  // Metrics configuration with icon paths
-  const metrics = [
-    {
-      title: 'Total Facilities',
-      value: '2',
-      iconPath: '/Staff.png',
-    },
-    {
-      title: 'Active Facilities',
-      value: '1',
-      iconPath: '/Staff3.png',
-    },
-    {
-      title: 'Inactive Facilities',
-      value: '1',
-      iconPath: '/Staff2.png',
-    },
-  ];
+  if (error) {
+    return (
+      <Box sx={{ p: 3, bgcolor: '#F9FAFB', minHeight: '100vh' }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button
+          variant="contained"
+          onClick={() => window.location.reload()}
+          sx={{
+            bgcolor: '#0D9488',
+            '&:hover': { bgcolor: '#0F766E' },
+          }}
+        >
+          Retry
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 3, bgcolor: '#F9FAFB', minHeight: '100vh' }}>
       {/* Stats Cards */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        {metrics.map((metric, index) => (
-          <Card 
-            key={index} 
-            sx={{ 
-              flex: 1, 
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              '&:hover': {
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <img
-                    src={metric.iconPath}
-                    alt={metric.title}
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      objectFit: 'contain',
-                    }}
-                  />
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                  {metric.title}
-                </Typography>
-                <ChevronRight sx={{ ml: 'auto', color: 'text.secondary', fontSize: 20 }} />
+      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+        {loading ? (
+          <>
+            {[1, 2, 3].map((i) => (
+              <Box key={i} sx={{ flex: '1 1 calc(33.333% - 12px)', minWidth: '200px' }}>
+                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 3 }} />
               </Box>
-              <Typography variant="h4" fontWeight="600" sx={{ color: '#1F2937' }}>
-                {metric.value}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
+            ))}
+          </>
+        ) : (
+          <>
+            <Box sx={{ flex: '1 1 calc(33.333% - 12px)', minWidth: '200px' }}>
+              <MetricCard
+                title="Total Facilities"
+                value={overview?.total_facilities.count.toString() || '0'}
+                icon={<img src="/Staff.png" alt="Total" style={{ width: 24, height: 24 }} />}
+                color="teal"
+              />
+            </Box>
+            <Box sx={{ flex: '1 1 calc(33.333% - 12px)', minWidth: '200px' }}>
+              <MetricCard
+                title="Active Facilities"
+                value={overview?.active_facilities.count.toString() || '0'}
+                icon={<img src="/Staff3.png" alt="Active" style={{ width: 24, height: 24 }} />}
+                color="green"
+              />
+            </Box>
+            <Box sx={{ flex: '1 1 calc(33.333% - 12px)', minWidth: '200px' }}>
+              <MetricCard
+                title="Inactive Facilities"
+                value={overview?.inactive_facilities.count.toString() || '0'}
+                icon={<img src="/Staff2.png" alt="Inactive" style={{ width: 24, height: 24 }} />}
+                color="red"
+              />
+            </Box>
+          </>
+        )}
       </Box>
 
-      {/* Filters and Actions */}
+      {/* Search and Filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center' }}>
-        <TextField
-          placeholder="Search name..."
-          size="small"
-          sx={{ 
-            width: 280, 
-            bgcolor: 'white',
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#E5E7EB',
-              },
-            },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search sx={{ color: '#9CA3AF', fontSize: 20 }} />
-              </InputAdornment>
-            ),
-          }}
+        <SearchFilterBar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search name..."
+          filterValue={statusFilter || 'all'}
+          onFilterChange={handleStatusFilterChange}
+          filterOptions={filterOptions}
         />
-        <FormControl 
-          size="small" 
-          sx={{ 
-            minWidth: 150, 
-            bgcolor: 'white',
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#E5E7EB',
-              },
-            },
-          }}
-        >
-          <InputLabel>All status</InputLabel>
-          <Select label="All status" defaultValue="">
-            <MenuItem value="">All status</MenuItem>
-            <MenuItem value="available">Available</MenuItem>
-            <MenuItem value="busy">Busy</MenuItem>
-            <MenuItem value="break">Break</MenuItem>
-          </Select>
-        </FormControl>
         <Button
           variant="outlined"
           startIcon={<FilterList />}
@@ -365,6 +488,7 @@ export default function FacilitiesManagement() {
             bgcolor: 'white',
             borderColor: '#E5E7EB',
             color: '#6B7280',
+            borderRadius: 3,
             '&:hover': {
               bgcolor: '#F9FAFB',
               borderColor: '#D1D5DB',
@@ -381,6 +505,7 @@ export default function FacilitiesManagement() {
             ml: 'auto', 
             textTransform: 'none',
             bgcolor: '#0D9488',
+            borderRadius: 3,
             '&:hover': { bgcolor: '#0F766E' },
             boxShadow: 'none',
           }}
@@ -390,142 +515,16 @@ export default function FacilitiesManagement() {
       </Box>
 
       {/* Table */}
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          borderRadius: 2,
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>Level</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>Location</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>HSD</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>Date Created</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#6B7280', fontSize: '0.875rem' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {facilities.map((facility) => (
-              <TableRow 
-                key={facility.id} 
-                hover
-                sx={{
-                  '&:hover': {
-                    bgcolor: '#F9FAFB',
-                  }
-                }}
-              >
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Avatar
-                      sx={{
-                        bgcolor: facility.avatarColor,
-                        width: 36,
-                        height: 36,
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {facility.avatar}
-                    </Avatar>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#1F2937' }}>
-                      {facility.name}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <CustomChip
-                    label={facility.status}
-                    variant="status"
-                    size="small"
-                    showDot={true}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
-                    {facility.level}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
-                    {facility.location}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
-                    {facility.hsd}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: '#6B7280', 
-                      fontSize: '0.875rem',
-                      whiteSpace: 'pre-line',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {facility.dateCreated}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <IconButton 
-                    size="small" 
-                    onClick={(e) => handleMenuOpen(e, facility)}
-                    sx={{
-                      '&:hover': {
-                        bgcolor: '#F3F4F6',
-                      }
-                    }}
-                  >
-                    <MoreVert sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Pagination */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, px: 1 }}>
-        <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
-          Page 1-1 of 3 results
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton 
-            size="small" 
-            disabled
-            sx={{
-              border: '1px solid #E5E7EB',
-              borderRadius: 1,
-              '&.Mui-disabled': {
-                bgcolor: '#F9FAFB',
-              }
-            }}
-          >
-            <ChevronLeft sx={{ fontSize: 20 }} />
-          </IconButton>
-          <IconButton 
-            size="small"
-            sx={{
-              border: '1px solid #E5E7EB',
-              borderRadius: 1,
-              '&:hover': {
-                bgcolor: '#F9FAFB',
-              }
-            }}
-          >
-            <ChevronRight sx={{ fontSize: 20 }} />
-          </IconButton>
-        </Box>
-      </Box>
+      <DataTable
+        columns={columns}
+        data={facilities}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        totalCount={facilitiesData?.total || 0}
+        onPageChange={setPage}
+        onRowsPerPageChange={setRowsPerPage}
+        isLoading={loading}
+      />
 
       {/* Action Menu */}
       <Menu
@@ -616,7 +615,7 @@ export default function FacilitiesManagement() {
         </MenuItem>
       </Menu>
 
-      {/* Add Facility Dialog - Using SlideDialog Component */}
+      {/* Add Facility Dialog */}
       <SlideDialog
         open={addFacilityDialogOpen}
         onClose={() => setAddFacilityDialogOpen(false)}

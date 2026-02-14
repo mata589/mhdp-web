@@ -75,8 +75,31 @@ export interface FullOverview {
 }
 
 // ============================================
-// FACILITIES TYPES
+// FACILITY TYPES
 // ============================================
+
+export interface FacilityAddress {
+  district: string;
+  sub_county: string;
+  county: string;
+  parish: string;
+  village: string;
+  country: string;
+}
+
+export interface Facility {
+  facility_id: string;
+  facility_name: string;
+  code: string;
+  level: string;
+  HSD: string;
+  is_active: boolean;
+  address: FacilityAddress;
+  date_created: string;
+  facility_admin_first_name?: string;
+  facility_admin_last_name?: string;
+  facility_admin_designation?: string;
+}
 
 export interface FacilityItem {
   facility_id: string;
@@ -94,6 +117,23 @@ export interface FacilitiesListResponse {
   total: number;
 }
 
+export interface CreateFacilityRequest {
+  facility_name: string;
+  code: string;
+  level: string;
+  HSD: string;
+  sub_county: string;
+  district: string;
+  county: string;
+  parish: string;
+  village: string;
+  country: string;
+}
+
+export interface UpdateFacilityRequest extends CreateFacilityRequest {
+  facility_id: string;
+}
+
 export interface FacilityPerformanceItem {
   facility_id: string;
   facility_name: string;
@@ -106,7 +146,61 @@ export interface FacilitiesPerformanceResponse {
 }
 
 // ============================================
-// CALLS TYPES
+// USER TYPES
+// ============================================
+
+export interface FacilityAdmin {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  gender: string;
+  nationality: string;
+  contact: string;
+  is_active: boolean;
+  facility_id: string;
+  designation_name: string;
+  role_names: string[];
+  address: string;
+}
+
+export interface CreateFacilityAdminRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  gender: string;
+  nationality: string;
+  contact: string;
+  is_active: boolean;
+  facility_id: string;
+  address: string;
+}
+
+export interface UpdateFacilityAdminRequest {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  gender: string;
+  nationality: string;
+  contact: string;
+  is_active: boolean;
+  facility_id: string;
+  address: string;
+}
+
+export interface UserDistributionItem {
+  role: string;
+  count: number;
+}
+
+export interface UsersDistributionResponse {
+  data: UserDistributionItem[];
+}
+
+// ============================================
+// CALLS / ANALYTICS TYPES
 // ============================================
 
 export interface HourlyCallTrend {
@@ -116,17 +210,4 @@ export interface HourlyCallTrend {
 
 export interface HourlyCallTrendsResponse {
   data: HourlyCallTrend[];
-}
-
-// ============================================
-// USERS TYPES
-// ============================================
-
-export interface UserDistributionItem {
-  role: string;
-  count: number;
-}
-
-export interface UsersDistributionResponse {
-  data: UserDistributionItem[];
 }
