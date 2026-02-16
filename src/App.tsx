@@ -1,4 +1,4 @@
-// src/App.tsx - Updated with Supervisor Voicemail and Missed Calls routes
+// src/App.tsx - Updated with UserDetailsPage route
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -41,11 +41,12 @@ import { VoicemailPage as SupervisorVoicemailPage } from './pages/supervisor/Voi
 import { MissedCallsPage as SupervisorMissedCallsPage } from './pages/supervisor/MissedCallsPage/MissedCallsPage';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import FacilityUsersPage from './pages/admin/FacilityUsersPage/FacilityUsersPage';
+
 import DashboardOverviewPage from './pages/admin/DashboardOverviewPage/DashboardOverviewPage';
 import { UserManagement } from './pages/admin/UserManagement/UserManagement';
 import FacilitiesManagement from './pages/admin/FacilitiesManagement/FacilitiesManagement';
 import FacilitiesManagement2 from './pages/admin/FacilitiesManagement2/FacilitiesManagement2';
-import FacilityUserManagement from './pages/admin/FacilityUserManagement/FacilityUserManagement';
+import FacilityUserManagement from './pages/admin/FacilityUserManagement.old/FacilityUserManagement';
 import FacilityDetails from './pages/admin/FacilityDetails/FacilityDetails';
 import { LandingPage } from './pages/public/LandingPage';
 import { CallHistory } from './pages/agent/CallHistory/CallHistory';
@@ -61,6 +62,7 @@ import { CallReviewScreen } from './pages/shared/CallReviewScreen/CallReviewScre
 import Settings from './components/Settings/settings';
 import { LoginPage } from './pages/auth/LoginPage';
 import Escalations from './pages/agent/Escalations/Escalations';
+import UserDetailsPage from './pages/admin/Userdetailspage/Userdetailspage';
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -129,13 +131,17 @@ const SupervisorRoutes: React.FC = () => {
 
 const AdminRoutes: React.FC = () => {
   return (
-    <Routes>
+    <Routes> 
       <Route index element={<AdminDashboard />} />
       <Route path="FacilitiesManagement" element={<FacilitiesManagement />} />
       <Route path="FacilitiesManagement2" element={<FacilitiesManagement2 />} />
       <Route path="FacilityDetails" element={<FacilityDetails />} />
+      <Route path="FacilityDetails/:facilityId" element={<FacilityDetails />} />
       <Route path="FacilityUsersPage" element={<FacilityUsersPage />} />
-      <Route path="FacilityUserManagement" element={<FacilityUserManagement />} />
+      
+      {/* NEW: User details page */}
+      <Route path="user-details/:userId" element={<UserDetailsPage />} />
+      
       <Route path="DashboardOverviewPage" element={<DashboardOverviewPage />} />
       <Route path="system" element={<div>System Health Page</div>} />
       <Route path="analytics" element={<div>Analytics Page</div>} />

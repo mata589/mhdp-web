@@ -27,8 +27,8 @@ const adminNavItems = [
   { path: '/admin/admin', label: 'Dashboard', icon: DashboardIcon },
   { path: '/admin/FacilitiesManagement2', label: 'Facility management', icon: FacilityIcon },
   { path: '/admin/FacilityUsersPage', label: 'User management', icon: UsersIcon },
-  { path: '/admin/DashboardOverviewPage', label: 'System health', icon: SystemHealthIcon },
-  { path: '/admin/admin/DashboardOverviewPage', label: 'Analytics', icon: AnalyticsIcon },
+  { path: '/admin/DashboardOverviewPage', label: 'Analytics', icon: SystemHealthIcon },
+  // { path: '/admin/admin/DashboardOverviewPage', label: 'Analytics', icon: AnalyticsIcon },
 ];
 
 const DRAWER_WIDTH = 280;

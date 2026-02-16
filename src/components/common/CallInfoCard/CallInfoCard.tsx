@@ -4,10 +4,19 @@ import { Box, Paper, Typography, Chip, IconButton, Button } from "@mui/material"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import WarningIcon from "@mui/icons-material/Warning";
 import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ArchiveIcon from "@mui/icons-material/Archive";
 
 interface CallInfoField {
   label: string;
   value: string | number | React.ReactNode;
+}
+
+interface ActionButton {
+  label: string;
+  icon?: "escalate" | "edit" | "delete" | "archive";
+  variant?: "escalate" | "edit" | "delete" | "archive";
+  onClick: () => void;
 }
 
 interface CallInfoCardHeader {
@@ -20,12 +29,8 @@ interface CallInfoCardHeader {
   };
   subtitle?: string;
   onBack?: () => void;
-  actionButton?: {
-    label: string;
-    icon?: "escalate" | "edit";
-    variant?: "escalate" | "edit";
-    onClick: () => void;
-  };
+  actionButton?: ActionButton;
+  secondaryActions?: ActionButton[]; // NEW: Support for Archive and Delete buttons
 }
 
 interface CallInfoCardProps {
@@ -35,6 +40,61 @@ interface CallInfoCardProps {
   header?: CallInfoCardHeader;
   showPaper?: boolean;
 }
+
+const getButtonIcon = (icon?: string) => {
+  switch (icon) {
+    case "escalate":
+      return <WarningIcon sx={{ fontSize: 18 }} />;
+    case "edit":
+      return <EditIcon sx={{ fontSize: 18 }} />;
+    case "delete":
+      return <DeleteIcon sx={{ fontSize: 18 }} />;
+    case "archive":
+      return <ArchiveIcon sx={{ fontSize: 18 }} />;
+    default:
+      return null;
+  }
+};
+
+const getButtonStyles = (variant?: string) => {
+  switch (variant) {
+    case "escalate":
+      return {
+        bgcolor: "#dc2626",
+        color: "#ffffff",
+        "&:hover": { bgcolor: "#b91c1c" },
+      };
+    case "edit":
+      return {
+        bgcolor: "#0d9488",
+        color: "#ffffff",
+        "&:hover": { bgcolor: "#0f766e" },
+      };
+    case "delete":
+      return {
+        bgcolor: "#dc2626",
+        color: "#ffffff",
+        border: "none",
+        "&:hover": { bgcolor: "#b91c1c" },
+      };
+    case "archive":
+      return {
+        bgcolor: "white",
+        color: "#0d9488",
+        border: "1.5px solid #d1d5db",
+        "&:hover": {
+          bgcolor: "#f9fafb",
+          borderColor: "#9ca3af",
+        },
+      };
+    default:
+      return {
+        bgcolor: "#0d9488",
+        color: "#ffffff",
+        "&:hover": { bgcolor: "#0f766e" },
+      };
+  }
+};
 
 export const CallInfoCard: React.FC<CallInfoCardProps> = ({
   fields,
@@ -47,7 +107,7 @@ export const CallInfoCard: React.FC<CallInfoCardProps> = ({
     <>
       {header && (
         <Box sx={{ mb: 3 }}>
-          {/* Header with back button, title, status chip, and action button */}
+          {/* Header with back button, title, status chip, and action buttons */}
           <Box
             sx={{
               display: "flex",
@@ -98,44 +158,51 @@ export const CallInfoCard: React.FC<CallInfoCardProps> = ({
               </Box>
             </Box>
 
-            {header.actionButton && (
-              <Button
-                variant="contained"
-                startIcon={
-                  header.actionButton.icon === "escalate" ? (
-                    <WarningIcon />
-                  ) : header.actionButton.icon === "edit" ? (
-                    <EditIcon />
-                  ) : null
-                }
-                onClick={header.actionButton.onClick}
-                sx={{
-                  bgcolor:
-                    header.actionButton.variant === "escalate"
-                      ? "#dc2626"
-                      : header.actionButton.variant === "edit"
-                      ? "#0d9488"
-                      : "#0d9488",
-                  color: "#ffffff",
-                  textTransform: "none",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1.25,
-                  borderRadius: 1.5,
-                  "&:hover": {
-                    bgcolor:
-                      header.actionButton.variant === "escalate"
-                        ? "#b91c1c"
-                        : header.actionButton.variant === "edit"
-                        ? "#0f766e"
-                        : "#0f766e",
-                  },
-                }}
-              >
-                {header.actionButton.label}
-              </Button>
-            )}
+            {/* Action Buttons Container */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              {/* Secondary Actions (Delete, Archive) */}
+              {header.secondaryActions?.map((action, index) => (
+                <Button
+                  key={index}
+                  variant={action.variant === "delete" ? "contained" : "outlined"}
+                  startIcon={getButtonIcon(action.icon)}
+                  onClick={action.onClick}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    px: 2.5,
+                    py: 1,
+                    borderRadius: 2,
+                    boxShadow: "none",
+                    ...getButtonStyles(action.variant),
+                  }}
+                >
+                  {action.label}
+                </Button>
+              ))}
+
+              {/* Primary Action Button (Edit/Escalate) */}
+              {header.actionButton && (
+                <Button
+                  variant="contained"
+                  startIcon={getButtonIcon(header.actionButton.icon)}
+                  onClick={header.actionButton.onClick}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    boxShadow: "none",
+                    ...getButtonStyles(header.actionButton.variant),
+                  }}
+                >
+                  {header.actionButton.label}
+                </Button>
+              )}
+            </Box>
           </Box>
 
           {header.subtitle && (
@@ -155,14 +222,13 @@ export const CallInfoCard: React.FC<CallInfoCardProps> = ({
       )}
       
       <Box
-      sx={{
-        backgroundColor: `color-mix(in srgb, ${backgroundColor} 25%, white)`,
-        p: { xs: 1.5, sm: 2 },
-        borderRadius: 2,
-        border: "2px solid",
-        borderColor: backgroundColor,
-      }}
-      
+        sx={{
+          backgroundColor: `color-mix(in srgb, ${backgroundColor} 25%, white)`,
+          p: { xs: 1.5, sm: 2 },
+          borderRadius: 2,
+          border: "2px solid",
+          borderColor: backgroundColor,
+        }}
       >
         <Box
           sx={{
@@ -295,26 +361,25 @@ export const getCallerTypeColors = (type: string) => {
 };
 
 // Helper function to create speaker chips
-// Helper function to create speaker chips
 export const createSpeakerChips = (speakers: Array<{ label: string; percentage: number }>) => {
-    return (
-      <Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", overflowX: "auto" }}>
-        {speakers.map((speaker, index) => (
-          <Chip
-            key={index}
-            label={`${speaker.label} (${speaker.percentage}%)`}
-            size="small"
-            sx={{
-              bgcolor: "#f3f4f6",
-              color: "#374151",
-              border: "1px solid #d1d5db",
-              fontWeight: 500,
-              fontSize: "13px",
-              height: "28px",
-              flexShrink: 0,
-            }}
-          />
-        ))}
-      </Box>
-    );
-  };
+  return (
+    <Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", overflowX: "auto" }}>
+      {speakers.map((speaker, index) => (
+        <Chip
+          key={index}
+          label={`${speaker.label} (${speaker.percentage}%)`}
+          size="small"
+          sx={{
+            bgcolor: "#f3f4f6",
+            color: "#374151",
+            border: "1px solid #d1d5db",
+            fontWeight: 500,
+            fontSize: "13px",
+            height: "28px",
+            flexShrink: 0,
+          }}
+        />
+      ))}
+    </Box>
+  );
+};

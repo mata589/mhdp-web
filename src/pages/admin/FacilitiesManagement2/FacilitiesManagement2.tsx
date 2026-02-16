@@ -25,14 +25,18 @@ import { MetricCard } from '../../../components/cards/MetricCard/MetricCard';
 import CustomChip from '../../../components/common/CustomChip/CustomChip';
 import { DataTable } from '../../../components/common/DataTable/DataTable';
 
-import { SlideDialog, type FormField } from '../../../components/forms/SlideDialogform/SlideDialog';
+// Import CustomSlideDialog and its FormField type
 import systemAdminApi from '../../../services/api/systemAdminApi';
 import type { 
   FacilitiesOverview, 
   FacilitiesListResponse,
-  CreateFacilityRequest 
+  CreateFacilityRequest,
+  UpdateFacilityRequest,
+  CreateFacilityAdminRequest,
+  Facility as FacilityFull,
 } from '../../../types/systemAdmin.types';
 import { SearchFilterBar } from '../../../components/common/SearchBar/SearchFilterBar';
+import CustomSlideDialog, { type FormField } from '../../../components/forms/Customslidedialog/Customslidedialog';
 
 interface Facility {
   id: string;
@@ -53,6 +57,8 @@ export default function FacilitiesManagement() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [addFacilityDialogOpen, setAddFacilityDialogOpen] = useState(false);
+  const [editFacilityDialogOpen, setEditFacilityDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
 
   // Pagination and filters
   const [page, setPage] = useState(0);
@@ -120,6 +126,7 @@ export default function FacilitiesManagement() {
     if (!loading) {
       fetchFacilities();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rowsPerPage, statusFilter, searchQuery]);
 
   // Format facilities data for DataTable
@@ -146,14 +153,18 @@ export default function FacilitiesManagement() {
   })) || [];
 
   // Define fields for the Add Facility dialog
-  const facilityFields: FormField[] = [
+  const addFacilityFields: FormField[] = [
     { 
       name: 'facility_name', 
       label: 'Facility Name', 
       type: 'text', 
       placeholder: 'Hospital', 
       gridColumn: '1 / -1',
-      required: true 
+      required: true,
+      validation: {
+        minLength: 3,
+        maxLength: 100,
+      },
     },
     { 
       name: 'code', 
@@ -161,7 +172,11 @@ export default function FacilitiesManagement() {
       type: 'text', 
       placeholder: 'Code',
       gridColumn: '1 / -1',
-      required: true
+      required: true,
+      validation: {
+        pattern: /^[A-Z0-9-]+$/,
+      },
+      helperText: 'Use uppercase letters, numbers, and hyphens',
     },
     {
       name: 'level',
@@ -222,6 +237,151 @@ export default function FacilitiesManagement() {
       label: 'Village',
       type: 'text',
       placeholder: 'Village',
+    },
+  ];
+
+  // Define fields for the Edit Facility dialog
+  const editFacilityFields: FormField[] = [
+    { 
+      name: 'facility_name', 
+      label: 'Facility Name', 
+      type: 'text', 
+      gridColumn: '1 / -1',
+      required: true,
+    },
+    { 
+      name: 'code', 
+      label: 'Facility Code', 
+      type: 'text', 
+      gridColumn: '1 / -1',
+      required: true,
+      disabled: true,
+      helperText: 'Facility code cannot be changed',
+    },
+    {
+      name: 'level',
+      label: 'Facility Level',
+      type: 'select',
+      options: [
+        { value: 'Referral Hospital', label: 'Referral Hospital' },
+        { value: 'Health Center IV', label: 'Health Center IV' },
+        { value: 'Health Center III', label: 'Health Center III' },
+        { value: 'Health Center II', label: 'Health Center II' },
+      ],
+      required: true
+    },
+    {
+      name: 'HSD',
+      label: 'Health Sub-District (HSD)',
+      type: 'text',
+      required: true
+    },
+    {
+      name: 'country',
+      label: 'Country',
+      type: 'text',
+      gridColumn: '1 / -1',
+      required: true
+    },
+    {
+      name: 'district',
+      label: 'District',
+      type: 'text',
+      gridColumn: '1 / -1',
+      required: true
+    },
+    {
+      name: 'is_active',
+      label: 'Active Status',
+      type: 'switch',
+      gridColumn: '1 / -1',
+    },
+  ];
+
+  // Define fields for the Add User dialog (Facility Admin)
+  const addUserFields: FormField[] = [
+    {
+      name: 'first_name',
+      label: 'First Name',
+      type: 'text',
+      placeholder: 'John',
+      required: true,
+    },
+    {
+      name: 'last_name',
+      label: 'Last Name',
+      type: 'text',
+      placeholder: 'Doe',
+      required: true,
+    },
+    {
+      name: 'email',
+      label: 'Email Address',
+      type: 'email',
+      placeholder: 'john.doe@example.com',
+      gridColumn: '1 / -1',
+      required: true,
+    },
+    {
+      name: 'password',
+      label: 'Password',
+      type: 'password',
+      placeholder: 'Enter secure password',
+      gridColumn: '1 / -1',
+      required: true,
+      validation: {
+        minLength: 8,
+        custom: (value) => {
+          if (value && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+            return 'Password must contain uppercase, lowercase, and number';
+          }
+          return null;
+        },
+      },
+      helperText: 'Min 8 characters with uppercase, lowercase, and number',
+    },
+    {
+      name: 'phone',
+      label: 'Contact Number',
+      type: 'tel',
+      placeholder: '+256 700 000 000',
+      gridColumn: '1 / -1',
+      required: true,
+    },
+    {
+      name: 'gender',
+      label: 'Gender',
+      type: 'select',
+      placeholder: 'Select gender',
+      options: [
+        { value: 'Male', label: 'Male' },
+        { value: 'Female', label: 'Female' },
+        { value: 'Other', label: 'Other' },
+      ],
+      required: true,
+    },
+    {
+      name: 'nationality',
+      label: 'Nationality',
+      type: 'text',
+      placeholder: 'e.g., Ugandan',
+      required: true,
+    },
+    {
+      name: 'address',
+      label: 'Address',
+      type: 'textarea',
+      placeholder: 'Enter full address',
+      gridColumn: '1 / -1',
+      rows: 3,
+      required: true,
+    },
+    {
+      name: 'is_active',
+      label: 'Activate account immediately',
+      type: 'switch',
+      gridColumn: '1 / -1',
+      defaultValue: true,
     },
   ];
 
@@ -326,18 +486,34 @@ export default function FacilitiesManagement() {
 
   const handleViewDetails = () => {
     if (selectedFacility) {
-      navigate(`/admin/admin/FacilityUserManagement/${selectedFacility.id}`);
+      // Navigate to the facility details page
+      navigate(`/admin/FacilityDetails/${selectedFacility.id}`);
       handleMenuClose();
     }
   };
 
-  const handleEdit = () => {
-    // Handle edit logic
+  const handleEdit = async () => {
+    if (!selectedFacility) return;
+    
+    try {
+      // Fetch full facility details for editing (includes code and full address)
+      const fullFacility = await systemAdminApi.getFacility(selectedFacility.id);
+      
+      // Store full facility data for the edit dialog
+      setSelectedFacility({
+        ...selectedFacility,
+        fullData: fullFacility,
+      } as any);
+      
+      setEditFacilityDialogOpen(true);
+    } catch (err) {
+      console.error('Error fetching facility details:', err);
+    }
     handleMenuClose();
   };
 
   const handleAddUser = () => {
-    // Handle add user logic
+    setAddUserDialogOpen(true);
     handleMenuClose();
   };
 
@@ -383,13 +559,71 @@ export default function FacilitiesManagement() {
       };
 
       await systemAdminApi.createFacility(facilityData);
-      setAddFacilityDialogOpen(false);
       
       // Refresh data
       await fetchFacilities();
       await fetchOverview();
     } catch (err) {
       console.error('Error creating facility:', err);
+      throw err;
+    }
+  };
+
+  const handleUpdateFacility = async (data: Record<string, any>) => {
+    if (!selectedFacility) return;
+
+    try {
+      // Update facility API call - API expects UpdateFacilityRequest with facility_id
+      const updateData: UpdateFacilityRequest = {
+        facility_id: selectedFacility.id,
+        facility_name: data.facility_name,
+        code: data.code,
+        level: data.level,
+        HSD: data.HSD,
+        sub_county: data.sub_county || '',
+        district: data.district,
+        county: data.county || '',
+        parish: data.parish || '',
+        village: data.village || '',
+        country: data.country,
+      };
+      
+      await systemAdminApi.updateFacility(updateData);
+      
+      // Refresh data
+      await fetchFacilities();
+      await fetchOverview();
+    } catch (err) {
+      console.error('Error updating facility:', err);
+      throw err;
+    }
+  };
+
+  const handleSaveUser = async (data: Record<string, any>) => {
+    if (!selectedFacility) return;
+
+    try {
+      // Create facility admin API call
+      const adminData: CreateFacilityAdminRequest = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        password: data.password,
+        gender: data.gender,
+        nationality: data.nationality,
+        contact: data.phone,
+        is_active: data.is_active ?? true,
+        facility_id: selectedFacility.id,
+        address: data.address,
+      };
+      
+      await systemAdminApi.createFacilityAdmin(adminData);
+      
+      // Optionally refresh data or navigate
+      console.log('Facility admin created successfully');
+    } catch (err) {
+      console.error('Error creating facility admin:', err);
+      throw err;
     }
   };
 
@@ -407,6 +641,50 @@ export default function FacilitiesManagement() {
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
   ];
+
+  // Get initial values for edit dialog
+  const getEditInitialValues = () => {
+    if (!selectedFacility) return {};
+    
+    // Check if we have full facility data (fetched in handleEdit)
+    const fullData = (selectedFacility as any).fullData;
+    
+    if (fullData) {
+      return {
+        facility_name: fullData.facility_name,
+        code: fullData.code,
+        level: fullData.level,
+        HSD: fullData.HSD,
+        country: fullData.address.country,
+        district: fullData.address.district,
+        sub_county: fullData.address.sub_county || '',
+        county: fullData.address.county || '',
+        parish: fullData.address.parish || '',
+        village: fullData.address.village || '',
+      };
+    }
+    
+    // Fallback: This shouldn't normally execute since handleEdit fetches fullData
+    // But if it does, provide basic values (code will need to be fetched)
+    const rawFacility = facilitiesData?.results.find(
+      (f) => f.facility_id === selectedFacility.id
+    );
+    
+    if (!rawFacility) return {};
+
+    return {
+      facility_name: rawFacility.facility_name,
+      code: '', // FacilityItem doesn't have code field, will be populated by API fetch
+      level: rawFacility.level,
+      HSD: rawFacility.HSD,
+      country: rawFacility.country,
+      district: rawFacility.district,
+      sub_county: '',
+      county: '',
+      parish: '',
+      village: '',
+    };
+  };
 
   if (error) {
     return (
@@ -616,13 +894,52 @@ export default function FacilitiesManagement() {
       </Menu>
 
       {/* Add Facility Dialog */}
-      <SlideDialog
+      <CustomSlideDialog
         open={addFacilityDialogOpen}
         onClose={() => setAddFacilityDialogOpen(false)}
         title="Add Facility"
-        fields={facilityFields}
+        subtitle="Enter the facility details below"
+        fields={addFacilityFields}
         onSave={handleSaveFacility}
-        saveButtonText="Continue"
+        saveButtonText="Create Facility"
+        width={600}
+        gridColumns={2}
+        validateOnChange={true}
+      />
+
+      {/* Edit Facility Dialog */}
+      <CustomSlideDialog
+        open={editFacilityDialogOpen}
+        onClose={() => {
+          setEditFacilityDialogOpen(false);
+          setSelectedFacility(null);
+        }}
+        title="Edit Facility"
+        subtitle="Update facility information"
+        fields={editFacilityFields}
+        onSave={handleUpdateFacility}
+        saveButtonText="Update Facility"
+        initialValues={getEditInitialValues()}
+        width={600}
+        gridColumns={2}
+        validateOnChange={true}
+      />
+
+      {/* Add User Dialog */}
+      <CustomSlideDialog
+        open={addUserDialogOpen}
+        onClose={() => {
+          setAddUserDialogOpen(false);
+          setSelectedFacility(null);
+        }}
+        title="Add User"
+        subtitle={`Add a new user to ${selectedFacility?.name}`}
+        fields={addUserFields}
+        onSave={handleSaveUser}
+        saveButtonText="Create User"
+        width={500}
+        gridColumns={2}
+        validateOnChange={true}
       />
     </Box>
   );

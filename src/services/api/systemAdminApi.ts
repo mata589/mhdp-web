@@ -50,7 +50,7 @@ class SystemAdminApi {
 
   async getFullOverview(startDate: string, endDate: string): Promise<FullOverview> {
     const response = await fetch(
-      `${API_BASE_URL}/system_admin/analytics/overview/full?start_date=${startDate}&end_date=${endDate}`,
+      `${API_BASE_URL}/system_admin/analytics/overview/full`,
       {
         method: 'GET',
         headers: this.getAuthHeaders(),
@@ -74,8 +74,15 @@ class SystemAdminApi {
       offset: offset.toString(),
     });
     
-    if (search) params.append('search', search);
-    if (status) params.append('status', status);
+    // Only add search param if it has a value
+    if (search && search.trim() !== '') {
+      params.append('search', search);
+    }
+    
+    // Only add status param if it's defined
+    if (status) {
+      params.append('status', status);
+    }
 
     const response = await fetch(
       `${API_BASE_URL}/system_admin/facilities?${params.toString()}`,
@@ -146,7 +153,7 @@ class SystemAdminApi {
 
   async getFacilitiesPerformance(startDate: string, endDate: string): Promise<FacilitiesPerformanceResponse> {
     const response = await fetch(
-      `${API_BASE_URL}/system_admin/facilities/performance?start_date=${startDate}&end_date=${endDate}`,
+      `${API_BASE_URL}/system_admin/facilities/performance`,
       {
         method: 'GET',
         headers: this.getAuthHeaders(),
@@ -169,7 +176,7 @@ class SystemAdminApi {
 
   async getUsersDistribution(startDate: string, endDate: string): Promise<UsersDistributionResponse> {
     const response = await fetch(
-      `${API_BASE_URL}/system_admin/users/distribution?start_date=${startDate}&end_date=${endDate}`,
+      `${API_BASE_URL}/system_admin/users/distribution`,
       {
         method: 'GET',
         headers: this.getAuthHeaders(),
@@ -252,7 +259,7 @@ class SystemAdminApi {
 
   async getCallsHourlyTrends(startDate: string, endDate: string): Promise<HourlyCallTrendsResponse> {
     const response = await fetch(
-      `${API_BASE_URL}/system_admin/calls/hourly-trends?start_date=${startDate}&end_date=${endDate}`,
+      `${API_BASE_URL}/system_admin/calls/hourly-trends`,
       {
         method: 'GET',
         headers: this.getAuthHeaders(),

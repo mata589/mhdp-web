@@ -60,20 +60,26 @@ export interface DetailedMetric {
 }
 
 export interface FullOverview {
-  total_facilities: DetailedMetric;
-  active_facilities: DetailedMetric;
-  inactive_facilities: DetailedMetric;
-  facilities_added_today: DetailedMetric;
-  total_users: DetailedMetric;
-  active_users: DetailedMetric;
-  inactive_users: DetailedMetric;
-  users_added_today: DetailedMetric;
-  total_calls: DetailedMetric;
-  calls_today: DetailedMetric;
-  escalated_calls: DetailedMetric;
-  missed_calls: DetailedMetric;
+  total_facilities: MetricData;
+  active_facilities: MetricData;
+  inactive_facilities: MetricData;
+  facilities_added_today: MetricData;
+  total_users: MetricData;
+  active_users: MetricData;
+  inactive_users: MetricData;
+  users_added_today: MetricData;
+  total_calls: MetricData;
+  calls_today: MetricData;
+  incoming_calls: MetricData;  // Changed from escalated_calls
+  outgoing_calls: MetricData;   // Changed from missed_calls
 }
 
+interface MetricData {
+  label: string;
+  value: number;
+  percentage_change: number;
+  change_label: string;
+}
 // ============================================
 // FACILITY TYPES
 // ============================================
